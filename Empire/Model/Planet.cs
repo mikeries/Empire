@@ -12,8 +12,7 @@ namespace Empire.Model
         public Planets planetID { get; private set; }
 
         public Planet(int x = 0, int y = 0, Planets ID = Planets.planet1) : base(x, y) {
-            _x = x;
-            _y = y;
+            Location = new Vector2(x, y);
             planetID = ID;
             this.Type = EntityType.Planet;
         }

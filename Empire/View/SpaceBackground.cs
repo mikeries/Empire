@@ -8,36 +8,44 @@ using System.Threading.Tasks;
 
 namespace Empire.View
 {
-    // Implements a background of space with a parallax effect.
-    class SpaceBackground
+    // Implements a background of space textures with a parallax effect.
+    internal static class SpaceBackground
     {
-        List<TiledTexture> textures = new List<TiledTexture>();
+        static List<TiledTexture> textures = new List<TiledTexture>();
 
-        public SpaceBackground() { }
-
-        //TODO: might be a better idea to pull speed factor out of the TiledTexture class and put it in this class,
-        // calling the texture with an offset
-        public void Initialize() {
+        internal static void Initialize() {
             textures.Add(new TiledTexture("Graphics/background1", 0.4f));
             textures.Add(new TiledTexture("Graphics/background2", 0.3f));
             textures.Add(new TiledTexture("Graphics/background3", 0.2f));
         }
 
-        public void LoadContent(ContentManager content)
+        internal static void LoadContent(ContentManager content)
         {
             foreach (TiledTexture texture in textures)
+            {
                 texture.LoadContent(content);
+            }
         }
 
-        public void UnloadContent()
+        internal static void UnloadContent()
         {
             foreach (TiledTexture texture in textures)
+            {
                 texture.UnloadContent();
+            }
         }
 
-        public void Draw(SpriteBatch spriteBatch, int x, int y, int screenWidth, int screenHeight) {
+        internal static void Draw(SpriteBatch spriteBatch,
+            int x,  // the game coordinates of the player's ship (not view coords)
+            int y, 
+            int screenWidth, 
+            int screenHeight)
+        {
             foreach (TiledTexture texture in textures)
-                texture.Draw(spriteBatch,-x, -y, screenWidth, screenHeight); // use negative of player location so that the textures move the opposite way.
+            {
+                // Draw texture using negative of player coords, so that the textures move in the opposite direction
+                texture.Draw(spriteBatch, -x, -y, screenWidth, screenHeight);
+            }
         }
     }
 }

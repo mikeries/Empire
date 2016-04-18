@@ -10,19 +10,19 @@ namespace Empire.Model
     class Asteroid : Entity
     {
 
-        public int Stage { get; set; }  // track how many times this rock can split, also influences score value.
-        public int rollRate { get; set; }
-        public int Style { get; set; }  // which type of asteroid this is... mostly texture now, but might also be linked to score?
+        internal int Stage { get; set; }  // track how many times this rock can split, also influences score value.
+        internal float RollRate { get; set; }  // how rapidly it rotates
+        internal int Style { get; set; }  // which type of asteroid this is... mostly texture now, but might also be linked to score?
 
-        public Asteroid(int x, int y) : base (x, y) {
+        internal Asteroid(int x, int y) : base (x, y) {
             this.Status = Status.New;
             this.Orientation = (float)GameModel.Random.Next(0, 100);
-            rollRate = GameModel.Random.Next(-300, 300);
+            RollRate = GameModel.Random.Next(-300, 300) / 100f;
         }
 
-        public override void Update(GameTime gameTime)
+        internal override void Update(GameTime gameTime)
         {
-            this.Orientation += (float)(rollRate / 100f * Math.PI/18000*gameTime.ElapsedGameTime.TotalMilliseconds);
+            this.Orientation += (float)(RollRate * Math.PI/18000*gameTime.ElapsedGameTime.TotalMilliseconds);
             base.Update(gameTime);
         }
 

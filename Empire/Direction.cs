@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Empire
 {
+    // Directions are used for handling input keys
     enum Direction
     {
         Right,

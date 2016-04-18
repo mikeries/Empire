@@ -66,6 +66,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CanvasLayer.cs" />
     <Compile Include="Circle.cs" />
     <Compile Include="EntityTypes.cs" />
     <Compile Include="Model\Asteroid.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="View\Animation.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Model\Entity.cs" />
+    <Compile Include="View\GraphicalUserInterface.cs" />
     <Compile Include="View\IGUIElement.cs" />
     <Compile Include="View\StatusBar.cs" />
     <Compile Include="View\TextBlock.cs" />

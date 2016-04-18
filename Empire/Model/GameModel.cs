@@ -56,7 +56,7 @@ namespace Empire.Model
             for (int i = 0; i < 4000; i++)
             {
                 _gameEntities.Add(ModelHelper.AsteroidFactory(GameModel.Random.Next(View.Game.PlayArea.Left, View.Game.PlayArea.Right), GameModel.Random.Next(View.Game.PlayArea.Left, View.Game.PlayArea.Right)) as Entity);
-                _gameEntities[_gameEntities.Count - 1].setVelocity(new Vector2(GameModel.Random.Next(-300, 300)/100, Random.Next(-300, 300)/100));
+                _gameEntities[_gameEntities.Count - 1].Velocity = new Vector2(GameModel.Random.Next(-300, 300)/100, Random.Next(-300, 300)/100);
             }
 
         }
@@ -84,7 +84,7 @@ namespace Empire.Model
             var asteroids =
                 from entity in _gameEntities
                 where (entity is Asteroid && (entity.BoundingCircle.Center - _player.BoundingCircle.Center).Length() < 700)
-                orderby entity.X
+                orderby entity.Location.X
                 select entity;
 
             // next loop through again doing collision detection
@@ -114,24 +114,24 @@ namespace Empire.Model
                 for (int i = 0; i < Random.Next(3, 5); i++)
                 {
                     // TODO: move this stuff elsewhere
-                    Asteroid newAsteroid = new Asteroid((int)asteroid.X, (int)asteroid.Y);
+                    Asteroid newAsteroid = new Asteroid((int)asteroid.Location.X, (int)asteroid.Location.Y);
                     float randomX = asteroid.Velocity.X + (float)Random.Next(-2000, 2000) / 1000;
                     float randomY = asteroid.Velocity.Y + (float)Random.Next(-2000, 2000) / 1000;
                     Vector2 vector = new Vector2(randomX, randomY);
-                    newAsteroid.setVelocity(vector);
+                    newAsteroid.Velocity=vector;
                     int newSize = Random.Next(25, 75) * asteroid.Height / 100;
                     if (newSize < 20) newSize = 20;
                     newAsteroid.Height = newSize;
                     newAsteroid.Width = newSize;
                     newAsteroid.Stage = asteroid.Stage - 1;
-                    newAsteroid.rollRate = Random.Next(-(100000 / newSize), (100000 / newSize));
+                    newAsteroid.RollRate = Random.Next(-(1000 / newSize), (1000 / newSize));
                     newAsteroid.Style = asteroid.Style;
                     _gameEntities.Add(newAsteroid);
                 }
             }
             asteroid.Status = Status.Dead;
 
-            if (entity is Player && ((_player.visualState & (int)VisualStates.Shields)==0))
+            if (entity is Player && (((int)_player.visualState & (int)VisualStates.Shields)==0))
             {
                 _score -= 100;
             } else if (!(entity is Player))
@@ -154,7 +154,7 @@ namespace Empire.Model
                 previousKeyboardState = currentKeyboardState;
                 currentKeyboardState = Keyboard.GetState();
 
-                _player.visualState = 1; // reset visual state
+                _player.visualState = VisualStates.Idle; // reset visual state
 
                 if (currentKeyboardState.IsKeyDown(Keys.Left)) _player.RotateShip(Direction.Left, _elapsedTime);
                 if (currentKeyboardState.IsKeyDown(Keys.Right)) _player.RotateShip(Direction.Right, _elapsedTime);

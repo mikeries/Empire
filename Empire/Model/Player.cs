@@ -15,26 +15,24 @@ namespace Empire.Model
         private static float engineThrust = 0.01f;
         private const int timeBetweenShots = 40;
         internal int shieldEnergy = 100;
-        
-        public Player(int x, int y) : base(x,y)
+
+        internal Player(int x, int y) : base(x,y)
         {
-            _velocity = new Vector2(0.0001f, 0);
+            Velocity = new Vector2(0.0001f, 0);
             this.Type = EntityType.Ship;
         }
 
-        public override void Update(GameTime gameTime)
+        internal override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
         }
 
-        public void Initialize()
+        internal void Initialize()
         {
-            _x = 0;
-            _y = 0;
-            _velocity = new Vector2(0.0001f, 0);
+            Location = new Vector2(0, 0);
+            Velocity = new Vector2(0.0001f, 0);
         }
 
-        // TODO: need to scale by gameTime
         public void RotateShip(Direction direction,int elapsedTime) {
             switch (direction)
             {
@@ -49,15 +47,17 @@ namespace Empire.Model
             switch (direction)
             {
                 case Direction.Up:
-                    visualState |= (int)VisualStates.Thrusting;
+                    visualState |= VisualStates.Thrusting;
                     Vector2 acceleration = thrustVector(engineThrust*elapsedTime, Orientation);
-                    _velocity = _velocity + acceleration;
-                    if (Speed > MaxSpeed) Speed = MaxSpeed;
+                    Velocity = Velocity + acceleration;
+                    if (Speed > MaxSpeed)
+                    {
+                        Speed = MaxSpeed;
+                    }
                     break;
                 case Direction.Down:
                     if (shieldEnergy > 0)
-                        visualState |= (int)VisualStates.Shields;
-                   // Speed = 0.00001f;
+                        visualState |= VisualStates.Shields;
                     break;
                 default: break;
             }
@@ -67,11 +67,11 @@ namespace Empire.Model
         public Entity Fire(GameTime gameTime)
         {
             Laser laser = new Laser();
-            laser.Location = new Vector2(this.X, this.Y);
+            laser.Location = new Vector2(Location.X, Location.Y);
             laser.Height = 3;
             laser.Width = 3;
-            laser.Orientation = this.Orientation;
-            laser.setVelocity(_velocity + thrustVector(10,Orientation));
+            laser.Orientation = Orientation;
+            laser.Velocity = Velocity + thrustVector(10,Orientation);
             laser.Update(gameTime);
             return laser;
         }

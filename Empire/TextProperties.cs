@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Empire
 {
+    // Not currently used.  Planned for text alignment in text boxes.
     enum TextProperties
     {
         Left,

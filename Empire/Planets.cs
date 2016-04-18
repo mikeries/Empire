@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Empire.Model
 {
+    // These are the names of the planets.  I need to come up with some more creative names...
     enum Planets
     {
         planet1,
@@ -24,6 +25,6 @@ namespace Empire.Model
         planet14,
         planet15,
         planet16,
-
+        Count,
     }
 }

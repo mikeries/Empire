@@ -11,11 +11,13 @@ namespace Empire.View
 {
     static class ViewHelper
     {
-        public static Dictionary<string, Animation> _templates = new Dictionary<string, Animation>();
+        private static Dictionary<string, Animation> _templates = new Dictionary<string, Animation>();
         private static Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
         private static Dictionary<string, SpriteFont> _fonts = new Dictionary<string, SpriteFont>();
 
-        public static List<Animation> AnimationFactory(Entity entity) {
+        //TODO: read animations from config file
+        internal static List<Animation> AnimationFactory(Entity entity)
+        {
             List<Animation> animationCollection = new List<Animation>();
             Animation animation;
 
@@ -23,26 +25,22 @@ namespace Empire.View
             if (entity is Player)
             {
                 animation = _templates["player"].Clone();
-                animation.Zorder = 0.4f; // top... TODO: create enum for the various layers?
                 animationCollection.Add(animation);
 
                 animation = _templates["shipThrusting"].Clone();
-                animation.Zorder = 0.4f;
                 animationCollection.Add(animation);
 
                 animation = _templates["shieldStrip"].Clone();
-                animation.Zorder = 0.4f;
                 animationCollection.Add(animation);
 
                 return animationCollection;
             }
-            if (entity is Planet) {
+            if (entity is Planet)
+            {
                 Planet planet = entity as Planet;
 
                 animation = _templates["planet"].Clone();
-                animation.SpriteStrip = _textures[planet.planetID.ToString()];
-                animation.scale = (float)planet.Height / 245;  // 245 is the height/width of the planet texture.
-                animation.Zorder = 0.1f;
+                animation.Scale = (float)planet.Height / _textures["planet1"].Height;
                 animationCollection.Add(animation);
                 return animationCollection;
             }
@@ -51,8 +49,7 @@ namespace Empire.View
             {
                 Asteroid asteroid = entity as Asteroid;
                 animation = _templates["asteroid" + asteroid.Style].Clone();
-                animation.scale = (float)entity.Height / 150;  // ~150 is the height/width of the asteroid texture.
-                animation.Zorder = 0.3f;
+                animation.Scale = (float)entity.Height / _textures["asteroid" + asteroid.Style].Height;
                 animationCollection.Add(animation);
                 return animationCollection;
             }
@@ -60,22 +57,25 @@ namespace Empire.View
             if (entity is Laser)
             {
                 animation = _templates["laser"].Clone();
-                animation.Zorder = 0.4f;
                 animationCollection.Add(animation);
                 return animationCollection;
             }
 
+            // if we reach here, it is an error, so log it and throw an exception
             return null;
         }
 
-        public static Vector2 translateModelCoordsToViewCoords(int x, int y, Vector2 playerLocation)
+        // determine view coordinates based on the model coords of the entity relative to the player
+        internal static Vector2 TranslateModelCoordsToViewCoords(Vector2 entityLocation, Vector2 playerLocation)
         {
-            return new Vector2(x - playerLocation.X + 640, y  - playerLocation.Y + 360);
+            // return new Vector2(x - playerLocation.X + Game.ViewCenter.X, y - playerLocation.Y + Game.ViewCenter.Y);
+            return entityLocation - playerLocation + Game.ViewCenter;
         }
 
         // load the textures and create the animation templates
-        // TODO:  Add error handling (and eventually read from config files)
-        public static void LoadContent(ContentManager content)
+        // TODO: Add error handling
+        // TODO: read data from config files
+        internal static void LoadContent(ContentManager content)
         {
             _textures.Add("texture1x1", content.Load<Texture2D>("Graphics/texture1x1"));  // simple 1x1 texture used for line drawing
             _textures.Add("ship", content.Load<Texture2D>("Graphics/ship"));
@@ -105,18 +105,18 @@ namespace Empire.View
             _fonts.Add("Score24", content.Load<SpriteFont>("Score24"));
             _fonts.Add("Arial12", content.Load<SpriteFont>("Arial12"));
 
-            _templates.Add("player",new Animation(_textures["ship"], 64, 64, 1, 50, true));
-            _templates.Add("shipThrusting", new Animation(_textures["shipThrusting"], 64, 64, 4, 50, true));
-            _templates.Add("shieldStrip", new Animation(_textures["shieldStrip"], 87, 87, 4, 50, true));
-            _templates.Add("planet", new Animation(_textures["planet1"], 
-                _textures["planet1"].Width, _textures["planet1"].Height, 1, 1000, true));
-            _templates.Add("asteroid1", new Animation(_textures["asteroid1"], _textures["asteroid1"].Width, _textures["asteroid1"].Height, 1, 100, true));
-            _templates.Add("asteroid2", new Animation(_textures["asteroid2"], _textures["asteroid2"].Width, _textures["asteroid2"].Height, 1, 100, true));
-            _templates.Add("asteroid3", new Animation(_textures["asteroid3"], _textures["asteroid3"].Width, _textures["asteroid3"].Height, 1, 100, true));
-            _templates.Add("laser", new Animation(_textures["laser"], _textures["laser"].Width, _textures["laser"].Height, 1, 100, true));
+            _templates.Add("player", new Animation(_textures["ship"], 64, 64, 1, 50, true, CanvasLayer.Ship));
+            _templates.Add("shipThrusting", new Animation(_textures["shipThrusting"], 64, 64, 4, 50, true, CanvasLayer.Ship));
+            _templates.Add("shieldStrip", new Animation(_textures["shieldStrip"], 87, 87, 4, 50, true, CanvasLayer.Ship));
+            _templates.Add("planet", new Animation(_textures["planet1"],
+                 _textures["planet1"].Width, _textures["planet1"].Height, 1, 1000, true, CanvasLayer.Planet));
+            _templates.Add("asteroid1", new Animation(_textures["asteroid1"], _textures["asteroid1"].Width, _textures["asteroid1"].Height, 1, 100, true, CanvasLayer.Asteroid));
+            _templates.Add("asteroid2", new Animation(_textures["asteroid2"], _textures["asteroid2"].Width, _textures["asteroid2"].Height, 1, 100, true, CanvasLayer.Asteroid));
+            _templates.Add("asteroid3", new Animation(_textures["asteroid3"], _textures["asteroid3"].Width, _textures["asteroid3"].Height, 1, 100, true, CanvasLayer.Asteroid));
+            _templates.Add("laser", new Animation(_textures["laser"], _textures["laser"].Width, _textures["laser"].Height, 1, 100, true, CanvasLayer.Laser));
         }
 
-        public static void UnloadContent()
+        internal static void UnloadContent()
         {
             foreach (string textureName in _textures.Keys.ToList())
             {
@@ -125,25 +125,40 @@ namespace Empire.View
             }
         }
 
-        public static void DrawLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end)
-        {
-            Vector2 line = end - start;
-            float angleToRotate =(float)Math.Atan2(line.Y, line.X);
+        // currently not used
+        //private static void DrawLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end)
+        //{
+        //    Vector2 line = end - start;
+        //    float angleToRotate =(float)Math.Atan2(line.Y, line.X);
 
+        //    spriteBatch.Draw(_textures["texture1x1"],
+        //        new Rectangle((int)start.X,(int)start.Y, (int)line.Length(), 1), 
+        //        null, 
+        //        Color.White, 
+        //        angleToRotate, 
+        //        new Vector2(0, 0),  // rotation origin
+        //        SpriteEffects.None, 
+        //        0
+        //    );
+        //}
+
+        // DrawRectangle method stretches a 1x1 texture into the specified length and width
+        // used for StatusBars
+        internal static void DrawRectangle(SpriteBatch spriteBatch, Rectangle rect, Color color)
+        {
             spriteBatch.Draw(_textures["texture1x1"],
-                new Rectangle((int)start.X,(int)start.Y, (int)line.Length(), 1), 
-                null, Color.White, angleToRotate, new Vector2(0, 0), SpriteEffects.None, 0);
-
-        }
-
-        public static void DrawRectangle(SpriteBatch spriteBatch,Rectangle rect, Color color)
-        {
-
-            spriteBatch.Draw(_textures["texture1x1"], rect, null, color, 0, new Vector2(0, 0), SpriteEffects.None, 0);
+                rect,
+                null,
+                color,
+                0,
+                new Vector2(0, 0),
+                SpriteEffects.None,
+                0
+            );
         }
 
         // TODO: add error checking.  Maybe return a default font?
-        public static SpriteFont GetFont(string font)
+        internal static SpriteFont GetFont(string font)
         {
             return _fonts[font];
         }

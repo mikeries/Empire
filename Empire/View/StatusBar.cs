@@ -11,7 +11,7 @@ namespace Empire.View
     // Displays a bar that fills from left to right based on the Value, which is a percentage 
     // of the max (0 to 1f)
 
-    class StatusBar : IGUIElement
+    internal class StatusBar : IGUIElement
     {
         public string Name { get; set; }
         public bool Visible { get; set; }
@@ -38,7 +38,7 @@ namespace Empire.View
             ViewHelper.DrawRectangle(spriteBatch, new Rectangle((int)ViewportLocation.X, (int)ViewportLocation.Y, (int)(Width*Value), Height), ForeColor);
         }
 
-        public void Initialize()
+        public void LoadContent()
         {
             
         }

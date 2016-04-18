@@ -8,13 +8,15 @@ using System.Threading.Tasks;
 
 namespace Empire.View
 {
+    // Interface for the top-level GUI elements.
+    // Textboxes, StatusBars, minimap, etc.
     interface IGUIElement
     {
         bool Visible { get; set; }
         string Name { get; set; }
 
         void Update(GameTime gameTime);
-        void Initialize();
         void Draw(SpriteBatch spriteBatch);
+        void LoadContent();
     }
 }

@@ -13,12 +13,13 @@ namespace Empire.View
     {
         public bool Visible { get; set; }
         public string Text { get; set; }
-        private SpriteFont _font;
-        private string _fontName;
-        private Vector2 ViewportLocation;
         public string Name { get; set; }
         public Color Color{ get; set; }
         public TextProperties TextAlignment = TextProperties.Left;
+
+        private SpriteFont _font;
+        private string _fontName;
+        private Vector2 ViewportLocation;
 
         public TextBlock(string name, string fontName, int x = 0, int y = 0)
         {
@@ -40,7 +41,7 @@ namespace Empire.View
             spriteBatch.DrawString(_font, formattedText, new Vector2((int)ViewportLocation.X, (int)ViewportLocation.Y), Color);
         }
 
-        public void Initialize()
+        public void LoadContent()
         {
             _font = ViewHelper.GetFont(_fontName);
         }

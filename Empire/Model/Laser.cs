@@ -8,9 +8,11 @@ namespace Empire.Model
 {
     class Laser : Entity
     {
+        const int Lifetime = 800; // how long a laser bullet lasts, in milliseconds
+
         public Laser()
         {
-            this.timeToLive = 800;
+            this.timeToLive = Lifetime;
             this.Type = EntityType.Laser;
         }
     }

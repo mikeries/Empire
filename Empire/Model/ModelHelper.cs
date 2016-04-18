@@ -9,26 +9,34 @@ namespace Empire.Model
 {
     static class ModelHelper
     {
+        const int PlanetMinSize = 150;
+        const int PlanetMaxSize = 250;
+        const int AsteroidMinSize = 100;
+        const int AsteroidMaxSize = 200;
+        const int AsteroidInitialStage = 2;
+
         public static Entity PlanetFactory(int x, int y, Planets ID)
         {
             Planet newPlanet = new Planet(x, y, ID);
 
-            int size = GameModel.Random.Next(150, 250);
+            int size = GameModel.Random.Next(PlanetMinSize, PlanetMaxSize);
             newPlanet.Height = size;
             newPlanet.Width = size;
+
             return newPlanet;
         }
 
         public static Entity AsteroidFactory(int x, int y)
         {
-            Asteroid asteroid = new Asteroid(x, y);
+            Asteroid newAsteroid = new Asteroid(x, y);
 
-            int size = GameModel.Random.Next(100, 200);
-            asteroid.Height = size;
-            asteroid.Width = size;
-            asteroid.Stage = 2;
-            asteroid.Style = GameModel.Random.Next(1, 4);
-            return asteroid;
+            int size = GameModel.Random.Next(AsteroidMinSize, AsteroidMaxSize);
+            newAsteroid.Height = size;
+            newAsteroid.Width = size;
+            newAsteroid.Stage = AsteroidInitialStage;
+            newAsteroid.Style = GameModel.Random.Next(1, 4);
+
+            return newAsteroid;
         }
         
     }

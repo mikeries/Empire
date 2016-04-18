@@ -10,75 +10,125 @@ namespace Empire.Model
     class Entity
     {
 
-        public Vector2 Location   // location in game coords
+        private Vector2 _location = new Vector2(0,0);
+        internal Vector2 Location   // location in game coords
         {
-            get { return new Vector2(_x, _y); }
-            internal set { _x = value.X; _y = value.Y; }
+            get
+            {
+                return _location;
+            }
+            set
+            {
+                _location.X = value.X;
+                _location.Y = value.Y;
+            }
         }
-        protected float _x;
-        public float X { get { return _x; } }
-        protected float _y;
-        public float Y { get { return _y; } }
 
-        public Rectangle BoundingBox { get { return new Rectangle((int)_x-Width/2, (int)_y - Height/2, Width, Height); } }
-        public int Height { get; set; }
-        public int Width { get; set; }
+        // Height and Width specify the dimensions of the entity
+        // Bounding Circle needs to be updated whenever they change
+        private int _height;
+        internal int Height
+        {
+            get
+            {
+                return _height;
+            }
+            set
+            {
+                _height = value;
+                _boundingCircle.Radius = (_height + _width) / 4;
+            }
+        }
+        private int _width;
+        internal int Width
+        {
+            get
+            {
+                return _width;
+            }
+            set
+            {
+                _width = value;
+                _boundingCircle.Radius = (_height + _width) / 4;
+            }
+        }
+        
+        private Circle _boundingCircle = new Circle(new Vector2(0,0), 0);
+        internal Circle BoundingCircle
+        {
+            get
+            {
+                return _boundingCircle;
+            }
+        }
 
-        public Circle BoundingCircle { get { return new Circle(Location, (Width+Height)/4);} }
+        private Vector2 _velocity;
+        internal Vector2 Velocity
+        {
+            get { return _velocity; }
+            set { _velocity = value; }
+        }
 
-        internal Vector2 _velocity;
-        internal Vector2 Velocity { get { return _velocity; } }
         internal double Speed {
             get { return _velocity.Length(); }
             set { _velocity = Vector2.Normalize(_velocity) * (float)value; }
         }
 
         private float _orientation;
-        public float Orientation
+        internal float Orientation
         {
             get { return _orientation; }
-            internal set { _orientation = value; }
+            set { _orientation = value; }
         }
 
-        public Status Status { get; set; } // active, dead, new (unitialized), or disposable (can be removed)
-        public int visualState { get; set; } // used to tell the view what animations to show
+        internal Status Status { get; set; } // active, dead, new (unitialized), or disposable (can be removed)
+        internal VisualStates visualState { get; set; } // used to tell the view what animations to show
+        internal EntityType Type { get; set; }
 
-        public int timeToLive { get; set; }
-        private int _elapsedTime=0;
+        internal int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
+        private int _elapsedTime = 0;           // accumulates how much time has passed since the object spawned
 
-        public EntityType Type { get; internal set; }
-
-        internal Entity(int x=0, int y=0)
+        internal Entity(float x=0, float y=0)
         {
-            _x = x;
-            _y = y;
+            _location.X = x;
+            _location.Y = y;
             Status = Status.New;
-            visualState = 1;
-        }
-
-        internal void setVelocity(Vector2 velocity)
-        {
-            _velocity = velocity;
+            visualState = VisualStates.Idle;
         }
 
         internal void Rotate(float radians)
         {
-            // _velocity = Vector2.Transform(_velocity, Matrix.CreateRotationZ(radians));
             _orientation += radians;
         }
 
-        public void Move(GameTime gameTime)
+        internal void Move(GameTime gameTime)
         {
-            _x = (float)(_x+ _velocity.X * gameTime.ElapsedGameTime.TotalMilliseconds / 10);
-            if (_x < View.Game.PlayArea.Left) _x += View.Game.PlayArea.Width;
-            if (_x > View.Game.PlayArea.Right) _x -= View.Game.PlayArea.Width;
-            _y = (float)(_y+_velocity.Y * gameTime.ElapsedGameTime.TotalMilliseconds / 10);
-            if (_y < View.Game.PlayArea.Top) _y += View.Game.PlayArea.Height;
-            if (_y > View.Game.PlayArea.Bottom) _y -= View.Game.PlayArea.Height;
+            _location.X = (float)(_location.X + _velocity.X * gameTime.ElapsedGameTime.TotalMilliseconds / 10);
+            if (_location.X < View.Game.PlayArea.Left)
+            {
+                _location.X += View.Game.PlayArea.Width;
+            }
+            else if (_location.X > View.Game.PlayArea.Right)
+            {
+                _location.X -= View.Game.PlayArea.Width;
+            }
 
+            _location.Y = (float)(_location.Y + _velocity.Y * gameTime.ElapsedGameTime.TotalMilliseconds / 10);
+            if (_location.Y < View.Game.PlayArea.Top)
+            {
+                _location.Y += View.Game.PlayArea.Height;
+            }
+            else if (_location.Y > View.Game.PlayArea.Bottom)
+            {
+                _location.Y -= View.Game.PlayArea.Height;
+            }
+
+            _boundingCircle.Center = _location;
         }
 
-        public virtual void Update(GameTime gameTime) {
+        // accumulate age in milliseconds, and delete the object if beyond its timeToLive
+        // then move the object
+        internal virtual void Update(GameTime gameTime) {
             _elapsedTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
             if (timeToLive > 0 && _elapsedTime > timeToLive)
             {

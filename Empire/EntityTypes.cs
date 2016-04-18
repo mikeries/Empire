@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Empire
 {
+    // Enumerates the various entities that exist
     enum EntityType
     {
         Asteroid,

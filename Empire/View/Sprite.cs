@@ -52,7 +52,10 @@ namespace Empire.View
                 entityState >>= 1;
 
                 // break early if there aren't any more bits set
-                if (entityState == 0) break;
+                if (entityState == 0)
+                {
+                    break;
+                }
             }
 
         }

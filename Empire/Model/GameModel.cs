@@ -10,6 +10,8 @@ namespace Empire.Model
 {
     class GameModel
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private List<Entity> _gameEntities = new List<Entity>();
         public List<Entity> GameEntities { get { return _gameEntities; } }
         private Player _player;
@@ -18,10 +20,15 @@ namespace Empire.Model
 
         KeyboardState currentKeyboardState;
         KeyboardState previousKeyboardState;
+
         private int _elapsedTime;
         private int _timeSinceLastShot;
-        private int millisecondsPerRotation = 10;
-        private const int millisecondsPerShot = 100;
+        private const int millisecondsPerRotation = 10;     // minimum number of ms between rotations
+        private const int millisecondsPerShot = 70;         // minimum number of ms between shots
+        private const float ShieldDecayRate = 0.25f;        // shield decay rate per millisecond
+        private const float ShieldRegenerationRate = 0.1f;  // shield regen rate per millisecond
+        private const int CollisionCheckRange = 700;        // Objects must be at least this close to the player for collision checks
+
         private int _score=0;
         private int _timeRemaining;
 
@@ -43,17 +50,17 @@ namespace Empire.Model
             _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet5) as Entity);
             _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet6) as Entity);
             _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet7) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet8) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet9) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet10) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet11) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet12) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet13) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet14) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet15) as Entity);
-            //_gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(-1000, 1000), GameModel.Random.Next(-1000, 1000), Planets.planet16) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet8) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet9) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet10) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet11) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet12) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet13) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet14) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet15) as Entity);
+            _gameEntities.Add(ModelHelper.PlanetFactory(GameModel.Random.Next(10000, 30000), GameModel.Random.Next(10000, 30000), Planets.planet16) as Entity);
 
-            for (int i = 0; i < 4000; i++)
+            for (int i = 0; i < 8000; i++)
             {
                 _gameEntities.Add(ModelHelper.AsteroidFactory(GameModel.Random.Next(View.Game.PlayArea.Left, View.Game.PlayArea.Right), GameModel.Random.Next(View.Game.PlayArea.Left, View.Game.PlayArea.Right)) as Entity);
                 _gameEntities[_gameEntities.Count - 1].Velocity = new Vector2(GameModel.Random.Next(-300, 300)/100, Random.Next(-300, 300)/100);
@@ -63,7 +70,7 @@ namespace Empire.Model
 
         private static bool Collision(Circle c1, Circle c2)
         {
-            return ((c1.Center - c2.Center).Length() < (c1.Radius + c2.Radius-1));  // the -1 is a fudge factor to be sure they actually collided.
+            return ((c1.Center - c2.Center).Length() < (c1.Radius + c2.Radius-1));
         }
 
         public void Update(GameTime gameTime)
@@ -77,20 +84,21 @@ namespace Empire.Model
                 else entity.Update(gameTime);
             }
 
-            //// Use LINQ to pull out only the asteroids and check them against the non-asteroids.
-            // also only selects those asteroids within 700 away from the player
+            // Pull out only the asteroids and check them against the non-asteroids.
+            // also only selects those asteroids within CollisionCheckRange away from the player
             // this makes collision detection faster, but assumes that all collisionable objects (lasers and the ship) are
             // within this distance.
             var asteroids =
                 from entity in _gameEntities
-                where (entity is Asteroid && (entity.BoundingCircle.Center - _player.BoundingCircle.Center).Length() < 700)
-                orderby entity.Location.X
+                where (entity is Asteroid && 
+                    (entity.BoundingCircle.Center - _player.BoundingCircle.Center).Length() < CollisionCheckRange)
                 select entity;
 
             // next loop through again doing collision detection
             foreach (Entity entity in _gameEntities.ToList())
             {
-                if (entity.Type != EntityType.Asteroid && entity.Type != EntityType.Planet) // non-asteroids can only collide with asteroids
+                if (entity.Type != EntityType.Asteroid && 
+                    entity.Type != EntityType.Planet) // non-asteroids can only collide with asteroids
                 {
                     foreach(Entity asteroid in asteroids.ToList())
                     {
@@ -105,42 +113,40 @@ namespace Empire.Model
             HandleInputs(gameTime);
         }
 
-        private void HandleCollision(Entity entity, Entity struckAsteroid)
+        private void HandleCollision(Entity entity, Entity entityThatCollided)
         {
-            Asteroid asteroid = struckAsteroid as Asteroid;
 
-            if (asteroid.Stage > 0)
+            if (entityThatCollided is Asteroid)
             {
-                for (int i = 0; i < Random.Next(3, 5); i++)
+                Asteroid asteroid = entityThatCollided as Asteroid;
+
+                if (asteroid.Stage > 0)
                 {
-                    // TODO: move this stuff elsewhere
-                    Asteroid newAsteroid = new Asteroid((int)asteroid.Location.X, (int)asteroid.Location.Y);
-                    float randomX = asteroid.Velocity.X + (float)Random.Next(-2000, 2000) / 1000;
-                    float randomY = asteroid.Velocity.Y + (float)Random.Next(-2000, 2000) / 1000;
-                    Vector2 vector = new Vector2(randomX, randomY);
-                    newAsteroid.Velocity=vector;
-                    int newSize = Random.Next(25, 75) * asteroid.Height / 100;
-                    if (newSize < 20) newSize = 20;
-                    newAsteroid.Height = newSize;
-                    newAsteroid.Width = newSize;
-                    newAsteroid.Stage = asteroid.Stage - 1;
-                    newAsteroid.RollRate = Random.Next(-(1000 / newSize), (1000 / newSize));
-                    newAsteroid.Style = asteroid.Style;
-                    _gameEntities.Add(newAsteroid);
+                    for (int i = 0; i < Random.Next(3, 5); i++)
+                    {
+                        _gameEntities.Add(asteroid.childAsteroid());
+                    }
                 }
-            }
-            asteroid.Status = Status.Dead;
+                asteroid.Status = Status.Dead;
 
-            if (entity is Player && (((int)_player.visualState & (int)VisualStates.Shields)==0))
-            {
-                _score -= 100;
-            } else if (!(entity is Player))
-            {
-                entity.Status = Status.Dead;
-                _score += 10*(asteroid.Stage+1);
+                if (entity is Player && ShieldsAreDown())
+                {
+                    _score -= 100;
+                }
+                else if (!(entity is Player))
+                {
+                    {
+                        entity.Status = Status.Dead;
+                        _score += 10 * (asteroid.Stage + 1);
+                    }
+                }
+                OnGameChanged("score", _score);
             }
+        }
 
-            OnGameChanged("score",_score);
+        private bool ShieldsAreDown()
+        {
+            return ((int)_player.visualState & (int)VisualStates.Shields) == 0;
         }
 
         public void HandleInputs(GameTime gameTime)
@@ -162,12 +168,12 @@ namespace Empire.Model
 
                 if (currentKeyboardState.IsKeyDown(Keys.Down))
                 {
-                    _player.shieldEnergy -= (int)(_elapsedTime/4f);
-                    if (_player.shieldEnergy > 1)_player.AccelerateShip(Direction.Down, _elapsedTime);
+                    _player.ShieldEnergy -= (int)(_elapsedTime*ShieldDecayRate);
+                    if (_player.ShieldEnergy > 1)_player.AccelerateShip(Direction.Down, _elapsedTime);
                 }
-                _player.shieldEnergy += (int)(_elapsedTime / 10f);
-                _player.shieldEnergy = MathHelper.Clamp(_player.shieldEnergy, 0, 100);
-                OnGameChanged("shieldEnergy", _player.shieldEnergy);
+                _player.ShieldEnergy += (int)(_elapsedTime * ShieldRegenerationRate);
+                _player.ShieldEnergy = MathHelper.Clamp(_player.ShieldEnergy, 0, 100);
+                OnGameChanged("shieldEnergy", _player.ShieldEnergy);
 
                 if (currentKeyboardState.IsKeyDown(Keys.Space))
                 {

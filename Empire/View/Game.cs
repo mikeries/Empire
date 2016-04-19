@@ -6,14 +6,14 @@ using Empire.Model;
 using System.Linq;
 using System;
 
-// TODO: Move all the GUI initialization stuff into a new Class with all the related GUI stuff
-// needed to maintain level of abstraction in the Game() class and keep focus on game control
 // TODO: Move the spites into a class of their own for the same reason
 
 namespace Empire.View
 {
     public class Game : Microsoft.Xna.Framework.Game
     {
+        private static readonly log4net.ILog log = 
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         internal static Rectangle PlayArea = new Rectangle(0, 0, 40000, 40000);
         internal static Vector2 WindowSize = new Vector2(1280f, 760f);
         internal static Vector2 ViewCenter = new Vector2(WindowSize.X/2, WindowSize.Y/2);
@@ -38,7 +38,6 @@ namespace Empire.View
             _gui = new GraphicalUserInterface(this, _model);
 
             Content.RootDirectory = "Content";
-
         }
 
         protected override void Initialize()

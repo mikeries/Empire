@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Empire.Model
 {
+    // Events fired by the model are simply a property and a value.
     class GameEventArgs : EventArgs
     {
         public int Value { get; private set; }

@@ -13,6 +13,9 @@ namespace Empire.View
 
     internal class StatusBar : IGUIElement
     {
+
+        private const int DefaultHeight = 4;
+        private const int DefaultWidth = 100;
         public string Name { get; set; }
         public bool Visible { get; set; }
         public int Width { get; set; }  // length of a 'full' bar, in viewport pixels
@@ -27,15 +30,19 @@ namespace Empire.View
             Name = name;
             ViewportLocation.X = x;
             ViewportLocation.Y = y;
-            Height = 4;  // default value
-            Width = 100; // default value
+            Height = DefaultHeight;
+            Width = DefaultWidth;
             Value = 1f;
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            ViewHelper.DrawRectangle(spriteBatch, new Rectangle((int)ViewportLocation.X, (int)ViewportLocation.Y, Width, Height), BackColor);
-            ViewHelper.DrawRectangle(spriteBatch, new Rectangle((int)ViewportLocation.X, (int)ViewportLocation.Y, (int)(Width*Value), Height), ForeColor);
+            ViewHelper.DrawRectangle(spriteBatch, 
+                new Rectangle((int)ViewportLocation.X, (int)ViewportLocation.Y, Width, Height),
+                BackColor);
+            ViewHelper.DrawRectangle(spriteBatch, 
+                new Rectangle((int)ViewportLocation.X, (int)ViewportLocation.Y, (int)(Width*Value), Height), 
+                ForeColor);
         }
 
         public void LoadContent()

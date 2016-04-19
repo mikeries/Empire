@@ -126,7 +126,7 @@ namespace Empire.Model
             _boundingCircle.Center = _location;
         }
 
-        // accumulate age in milliseconds, and delete the object if beyond its timeToLive
+        // accumulate age in milliseconds, and mark the object for removal if beyond its timeToLive
         // then move the object
         internal virtual void Update(GameTime gameTime) {
             _elapsedTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;

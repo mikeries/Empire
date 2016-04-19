@@ -15,7 +15,10 @@ namespace Empire.View
     // status bars, text boxes, minimap, etc.
     class GraphicalUserInterface
     {
-        // private collection of gui elements
+        private static readonly log4net.ILog log =
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        
+        // collection of gui elements
         private Dictionary<string, IGUIElement> _gui = new Dictionary<string, IGUIElement>();
         private Game _gameManager;
 
@@ -115,6 +118,10 @@ namespace Empire.View
                             _gui["gameOver"].Visible = true;
                         }
                         break;
+                    default:
+                        log.Warn("GameModel threw unknown event.");
+                        break;
+                        
                 } // case
             } // if
         }

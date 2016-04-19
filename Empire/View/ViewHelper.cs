@@ -11,6 +11,9 @@ namespace Empire.View
 {
     static class ViewHelper
     {
+        private static readonly log4net.ILog log =
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private static Dictionary<string, Animation> _templates = new Dictionary<string, Animation>();
         private static Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
         private static Dictionary<string, SpriteFont> _fonts = new Dictionary<string, SpriteFont>();
@@ -62,6 +65,7 @@ namespace Empire.View
             }
 
             // if we reach here, it is an error, so log it and throw an exception
+            log.Error("Unable to create sprite -- unknown entity in the collection.");
             return null;
         }
 
@@ -114,6 +118,8 @@ namespace Empire.View
             _templates.Add("asteroid2", new Animation(_textures["asteroid2"], _textures["asteroid2"].Width, _textures["asteroid2"].Height, 1, 100, true, CanvasLayer.Asteroid));
             _templates.Add("asteroid3", new Animation(_textures["asteroid3"], _textures["asteroid3"].Width, _textures["asteroid3"].Height, 1, 100, true, CanvasLayer.Asteroid));
             _templates.Add("laser", new Animation(_textures["laser"], _textures["laser"].Width, _textures["laser"].Height, 1, 100, true, CanvasLayer.Laser));
+
+            log.Info("Textures loaded.");
         }
 
         internal static void UnloadContent()

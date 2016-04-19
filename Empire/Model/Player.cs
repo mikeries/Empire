@@ -11,15 +11,19 @@ namespace Empire.Model
 
     class Player : Entity
     {
-        private const double MaxSpeed = 5;
-        private static float engineThrust = 0.01f;
+        private const double MaxSpeed = 4;
+        private const float engineThrust = 0.01f;
         private const int timeBetweenShots = 40;
-        internal int shieldEnergy = 100;
+        private const float RotationRate = (float)Math.PI / 1000f;
+        private const float Stopped = 0.0001f;
 
-        internal Player(int x, int y) : base(x,y)
+        internal int ShieldEnergy { get; set; }
+
+        internal Player(float x, float y) : base(x,y)
         {
-            Velocity = new Vector2(0.0001f, 0);
+            Velocity = new Vector2(Stopped, 0);
             this.Type = EntityType.Ship;
+            ShieldEnergy = 100;
         }
 
         internal override void Update(GameTime gameTime)
@@ -30,14 +34,18 @@ namespace Empire.Model
         internal void Initialize()
         {
             Location = new Vector2(0, 0);
-            Velocity = new Vector2(0.0001f, 0);
+            Velocity = new Vector2(Stopped, 0);
         }
 
         public void RotateShip(Direction direction,int elapsedTime) {
             switch (direction)
             {
-                case Direction.Left: Rotate((float)Math.PI/1000*-1*elapsedTime); break;
-                case Direction.Right: Rotate((float)Math.PI/1000*elapsedTime); break;
+                case Direction.Left:
+                    Rotate(-1* RotationRate * elapsedTime);
+                    break;
+                case Direction.Right:
+                    Rotate(RotationRate * elapsedTime);
+                    break;
                 default: break;
             }
         }
@@ -48,7 +56,7 @@ namespace Empire.Model
             {
                 case Direction.Up:
                     visualState |= VisualStates.Thrusting;
-                    Vector2 acceleration = thrustVector(engineThrust*elapsedTime, Orientation);
+                    Vector2 acceleration = ModelHelper.thrustVector(engineThrust*elapsedTime, Orientation);
                     Velocity = Velocity + acceleration;
                     if (Speed > MaxSpeed)
                     {
@@ -56,29 +64,22 @@ namespace Empire.Model
                     }
                     break;
                 case Direction.Down:
-                    if (shieldEnergy > 0)
+                    if (ShieldEnergy > 0)
+                    {
                         visualState |= VisualStates.Shields;
+                    }
                     break;
-                default: break;
+                default:
+                    //TODO: Log this... it shouldn't happen
+                    break;
             }
         }
 
-        // TODO: need to move the details of laser spawning to ModelHelper
         public Entity Fire(GameTime gameTime)
         {
-            Laser laser = new Laser();
-            laser.Location = new Vector2(Location.X, Location.Y);
-            laser.Height = 3;
-            laser.Width = 3;
-            laser.Orientation = Orientation;
-            laser.Velocity = Velocity + thrustVector(10,Orientation);
+            Laser laser = ModelHelper.LaserFactory(this);
             laser.Update(gameTime);
             return laser;
-        }
-
-        private static Vector2 thrustVector(float thrust, float orientation)
-        {
-            return new Vector2(thrust * (float)Math.Sin(orientation), -thrust * (float)Math.Cos(orientation));
         }
 
     }

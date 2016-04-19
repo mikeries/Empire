@@ -32,7 +32,6 @@ namespace Empire.View
             Visible = true;
         }
 
-        // TODO:  Need to figure out the formatting... got frustrated, moving on for now.
         public void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;

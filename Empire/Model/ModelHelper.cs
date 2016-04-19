@@ -14,8 +14,10 @@ namespace Empire.Model
         const int AsteroidMinSize = 100;
         const int AsteroidMaxSize = 200;
         const int AsteroidInitialStage = 2;
+        const int LaserHeight = 3;
+        const int LaserWidth = 3;
 
-        public static Entity PlanetFactory(int x, int y, Planets ID)
+        internal static Entity PlanetFactory(float x, float y, Planets ID)
         {
             Planet newPlanet = new Planet(x, y, ID);
 
@@ -26,7 +28,7 @@ namespace Empire.Model
             return newPlanet;
         }
 
-        public static Entity AsteroidFactory(int x, int y)
+        internal static Entity AsteroidFactory(float x, float y)
         {
             Asteroid newAsteroid = new Asteroid(x, y);
 
@@ -38,6 +40,23 @@ namespace Empire.Model
 
             return newAsteroid;
         }
-        
+
+        internal static Laser LaserFactory(Player ship)
+        {
+            Laser laser = new Laser();
+            laser.Location = new Vector2(ship.Location.X, ship.Location.Y);
+            laser.Height = LaserHeight;
+            laser.Width = LaserWidth;
+            laser.Orientation = ship.Orientation;
+            laser.Velocity = ship.Velocity + thrustVector(15, ship.Orientation);
+
+            return laser;
+        }
+
+        internal static Vector2 thrustVector(float thrust, float orientation)
+        {
+            return new Vector2(thrust * (float)Math.Sin(orientation), -thrust * (float)Math.Cos(orientation));
+        }
+
     }
 }

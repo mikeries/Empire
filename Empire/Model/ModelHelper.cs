@@ -12,12 +12,14 @@ namespace Empire.Model
         const int PlanetMinSize = 150;
         const int PlanetMaxSize = 250;
         const int AsteroidMinSize = 100;
-        const int AsteroidMaxSize = 200;
+        const int AsteroidMaxSize = 150;
         const int AsteroidInitialStage = 2;
         const int LaserHeight = 3;
         const int LaserWidth = 3;
+        const float LaserSpeed = 1.0f;
 
-        internal static Entity PlanetFactory(float x, float y, Planets ID)
+        // create the specified planet at the requested location
+        internal static Planet SpawnPlanet(float x, float y, Planets ID)
         {
             Planet newPlanet = new Planet(x, y, ID);
 
@@ -28,7 +30,7 @@ namespace Empire.Model
             return newPlanet;
         }
 
-        internal static Entity AsteroidFactory(float x, float y)
+        internal static Asteroid SpawnAsteroid(float x, float y)
         {
             Asteroid newAsteroid = new Asteroid(x, y);
 
@@ -41,14 +43,14 @@ namespace Empire.Model
             return newAsteroid;
         }
 
-        internal static Laser LaserFactory(Player ship)
+        internal static Laser SpawnLaser(Ship ship)
         {
-            Laser laser = new Laser();
+            Laser laser = new Laser(ship);
             laser.Location = new Vector2(ship.Location.X, ship.Location.Y);
             laser.Height = LaserHeight;
             laser.Width = LaserWidth;
             laser.Orientation = ship.Orientation;
-            laser.Velocity = ship.Velocity + thrustVector(15, ship.Orientation);
+            laser.Velocity = ship.Velocity + thrustVector(LaserSpeed, ship.Orientation);
 
             return laser;
         }

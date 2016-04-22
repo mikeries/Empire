@@ -25,7 +25,7 @@ namespace Empire.View
             Animation animation;
 
             // Note:  Animations must be added to the collection in the right order, as they will be drawn in the order added.
-            if (entity is Player)
+            if (entity is Ship)
             {
                 animation = _templates["player"].Clone();
                 animationCollection.Add(animation);
@@ -44,6 +44,7 @@ namespace Empire.View
 
                 animation = _templates["planet"].Clone();
                 animation.Scale = (float)planet.Height / _textures["planet1"].Height;
+                //TODO: need to allow the texture to be set based on the planet ID.
                 animationCollection.Add(animation);
                 return animationCollection;
             }

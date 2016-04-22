@@ -6,7 +6,7 @@ using Empire.Model;
 using System.Linq;
 using System;
 
-// TODO: Move the spites into a class of their own for the same reason
+// TODO: Move the spites into a class of their own
 
 namespace Empire.View
 {
@@ -14,20 +14,24 @@ namespace Empire.View
     {
         private static readonly log4net.ILog log = 
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        internal static Rectangle PlayArea = new Rectangle(0, 0, 40000, 40000);
+        internal static Rectangle PlayArea = new Rectangle(0, 0, 20000, 20000);
         internal static Vector2 WindowSize = new Vector2(1280f, 760f);
         internal static Vector2 ViewCenter = new Vector2(WindowSize.X/2, WindowSize.Y/2);
-        internal static int GameTime = 1000 * 60 * 2;  // 2 minute timer in milliseconds
+        internal static int GameDuration = 1000 * 60 * 2;  // 2 minute timer in milliseconds
 
-        private bool _gameOver { get; set; }
-        public bool GameOver { get; set; }
+        internal bool GameOver { get; set; }
+        internal int Score { get { return _player.Score; } }
+        internal int ShieldEnergy { get { return _player.ShieldEnergy; } }
+        internal int TimeRemaining { get; set; }
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private GraphicalUserInterface _gui;
-        
-        private Model.GameModel _model = new Model.GameModel();
-        private Model.Player _player;
+        private AIComponent _ai = new AIComponent();
+
+        private int _shipIndex = 0;
+        private Model.Ship _player;
+        internal Model.Ship Player { get { return _player; } }
 
         private Dictionary<Entity, Sprite> _sprites = new Dictionary<Entity, Sprite>();
         private Dictionary<string, Animation> _animations = new Dictionary<string, Animation>();
@@ -35,7 +39,7 @@ namespace Empire.View
         internal Game()
         {
             _graphics = new GraphicsDeviceManager(this);
-            _gui = new GraphicalUserInterface(this, _model);
+            _gui = new GraphicalUserInterface(this);
 
             Content.RootDirectory = "Content";
         }
@@ -49,12 +53,17 @@ namespace Empire.View
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            TimeRemaining = GameDuration;
+
             SpaceBackground.Initialize();
-            _model.Initialize();
+            GameModel.Initialize();
+
+            _shipIndex = 0;
+            _player = GameModel.Ships[_shipIndex];
+
             _gui.Initialize();
 
-            _gameOver = false;
-            _player = _model.Player;
+            GameOver = false;
 
             base.Initialize();
         }
@@ -77,10 +86,26 @@ namespace Empire.View
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            _model.Update(gameTime);
-            _player.Update(gameTime);
+            // testing code to switch player control to other ships
+            if(Keyboard.GetState().IsKeyDown(Keys.Add))
+            {
+                _shipIndex++;
+                if(_shipIndex == GameModel.Ships.Count)
+                {
+                    _shipIndex = 0;
+                }
+                _player = GameModel.Ships[_shipIndex];
+            }
+
+            ProcessLocalInput();
+
+            _ai.Update(_player);
+
+            GameModel.Update(gameTime);
             updateSprites(gameTime);
             _gui.Update(gameTime);
+
+            TimeRemaining -= (int)gameTime.ElapsedGameTime.TotalMilliseconds;
 
             if (GameOver)
             {
@@ -88,6 +113,21 @@ namespace Empire.View
             }
 
             base.Update(gameTime);
+        }
+
+        // process input and handle it, or dispatch it to the GameModel to be processed
+        internal void ProcessLocalInput()
+        {
+            KeyboardState keyboardState = Keyboard.GetState();
+
+            // eventually, there will be commands to bring up the local minimap, or zoom in/out, chat, etc, but
+            // for now, we only have commands to be passed to the ship.
+
+            // In the future, dispatching commands to the world will be done through the network interface
+            // currently, we'll just send the command directly.
+
+            _player.Command = new ShipCommand(keyboardState);
+
         }
 
         protected override void Draw(GameTime gameTime)
@@ -104,16 +144,20 @@ namespace Empire.View
             );
             _spriteBatch.End();
 
-
+            // game entities next
             // Use front-to-back sort mode so that the zOrder works correctly.  
             // An alternative choice would be to plot each entity type in a separate spriteBatch.
-            _spriteBatch.Begin(SpriteSortMode.FrontToBack);
+            //_spriteBatch.Begin(SpriteSortMode.FrontToBack);
+            // Note: front-to-back causes asteroids to randomly shimmer infront/behind each other because they are all at the
+            // same depth.  So let them sort themselves out...
+            _spriteBatch.Begin();
             foreach (Sprite sprite in _sprites.Values)
             {
-                sprite.Draw(_spriteBatch, _player.Location);
+                sprite.Draw(_spriteBatch, _player);
             }
             _spriteBatch.End();
 
+            // Now the GUI elements
             // use a new Begin() to draw the GUI elements so that they always appear on top
             // of everything else
             _spriteBatch.Begin();
@@ -127,7 +171,7 @@ namespace Empire.View
         {
             // remove dead entities
             var deadEntities =
-                from entity in _model.GameEntities
+                from entity in GameModel.GameEntities
                 where entity.Status == Status.Dead
                 select entity;
             foreach (Entity entity in deadEntities)
@@ -138,7 +182,7 @@ namespace Empire.View
 
             // add new ones
             var newEntities =
-                from entity in _model.GameEntities
+                from entity in GameModel.GameEntities
                 where entity.Status == Status.New
                 select entity;
             foreach (Entity entity in newEntities)
@@ -158,7 +202,7 @@ namespace Empire.View
 
         internal void EndGame()
         {
-            _gameOver = true;
+            GameOver = true;
             
             //TODO: pause here for a key and add NewGame()
             Console.ReadLine();

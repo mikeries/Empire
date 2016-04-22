@@ -86,7 +86,7 @@ namespace Empire.Model
         internal EntityType Type { get; set; }
 
         internal int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
-        private int _elapsedTime = 0;           // accumulates how much time has passed since the object spawned
+        private int _age = 0;           // accumulates how much time has passed since the object spawned
 
         internal Entity(float x=0, float y=0)
         {
@@ -94,6 +94,12 @@ namespace Empire.Model
             _location.Y = y;
             Status = Status.New;
             visualState = VisualStates.Idle;
+
+            // TODO:  I'm not sure I like having objects automatically add themselves to the GameEntities list
+            // Management of the game entities list is owned by the GameModel class...  this makes sure that 
+            // every object gets on the list however, and simplifies things like asteroids creating children when
+            // they collide.
+            GameModel.GameEntities.Add(this);
         }
 
         internal void Rotate(float radians)
@@ -101,9 +107,12 @@ namespace Empire.Model
             _orientation += radians;
         }
 
+        // move the entity in the correct direction, then check  to make sure it hasn't left the
+        // play area
         internal void Move(GameTime gameTime)
         {
-            _location.X = (float)(_location.X + _velocity.X * gameTime.ElapsedGameTime.TotalMilliseconds / 10);
+            _location = _location + _velocity * (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+
             if (_location.X < View.Game.PlayArea.Left)
             {
                 _location.X += View.Game.PlayArea.Width;
@@ -113,7 +122,6 @@ namespace Empire.Model
                 _location.X -= View.Game.PlayArea.Width;
             }
 
-            _location.Y = (float)(_location.Y + _velocity.Y * gameTime.ElapsedGameTime.TotalMilliseconds / 10);
             if (_location.Y < View.Game.PlayArea.Top)
             {
                 _location.Y += View.Game.PlayArea.Height;
@@ -129,12 +137,14 @@ namespace Empire.Model
         // accumulate age in milliseconds, and mark the object for removal if beyond its timeToLive
         // then move the object
         internal virtual void Update(GameTime gameTime) {
-            _elapsedTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (timeToLive > 0 && _elapsedTime > timeToLive)
+            _age += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (timeToLive > 0 && _age > timeToLive)
             {
                 this.Status = Status.Dead;
             }
             Move(gameTime);
         }
+
+        internal virtual void HandleCollision(Entity entityThatCollided) { }
     }
 }

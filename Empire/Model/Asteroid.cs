@@ -14,9 +14,10 @@ namespace Empire.Model
         internal float RollRate { get; set; }  // how rapidly it rotates
         internal int Style { get; set; }  // which type of asteroid this is... mostly texture now, but might also be linked to score?
 
-        private const int maxVelocity = 2;  // this velocity is added to the velocity of the parent when a child is created
+        private const float maxVelocity = 0.2f;  // child volocity = this velocity plus the velocity of the parent
         private const int minSizePercent = 20; // minSizePercent and maxSizePercent are used to scale a child relative to the parent size
         private const int maxSizePercent = 60;
+        private const int minAsteroidSize = 20;
 
         internal Asteroid(float x, float y) : base (x, y) {
             this.Status = Status.New;
@@ -30,18 +31,16 @@ namespace Empire.Model
             base.Update(gameTime);
         }
 
-        internal Asteroid childAsteroid()
+        // spawns a child asteroid with smaller size, new rotation rate, and slightly different velocity vector
+        internal void spawnChildAsteroid()
         {
             Asteroid newAsteroid = new Asteroid(Location.X, Location.Y);
+            newAsteroid.Velocity = Velocity + randomVelocityVector();
 
-            float randomX = Velocity.X + (float)GameModel.Random.Next(-maxVelocity * 1000, maxVelocity * 1000) / 1000;
-            float randomY = Velocity.Y + (float)GameModel.Random.Next(-maxVelocity * 1000, maxVelocity * 1000) / 1000;
-            Vector2 vector = new Vector2(randomX, randomY);
-            newAsteroid.Velocity = vector;
             int newSize = GameModel.Random.Next(minSizePercent, maxSizePercent) * Height / 100;
-            if (newSize < 20)
+            if (newSize < minAsteroidSize)
             {
-                newSize = 20;
+                newSize = minAsteroidSize;
             }
             newAsteroid.Height = newSize;
             newAsteroid.Width = newSize;
@@ -49,8 +48,42 @@ namespace Empire.Model
             newAsteroid.RollRate = GameModel.Random.Next(-(1000 / newSize), (1000 / newSize));
             newAsteroid.Style = Style;
 
-            return newAsteroid;
         }
+
+        internal override void HandleCollision(Entity entityThatCollided)
+        {
+            if (Status == Status.Active) // ignore dead or new asteroids
+            {
+                if (Stage > 0)
+                {
+                    for (int i = 0; i < GameModel.Random.Next(3, 5); i++)
+                    {
+                        spawnChildAsteroid();
+                    }
+                }
+                Status = Status.Dead;
+                if (entityThatCollided is Ship)
+                {
+                    Ship ship = entityThatCollided as Ship;
+                    ship.Score += (Stage + 1) * 30;
+                }
+                else if (entityThatCollided is Laser)
+                {
+                    Laser laser = entityThatCollided as Laser;
+                    laser.Owner.Score += (Stage+1) * 30;
+                }
+                
+            }
+        }
+
+        // create a new velocity with a random direction and speed
+        private Vector2 randomVelocityVector()
+        {
+            float randomX = GameModel.Random.Next((int)(-maxVelocity * 1000),(int)(maxVelocity * 1000)) / 1000f;
+            float randomY = GameModel.Random.Next((int)(-maxVelocity * 1000), (int)(maxVelocity * 1000)) / 1000f;
+            return new Vector2(randomX, randomY);
+        }
+
 
     }
 }

@@ -70,11 +70,13 @@
     <Compile Include="CanvasLayer.cs" />
     <Compile Include="Circle.cs" />
     <Compile Include="EntityTypes.cs" />
+    <Compile Include="Model\AIComponent.cs" />
     <Compile Include="Model\Asteroid.cs" />
     <Compile Include="Model\GameEventArgs.cs" />
     <Compile Include="Model\Laser.cs" />
     <Compile Include="Model\ModelHelper.cs" />
     <Compile Include="Model\Planet.cs" />
+    <Compile Include="Model\ShipCommand.cs" />
     <Compile Include="Planets.cs" />
     <Compile Include="Status.cs" />
     <Compile Include="TextProperties.cs" />
@@ -88,7 +90,7 @@
     <Compile Include="View\ViewHelper.cs" />
     <Compile Include="View\Game.cs" />
     <Compile Include="Model\GameModel.cs" />
-    <Compile Include="Model\Player.cs" />
+    <Compile Include="Model\Ship.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="View\SpaceBackground.cs" />

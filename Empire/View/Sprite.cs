@@ -27,12 +27,15 @@ namespace Empire.View
             }
         }
 
-        internal void Draw(SpriteBatch spriteBatch, Vector2 playerLocation)
+        internal void Draw(SpriteBatch spriteBatch, Model.Ship player)
         {
+            if ((player.Location - _entity.Location).Length() > 800) return;        // quick exit for stuff that's too far away
+
             Vector2 position;
-            if (!(_entity is Player))
+
+            if (!(_entity == player))
             {
-                position = ViewHelper.TranslateModelCoordsToViewCoords(_entity.Location, playerLocation);
+                position = ViewHelper.TranslateModelCoordsToViewCoords(_entity.Location, player.Location);
             }
             else
             {

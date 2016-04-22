@@ -22,12 +22,12 @@ namespace Empire.View
         private Dictionary<string, IGUIElement> _gui = new Dictionary<string, IGUIElement>();
         private Game _gameManager;
 
-        public GraphicalUserInterface(Game gameManager, Empire.Model.GameModel model)
+        public GraphicalUserInterface(Game gameManager)
         {
             _gameManager = gameManager;
 
             // hook up the model's event handlers
-            model.GameChanged += GameChangedEventHandler;
+            //GameModel.GameChanged += GameChangedEventHandler;
         }
 
         internal void Initialize()
@@ -80,6 +80,20 @@ namespace Empire.View
 
         internal void Update(GameTime gameTime)
         {
+            TextBlock scoreText = _gui["score"] as TextBlock;
+            scoreText.Text = _gameManager.Score.ToString();
+
+            StatusBar shieldBar = _gui["shieldEnergy"] as StatusBar;
+            shieldBar.Value = _gameManager.ShieldEnergy / 100f;
+
+            StatusBar timeBar = _gui["timeRemaining"] as StatusBar;
+            timeBar.Value = _gameManager.TimeRemaining / (float)Game.GameDuration;
+            if (_gameManager.TimeRemaining < 0)
+            {
+                _gameManager.GameOver = true;
+                _gui["gameOver"].Visible = true;
+            }
+
             foreach (string guiElement in _gui.Keys)
                 _gui[guiElement].Update(gameTime);
         }
@@ -111,7 +125,7 @@ namespace Empire.View
                         break;
                     case "timeRemaining":
                         bar = _gui["timeRemaining"] as StatusBar;
-                        bar.Value = (float)e.Value / (float)Game.GameTime;
+                        bar.Value = (float)e.Value / (float)Game.GameDuration;
                         if (e.Value < 0)
                         {
                             _gameManager.GameOver = true;

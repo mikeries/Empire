@@ -24,8 +24,6 @@ namespace Empire.Model
         public static int InitialAsteroidCount = 4000;
         public static int InitialShipCount = 5;
 
-        //private const int CollisionCheckRange = 700;        // Objects must be at least this close to the player for collision checks
-
         public GameModel()
         {
         }
@@ -89,6 +87,32 @@ namespace Empire.Model
                 }
             }
 
+        }
+
+        internal static Ship GetShip(string connectionID)
+        {
+            Ship ship = Ships.Find(
+                delegate (Ship s)
+                {
+                    return (s.Owner == connectionID);
+                }
+                );
+
+
+            if (ship != null) return ship;  // early exit
+
+            foreach (Ship s in Ships)
+            {
+                if (s.Owner == null)
+                {
+                    s.Owner = connectionID;
+                    return s;
+                }
+            }
+            
+
+            //TODO: Log this and throw exception
+            return null;
         }
 
         //public static event EventHandler<GameEventArgs> GameChanged = delegate { };

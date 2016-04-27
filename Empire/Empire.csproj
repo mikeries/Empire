@@ -41,6 +41,7 @@
     <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -50,6 +51,7 @@
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
@@ -67,21 +69,31 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CanvasLayer.cs" />
-    <Compile Include="Circle.cs" />
-    <Compile Include="EntityTypes.cs" />
+    <Compile Include="Model\CommandFlags.cs" />
+    <Compile Include="View\CanvasLayer.cs" />
+    <Compile Include="Model\Circle.cs" />
+    <Compile Include="Model\EntityTypes.cs" />
     <Compile Include="Model\AIComponent.cs" />
     <Compile Include="Model\Asteroid.cs" />
     <Compile Include="Model\GameEventArgs.cs" />
     <Compile Include="Model\Laser.cs" />
     <Compile Include="Model\ModelHelper.cs" />
     <Compile Include="Model\Planet.cs" />
-    <Compile Include="Model\ShipCommand.cs" />
-    <Compile Include="Planets.cs" />
-    <Compile Include="Status.cs" />
-    <Compile Include="TextProperties.cs" />
+    <Compile Include="Network\PacketTypes\ShipCommand.cs" />
+    <Compile Include="Network\ConnectionManager.cs" />
+    <Compile Include="Network\Gamer.cs" />
+    <Compile Include="Network\NetworkInterface.cs" />
+    <Compile Include="Network\PacketReceivedEventArgs.cs" />
+    <Compile Include="Network\PacketTypes\AcknowledgePacket.cs" />
+    <Compile Include="Network\PacketTypes\NetworkPacket.cs" />
+    <Compile Include="Network\PacketTypes\PacketTypes.cs" />
+    <Compile Include="Network\PacketTypes\PingPacket.cs" />
+    <Compile Include="Network\PacketTypes\SalutationPacket.cs" />
+    <Compile Include="Model\Planets.cs" />
+    <Compile Include="Model\Status.cs" />
+    <Compile Include="View\TextProperties.cs" />
     <Compile Include="View\Animation.cs" />
-    <Compile Include="Direction.cs" />
+    <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\Entity.cs" />
     <Compile Include="View\GraphicalUserInterface.cs" />
     <Compile Include="View\IGUIElement.cs" />
@@ -96,7 +108,7 @@
     <Compile Include="View\SpaceBackground.cs" />
     <Compile Include="View\Sprite.cs" />
     <Compile Include="View\TiledTexture.cs" />
-    <Compile Include="VisualStates.cs" />
+    <Compile Include="View\VisualStates.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">

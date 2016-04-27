@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Empire.Network;
 
 namespace Empire.Model
 {
     class Ship : Entity
     {
-        internal ShipCommand Command;        // container for commands issued by player, network, AI
+        internal ShipCommand Command = new ShipCommand(0);        // container for commands issued by player, network, AI
 
         private static readonly log4net.ILog log =
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -35,6 +36,8 @@ namespace Empire.Model
         internal int Score;                                 // Number of points this ship has scored
 
         internal int ShieldEnergy { get; set; }
+
+        internal string Owner { get; set; }     
 
         internal Ship(float x, float y) : base(x,y)
         {
@@ -69,25 +72,25 @@ namespace Empire.Model
 
             visualState = VisualStates.Idle; // reset visual state
 
-            if (Command.KeyboardState.IsKeyDown(Keys.Left))
+            if (Command.Left)
             {
                 RotateShip(Direction.Left, elapsedTime);
             }
-            if (Command.KeyboardState.IsKeyDown(Keys.Right))
+            if (Command.Right)
             {
                 RotateShip(Direction.Right, elapsedTime);
             }
-            if (Command.KeyboardState.IsKeyDown(Keys.Up))
+            if (Command.Thrust)
             {
                 AccelerateShip(elapsedTime);
             }
-            if (Command.KeyboardState.IsKeyDown(Keys.Down))
+            if (Command.Shields)
             {
                 ShieldsUp(elapsedTime);
             }
 
             _timeSinceLastShot += elapsedTime;
-            if (Command.KeyboardState.IsKeyDown(Keys.Space))
+            if (Command.Shoot)
             {
                 if (_timeSinceLastShot > millisecondsPerShot)
                 {

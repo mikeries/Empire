@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Empire.Model;
+using Empire.Network;
 using System.Linq;
 using System;
 
@@ -29,7 +30,6 @@ namespace Empire.View
         private GraphicalUserInterface _gui;
         private AIComponent _ai = new AIComponent();
 
-        private int _shipIndex = 0;
         private Model.Ship _player;
         internal Model.Ship Player { get { return _player; } }
 
@@ -57,9 +57,15 @@ namespace Empire.View
 
             SpaceBackground.Initialize();
             GameModel.Initialize();
+            ConnectionManager.Initialize();
+            ConnectionManager.Join("Mike");
 
-            _shipIndex = 0;
-            _player = GameModel.Ships[_shipIndex];
+            while (ConnectionManager.ConnectionID == null)
+            {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            _player = ConnectionManager.GetShip();
 
             _gui.Initialize();
 
@@ -85,17 +91,6 @@ namespace Empire.View
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
-            // testing code to switch player control to other ships
-            if(Keyboard.GetState().IsKeyDown(Keys.Add))
-            {
-                _shipIndex++;
-                if(_shipIndex == GameModel.Ships.Count)
-                {
-                    _shipIndex = 0;
-                }
-                _player = GameModel.Ships[_shipIndex];
-            }
 
             ProcessLocalInput();
 
@@ -126,7 +121,28 @@ namespace Empire.View
             // In the future, dispatching commands to the world will be done through the network interface
             // currently, we'll just send the command directly.
 
-            _player.Command = new ShipCommand(keyboardState);
+            int commands = 0;
+            if (keyboardState.IsKeyDown(Keys.Left))
+            {
+                commands += (int)CommandFlags.Left;
+            }
+            if (keyboardState.IsKeyDown(Keys.Right))
+            {
+                commands += (int)CommandFlags.Right;
+            }
+            if (keyboardState.IsKeyDown(Keys.Up))
+            {
+                commands += (int)CommandFlags.Thrust;
+            }
+            if (keyboardState.IsKeyDown(Keys.Down))
+            {
+                commands += (int)CommandFlags.Shields;
+            }
+            if (keyboardState.IsKeyDown(Keys.Space))
+            {
+                commands += (int)CommandFlags.Shoot;
+            }
+            ConnectionManager.SendShipCommand(new ShipCommand(commands));
 
         }
 

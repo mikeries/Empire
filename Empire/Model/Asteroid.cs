@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using System.Runtime.Serialization;
 
 namespace Empire.Model
 {
-    class Asteroid : Entity
+    [Serializable]
+    class Asteroid : Entity, ISerializable
     {
-
         internal int Stage { get; set; }  // track how many times this rock can split, also influences score value.
         internal float RollRate { get; set; }  // how rapidly it rotates
         internal int Style { get; set; }  // which type of asteroid this is... mostly texture now, but might also be linked to score?
@@ -19,10 +20,25 @@ namespace Empire.Model
         private const int maxSizePercent = 60;
         private const int minAsteroidSize = 20;
 
-        internal Asteroid(float x, float y) : base (x, y) {
+        internal Asteroid(Vector2 location) : base (location) {
             this.Status = Status.New;
             this.Orientation = (float)GameModel.Random.Next(0, 100);
             RollRate = GameModel.Random.Next(-300, 300) / 100f;
+        }
+
+        internal Asteroid(SerializationInfo info, StreamingContext context) : base(info,context)
+        {
+            Stage = (int)info.GetValue("Stage", typeof(int));
+            RollRate = (float)info.GetValue("RollRate", typeof(float));
+            Style = (int)info.GetValue("Style", typeof(int));
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+            info.AddValue("Stage", Stage);
+            info.AddValue("RollRate", RollRate);
+            info.AddValue("Style", Style);
         }
 
         internal override void Update(GameTime gameTime)
@@ -32,9 +48,9 @@ namespace Empire.Model
         }
 
         // spawns a child asteroid with smaller size, new rotation rate, and slightly different velocity vector
-        internal void spawnChildAsteroid()
+        internal Asteroid spawnChildAsteroid()
         {
-            Asteroid newAsteroid = new Asteroid(Location.X, Location.Y);
+            Asteroid newAsteroid = new Asteroid(Location);
             newAsteroid.Velocity = Velocity + randomVelocityVector();
 
             int newSize = GameModel.Random.Next(minSizePercent, maxSizePercent) * Height / 100;
@@ -48,6 +64,7 @@ namespace Empire.Model
             newAsteroid.RollRate = GameModel.Random.Next(-(1000 / newSize), (1000 / newSize));
             newAsteroid.Style = Style;
 
+            return newAsteroid;
         }
 
         internal override void HandleCollision(Entity entityThatCollided)
@@ -58,7 +75,7 @@ namespace Empire.Model
                 {
                     for (int i = 0; i < GameModel.Random.Next(3, 5); i++)
                     {
-                        spawnChildAsteroid();
+                        GameModel.AddGameEntity(spawnChildAsteroid());
                     }
                 }
                 Status = Status.Dead;
@@ -70,7 +87,7 @@ namespace Empire.Model
                 else if (entityThatCollided is Laser)
                 {
                     Laser laser = entityThatCollided as Laser;
-                    laser.Owner.Score += (Stage+1) * 30;
+                    GameModel.GetShip(laser.Owner).Score += (Stage+1) * 30;
                 }
                 
             }

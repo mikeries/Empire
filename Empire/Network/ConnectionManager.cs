@@ -10,6 +10,9 @@ namespace Empire.Network
 {
     public static class ConnectionManager
     {
+        private static readonly log4net.ILog log =
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private static Dictionary<string, Gamer> _gamerList = new Dictionary<string, Gamer>();
         private const int MaximumPlayers = 5;
         public static bool IsHost { get { return NetworkInterface.IsHost; } }
@@ -42,14 +45,14 @@ namespace Empire.Network
             NetworkInterface.PacketReceived += ProcessIncomingPacket;
         }
 
-        public static void SendToHost(NetworkPacket packet)
+        internal static void SendToHost(NetworkPacket packet)
         {
             NetworkInterface.SendPacket(NetworkInterface.HostEndPoint, packet);
         }
 
-        public static void SendToAllGamers(NetworkPacket packet)
+        internal static void SendToAllGamers(NetworkPacket packet)
         {
-            foreach (Gamer gamer in _gamerList.Values)
+            foreach (Gamer gamer in _gamerList.Values.ToList())
             {
                 NetworkInterface.SendPacket(gamer.EndPoint, packet);
             }
@@ -58,7 +61,9 @@ namespace Empire.Network
         private static void AddNewGamer(SalutationPacket salutation)
         {
             Gamer gamer = new Gamer(salutation.Name, salutation.Source);
-            _gamerList.Add(salutation.Source.ToString(), gamer);
+            _gamerList.Add(salutation.Name, gamer);
+            GameModel.NewShip(gamer.ConnectionID);
+            log.Info(gamer.Name + " has joined the game from " + salutation.Source);
         }
 
         private static void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)
@@ -80,16 +85,17 @@ namespace Empire.Network
                     ProcessAcknowledge(packet);
                     break;
 
-                case PacketType.TestPacket:
-                    break;
-
                 case PacketType.ShipCommand:
-                    string sourceID = packet.Source.ToString();
-                    GameModel.GetShip(sourceID).Command = packet as ShipCommand;
+                    ShipCommand command = packet as ShipCommand;
+                    Ship ship = GameModel.GetShip(command.Owner);
+                    if (ship != null)
+                    {
+                        ship.Command = command;
+                    }
                     break;
 
                 default:
-                    // TODO: log unknown packet type
+                    // ignore other packet types -- they may be for someone else
                     break;
             }
         }
@@ -100,7 +106,13 @@ namespace Empire.Network
             AcknowledgePacket ack = packet as AcknowledgePacket;
             if (ack.Response == AcknowledgePacket.Acknowledgement.OK)
             {
-                ConnectionID = ack.ConnectionID;
+                ConnectionID = ack.Name;
+            }
+            else if (ack.Response == AcknowledgePacket.Acknowledgement.DuplicateName)
+            {
+                string newID = ack.Name + GameModel.Random.Next(0, 10);
+                SalutationPacket newSalutation = new SalutationPacket(newID);
+                SendToHost(newSalutation);
             }
         }
 
@@ -109,9 +121,8 @@ namespace Empire.Network
             if (NetworkInterface.IsHost)
             {
                 SalutationPacket salutation = packet as SalutationPacket;
-                Console.WriteLine("Salutation received from {0}", packet.Source);
 
-                AcknowledgePacket ack = new AcknowledgePacket(salutation.Source.ToString(),salutation.Timestamp);
+                AcknowledgePacket ack = new AcknowledgePacket(salutation.Name,salutation.Timestamp);
                 ack.Response = DetermineAppropriateResponse(salutation);
                 if (ack.Response == AcknowledgePacket.Acknowledgement.OK)
                 {
@@ -138,7 +149,7 @@ namespace Empire.Network
                 {
                     if (gamer.Name == salutation.Name)
                     {
-                        //response = AcknowledgePacket.Acknowledgement.DuplicateName;
+                        response = AcknowledgePacket.Acknowledgement.DuplicateName;
                     }
                 }
             }

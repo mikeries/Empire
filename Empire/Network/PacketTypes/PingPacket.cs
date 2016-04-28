@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 namespace Empire.Network
 {
     [Serializable]
-    public class PingPacket : NetworkPacket
+    internal class PingPacket : NetworkPacket
     {
-        public PingPacket() : base()
+        internal PingPacket() : base()
         {
-            Type = PacketType.Ping;
+            this.Type = PacketType.Ping;
         }
 
     }

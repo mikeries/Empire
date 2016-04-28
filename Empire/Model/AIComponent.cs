@@ -1,10 +1,4 @@
-﻿using Empire.Network;
-using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Empire.Model
 {
@@ -17,15 +11,15 @@ namespace Empire.Model
         private const int chanceToSwitchCommands = 1;  // percent chance that the ship picks a new command
         private Dictionary<Ship, int> _commandHistory = new Dictionary<Ship, int>();
 
-        internal void Update(Ship player)
+        internal void Update()
         {
-            foreach(Ship ship in GameModel.Ships)
-            {
-                if (ship.Owner == null)
-                {
-                    issueCommand(ship);
-                }
-            }
+            //foreach(Ship ship in GameModel.Ships)
+            //{
+            //    if (ship.Owner == null)
+            //    {
+            //        issueCommand(ship);
+            //    }
+            //}
         }
 
         private void issueCommand(Ship ship)

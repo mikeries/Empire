@@ -18,13 +18,13 @@ namespace Empire.Network
         }
         public DateTime PacketToAcknowledge;
         public Acknowledgement Response;
-        public string ConnectionID;            
+        public string Name;            
 
-        public AcknowledgePacket(string connectionID, DateTime packetToAcknowledge, Acknowledgement response=Acknowledgement.OK) : base()
+        public AcknowledgePacket(string name, DateTime packetToAcknowledge, Acknowledgement response=Acknowledgement.OK) : base()
         {
             PacketToAcknowledge = packetToAcknowledge;
             Response = response;
-            ConnectionID = connectionID;
+            Name = name;
             Type = PacketType.Acknowledge;
         }
 

@@ -19,9 +19,9 @@ namespace Empire.Model
         const float LaserSpeed = 1.0f;
 
         // create the specified planet at the requested location
-        internal static Planet SpawnPlanet(float x, float y, Planets ID)
+        internal static Planet SpawnPlanet(Vector2 location, Planets ID)
         {
-            Planet newPlanet = new Planet(x, y, ID);
+            Planet newPlanet = new Planet(location, ID);
 
             int size = GameModel.Random.Next(PlanetMinSize, PlanetMaxSize);
             newPlanet.Height = size;
@@ -30,9 +30,9 @@ namespace Empire.Model
             return newPlanet;
         }
 
-        internal static Asteroid SpawnAsteroid(float x, float y)
+        internal static Asteroid SpawnAsteroid(Vector2 location)
         {
-            Asteroid newAsteroid = new Asteroid(x, y);
+            Asteroid newAsteroid = new Asteroid(location);
 
             int size = GameModel.Random.Next(AsteroidMinSize, AsteroidMaxSize);
             newAsteroid.Height = size;
@@ -45,7 +45,7 @@ namespace Empire.Model
 
         internal static Laser SpawnLaser(Ship ship)
         {
-            Laser laser = new Laser(ship);
+            Laser laser = new Laser(ship.Owner);
             laser.Location = new Vector2(ship.Location.X, ship.Location.Y);
             laser.Height = LaserHeight;
             laser.Width = LaserWidth;

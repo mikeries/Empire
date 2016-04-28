@@ -21,8 +21,36 @@ namespace Empire.View
         internal static int GameDuration = 1000 * 60 * 2;  // 2 minute timer in milliseconds
 
         internal bool GameOver { get; set; }
-        internal int Score { get { return _player.Score; } }
-        internal int ShieldEnergy { get { return _player.ShieldEnergy; } }
+        internal int Score
+        {
+            get
+            {
+                if (_player != null)
+                {
+                    return _player.Score;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        internal int ShieldEnergy
+        {
+            get
+            {
+                if (_player != null)
+                {
+                    return _player.ShieldEnergy;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
         internal int TimeRemaining { get; set; }
 
         private GraphicsDeviceManager _graphics;
@@ -33,7 +61,7 @@ namespace Empire.View
         private Model.Ship _player;
         internal Model.Ship Player { get { return _player; } }
 
-        private Dictionary<Entity, Sprite> _sprites = new Dictionary<Entity, Sprite>();
+        private Dictionary<int, Sprite> _sprites = new Dictionary<int, Sprite>();
         private Dictionary<string, Animation> _animations = new Dictionary<string, Animation>();
 
         internal Game()
@@ -56,8 +84,9 @@ namespace Empire.View
             TimeRemaining = GameDuration;
 
             SpaceBackground.Initialize();
-            GameModel.Initialize();
             ConnectionManager.Initialize();
+            GameModel.Initialize();
+
             ConnectionManager.Join("Mike");
 
             while (ConnectionManager.ConnectionID == null)
@@ -65,7 +94,13 @@ namespace Empire.View
                 System.Threading.Thread.Sleep(1000);
             }
 
-            _player = ConnectionManager.GetShip();
+            SyncManager.Start();
+
+            while(_player == null)
+            {
+                GameModel.ApplyUpdates(); // need to stop doing this this way.
+                _player = GameModel.GetShip(ConnectionManager.ConnectionID);
+            }
 
             _gui.Initialize();
 
@@ -92,9 +127,10 @@ namespace Empire.View
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            _player = ConnectionManager.GetShip();
             ProcessLocalInput();
 
-            _ai.Update(_player);
+            _ai.Update();
 
             GameModel.Update(gameTime);
             updateSprites(gameTime);
@@ -142,7 +178,7 @@ namespace Empire.View
             {
                 commands += (int)CommandFlags.Shoot;
             }
-            ConnectionManager.SendShipCommand(new ShipCommand(commands));
+            ConnectionManager.SendShipCommand(new ShipCommand(ConnectionManager.ConnectionID, commands));
 
         }
 
@@ -192,7 +228,7 @@ namespace Empire.View
                 select entity;
             foreach (Entity entity in deadEntities)
             {
-                _sprites.Remove(entity);
+                _sprites.Remove(entity.EntityID);
                 entity.Status = Status.Disposable;
             }
 
@@ -205,7 +241,7 @@ namespace Empire.View
             {
                 List<Animation> animationCollection = ViewHelper.AnimationFactory(entity);
                 Sprite newSprite = new Sprite(animationCollection, entity);
-                _sprites.Add(entity, newSprite);
+                _sprites.Add(entity.EntityID, newSprite);
                 entity.Status = Status.Active;
             }
 

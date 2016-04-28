@@ -67,7 +67,8 @@ namespace Empire.View
 
             // if we reach here, it is an error, so log it and throw an exception
             log.Error("Unable to create sprite -- unknown entity in the collection.");
-            return null;
+            throw new Exception();
+
         }
 
         // determine view coordinates based on the model coords of the entity relative to the player
@@ -132,23 +133,6 @@ namespace Empire.View
             }
         }
 
-        // currently not used
-        //private static void DrawLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end)
-        //{
-        //    Vector2 line = end - start;
-        //    float angleToRotate =(float)Math.Atan2(line.Y, line.X);
-
-        //    spriteBatch.Draw(_textures["texture1x1"],
-        //        new Rectangle((int)start.X,(int)start.Y, (int)line.Length(), 1), 
-        //        null, 
-        //        Color.White, 
-        //        angleToRotate, 
-        //        new Vector2(0, 0),  // rotation origin
-        //        SpriteEffects.None, 
-        //        0
-        //    );
-        //}
-
         // DrawRectangle method stretches a 1x1 texture into the specified length and width
         // used for StatusBars
         internal static void DrawRectangle(SpriteBatch spriteBatch, Rectangle rect, Color color)
@@ -164,10 +148,17 @@ namespace Empire.View
             );
         }
 
-        // TODO: add error checking.  Maybe return a default font?
         internal static SpriteFont GetFont(string font)
         {
-            return _fonts[font];
+            if (_fonts.ContainsKey(font))
+            {
+                return _fonts[font];
+            }
+            else
+            {
+                log.Warn("Unknown font '" + font + "' requested.");
+                return _fonts[_fonts.Keys.First()];
+            }
         }
     }
 }

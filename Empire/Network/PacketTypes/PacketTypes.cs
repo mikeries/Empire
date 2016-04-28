@@ -5,7 +5,7 @@
         Salutation,     // "hello, can I join your game?"
         Acknowledge,
         Ping,
-        TestPacket,
+        Entity,
         ShipCommand,
     }
 }

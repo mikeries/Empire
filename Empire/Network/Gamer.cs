@@ -17,7 +17,7 @@ namespace Empire.Network
         {
             Name = name;
             EndPoint = endpoint;
-            ConnectionID = EndPoint.ToString();
+            ConnectionID = name;
         }
     }
 }

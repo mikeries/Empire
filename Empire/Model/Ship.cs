@@ -6,12 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Empire.Network;
+using System.Runtime.Serialization;
 
 namespace Empire.Model
 {
-    class Ship : Entity
+    [Serializable]
+    class Ship : Entity , ISerializable
     {
-        internal ShipCommand Command = new ShipCommand(0);        // container for commands issued by player, network, AI
+        internal ShipCommand Command = new ShipCommand("",0);        // container for commands issued by player, network, AI
 
         private static readonly log4net.ILog log =
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -39,13 +41,36 @@ namespace Empire.Model
 
         internal string Owner { get; set; }     
 
-        internal Ship(float x, float y) : base(x,y)
+        internal Ship(Vector2 location) : base(location)
         {
             Velocity = new Vector2(Stopped, 0);
             this.Type = EntityType.Ship;
             Height = ShipHeight;
             Width = ShipWidth;
             ShieldEnergy = 100;
+        }
+
+        internal Ship(SerializationInfo info, StreamingContext context) : base(info,context)
+        {
+            _timeSinceLastShot = (int)info.GetValue("timeSinceLastShot", typeof(int));
+            Score = (int)info.GetValue("Score", typeof(int));
+            ShieldEnergy = (int)info.GetValue("ShieldEnergy", typeof(int));
+            Owner = (string)info.GetValue("Owner", typeof(string));
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+            info.AddValue("timeSinceLastShot", _timeSinceLastShot);
+            info.AddValue("Score", Score);
+            info.AddValue("ShieldEnergy", ShieldEnergy);
+            info.AddValue("Owner", Owner);
+        }
+
+        internal void Initialize()
+        {
+            Location = new Vector2(0, 0);
+            Velocity = new Vector2(Stopped, 0);
         }
 
         internal override void Update(GameTime gameTime)
@@ -60,11 +85,6 @@ namespace Empire.Model
             base.Update(gameTime);
         }
 
-        internal void Initialize()
-        {
-            Location = new Vector2(0, 0);
-            Velocity = new Vector2(Stopped, 0);
-        }
 
         private void ProcessInput(GameTime gameTime)
         {
@@ -86,7 +106,7 @@ namespace Empire.Model
             }
             if (Command.Shields)
             {
-                ShieldsUp(elapsedTime);
+                RaiseShields(elapsedTime);
             }
 
             _timeSinceLastShot += elapsedTime;
@@ -101,12 +121,7 @@ namespace Empire.Model
 
         }
 
-        private bool ShieldsAreDown()
-        {
-            return ((int)visualState & (int)VisualStates.Shields) == 0;
-        }
-
-        internal void ShieldsUp(int elapsedTime)
+        internal void RaiseShields(int elapsedTime)
         {
             ShieldEnergy -= (int)(elapsedTime * ShieldDecayRate);
             if (ShieldEnergy > 0)
@@ -143,6 +158,7 @@ namespace Empire.Model
         {
             Laser laser = ModelHelper.SpawnLaser(this);
             laser.Update(gameTime);
+            GameModel.AddGameEntity(laser);
         }
 
         internal override void HandleCollision(Entity entityThatCollided)
@@ -151,6 +167,11 @@ namespace Empire.Model
             {
                 Score -= 100;  
             }
+        }
+
+        private bool ShieldsAreDown()
+        {
+            return ((int)visualState & (int)VisualStates.Shields) == 0;
         }
 
     }

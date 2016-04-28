@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace Empire.Network
 {
-    public class PacketReceivedEventArgs : EventArgs
+    internal class PacketReceivedEventArgs : EventArgs
     {
-        public IPEndPoint Source { get; set; }
-        public NetworkPacket Packet { get; set; }
+        internal IPEndPoint Source { get; set; }
+        internal NetworkPacket Packet { get; set; }
 
-        public PacketReceivedEventArgs(IPEndPoint source, NetworkPacket packet)
+        internal PacketReceivedEventArgs(IPEndPoint source, NetworkPacket packet)
         {
             Packet = packet;
             Source = source;

@@ -70,6 +70,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Model\CommandFlags.cs" />
+    <Compile Include="Model\IDGenerator.cs" />
+    <Compile Include="Network\PacketTypes\EntityPacket.cs" />
+    <Compile Include="Network\SyncManager.cs" />
     <Compile Include="View\CanvasLayer.cs" />
     <Compile Include="Model\Circle.cs" />
     <Compile Include="Model\EntityTypes.cs" />

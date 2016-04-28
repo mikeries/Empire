@@ -10,6 +10,9 @@ namespace Empire.Network
 {
     internal static class NetworkInterface
     {
+        private static readonly log4net.ILog log =
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private const string hostName = "Mike-PC";
         private const string hostAddress = "ries.asuscomm.com";
         private const int _hostPort = 5394;
@@ -18,7 +21,6 @@ namespace Empire.Network
         private static UdpClient _socket;
         public static IPEndPoint HostEndPoint;
         private static IPEndPoint _clientEndPoint;
-        public static string ConnectionID { get; private set; }
 
         private static int _port = _hostPort;             // default to using the same port as the host
 
@@ -37,7 +39,6 @@ namespace Empire.Network
                 {
                     IsHost = true;
                 }
-                ConnectionID = HostEndPoint.ToString();
             }
             catch (SocketException e)
             {
@@ -46,10 +47,10 @@ namespace Empire.Network
                     _clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
                     _port = _clientEndPoint.Port;
                     _socket = new UdpClient(_clientEndPoint);
-                    ConnectionID = _clientEndPoint.ToString();
                 }
                 else
                 {
+                    log.Error("Unexpected network exception during initialization.", e);
                     throw (e);
                 }
             }
@@ -59,21 +60,36 @@ namespace Empire.Network
 
         private static void ReceiveData(IAsyncResult result)
         {
-            _socket = result.AsyncState as UdpClient;
-            IPEndPoint source = new IPEndPoint(IPAddress.Any, 0);
-            byte[] message = _socket.EndReceive(result, ref source);
+            try
+            {
+                _socket = result.AsyncState as UdpClient;
+                IPEndPoint source = new IPEndPoint(IPAddress.Any, 0);
+                byte[] message = _socket.EndReceive(result, ref source);
 
-            NetworkPacket packet = NetworkPacket.ConstructPacketFromMessage(message);
-            OnPacketReceived(source, packet);
+                NetworkPacket packet = NetworkPacket.ConstructPacketFromMessage(message);
+                OnPacketReceived(source, packet);
 
-            _socket.BeginReceive(new AsyncCallback(ReceiveData), _socket);
+                _socket.BeginReceive(new AsyncCallback(ReceiveData), _socket);
+            }
+            catch (SocketException e)
+            {
+                if (e.ErrorCode == (int)SocketError.ConnectionReset)
+                {
+                    log.Warn("Connection closed by host.",e);
+                    // TODO: terminate network connection and inform game.
+                }
+                {
+                    log.Fatal("Fatal network error", e);
+                    throw e;
+                }
+            }
         }
 
         private static void SendDataToClient(IPEndPoint endpoint, byte[] message)
         {
             if (message.Length > MaximumPacketSize)
             {
-                // TODO: log this for now...
+                log.Warn("Packet size exceeds maximum. (" + message.Length+")");
             }
             _socket.Send(message, message.Length, endpoint);
         }

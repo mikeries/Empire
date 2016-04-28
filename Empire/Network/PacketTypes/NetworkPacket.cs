@@ -11,23 +11,26 @@ using System.Threading.Tasks;
 namespace Empire.Network
 {
     [Serializable]
-    public abstract class NetworkPacket
+    abstract class NetworkPacket
     {
-        public PacketType Type;
-        public IPEndPoint Source;
-        public DateTime Timestamp { get; private set; }  // when the packet was sent.  Used for determining lag time and as a packet ID
-        
-        public NetworkPacket()
+        private static readonly log4net.ILog log =
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        internal PacketType Type;
+        internal IPEndPoint Source;
+        internal DateTime Timestamp { get; }  // when the packet was sent.  Used for determining lag time and as a packet ID
+
+        internal NetworkPacket()
         {
             Timestamp = DateTime.Now;
         }
 
-        public virtual bool IsValid()
+        internal virtual bool IsValid()
         {
             return true;
         }
 
-        public static NetworkPacket ConstructPacketFromMessage(byte[] message)
+        internal static NetworkPacket ConstructPacketFromMessage(byte[] message)
         {
             NetworkPacket packet = null;
             IFormatter formatter = new BinaryFormatter();
@@ -41,21 +44,29 @@ namespace Empire.Network
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                log.Fatal("Deserialization exception", e);
             }
 
             return packet;
         }
 
-        public virtual byte[] CreateMessageFromPacket()
+        internal virtual byte[] CreateMessageFromPacket()
         {
-            byte[] message;
+            byte[] message=null;
             IFormatter formatter = new BinaryFormatter();
 
-            using (MemoryStream stream = new MemoryStream())
+            try
             {
-                formatter.Serialize(stream, this);
-                message = stream.ToArray();
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    formatter.Serialize(stream, this);
+                    message = stream.ToArray();
+                }
+            }
+            catch (SerializationException e)
+            {
+                log.Fatal("Serialization exception", e);
+                throw new Exception(e.Message);
             }
 
             return message;

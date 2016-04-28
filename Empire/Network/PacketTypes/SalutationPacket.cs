@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 namespace Empire.Network
 {
     [Serializable]
-    public class SalutationPacket : NetworkPacket
+    internal class SalutationPacket : NetworkPacket
     {
-        public string Name { get; private set; }
+        internal string Name { get; private set; }
 
-        public SalutationPacket(string name) : base()
+        internal SalutationPacket(string name) : base()
         {
             Type = PacketType.Salutation;
             Name = name;

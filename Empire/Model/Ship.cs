@@ -23,7 +23,7 @@ namespace Empire.Model
         private const float Stopped = 0.0001f;              // velocity when stopped.  We can't use 0 because we need to preserve
                                                             // the direction of the vector
 
-        private const int millisecondsPerShot = 400;         // minimum number of ms between shots
+        private const int millisecondsPerShot = 200;         // minimum number of ms between shots
         private static int _timeSinceLastShot;              // accumulated time since the weapon last fired
 
         private const float RotationRate = (float)Math.PI / 1500f;
@@ -52,7 +52,7 @@ namespace Empire.Model
 
         internal Ship(SerializationInfo info, StreamingContext context) : base(info,context)
         {
-            _timeSinceLastShot = (int)info.GetValue("timeSinceLastShot", typeof(int));
+            //_timeSinceLastShot = (int)info.GetValue("timeSinceLastShot", typeof(int));
             Score = (int)info.GetValue("Score", typeof(int));
             ShieldEnergy = (int)info.GetValue("ShieldEnergy", typeof(int));
             Owner = (string)info.GetValue("Owner", typeof(string));
@@ -61,7 +61,7 @@ namespace Empire.Model
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-            info.AddValue("timeSinceLastShot", _timeSinceLastShot);
+            //info.AddValue("timeSinceLastShot", _timeSinceLastShot);
             info.AddValue("Score", Score);
             info.AddValue("ShieldEnergy", ShieldEnergy);
             info.AddValue("Owner", Owner);
@@ -77,7 +77,8 @@ namespace Empire.Model
         {
             int elapsedTime = (int)gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            ProcessInput(gameTime);
+            if(ConnectionManager.IsHost)
+                ProcessInput(gameTime);
 
             ShieldEnergy += (int)(elapsedTime * ShieldRegenerationRate);
             ShieldEnergy = MathHelper.Clamp(ShieldEnergy, 0, 100);

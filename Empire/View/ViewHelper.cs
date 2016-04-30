@@ -75,7 +75,7 @@ namespace Empire.View
         internal static Vector2 TranslateModelCoordsToViewCoords(Vector2 entityLocation, Vector2 playerLocation)
         {
             // return new Vector2(x - playerLocation.X + Game.ViewCenter.X, y - playerLocation.Y + Game.ViewCenter.Y);
-            return entityLocation - playerLocation + Game.ViewCenter;
+            return entityLocation - playerLocation + GameView.ViewCenter;
         }
 
         // load the textures and create the animation templates

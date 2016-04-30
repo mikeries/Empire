@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Empire.View;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,9 @@ namespace Empire.Model
     [Serializable]
     class Entity : ISerializable
     {
-        private int _entityID = IDGenerator.NewID();
-        internal int EntityID { get { return _entityID; } } 
+        private int _entityID = 0;
+        internal int EntityID { get { return _entityID; }  } 
+
         private Vector2 _location = new Vector2(0,0);
         internal Vector2 Location   // location in game coords
         {
@@ -66,7 +68,17 @@ namespace Empire.Model
         }
 
         private Vector2 _velocity;
-        internal Vector2 Velocity { get; set; }
+        internal Vector2 Velocity
+        {
+            get
+            {
+                return _velocity;
+            }
+            set
+            {
+                _velocity = value;
+            }
+        }
   
         internal double Speed {
             get { return Velocity.Length(); }
@@ -82,17 +94,18 @@ namespace Empire.Model
         internal int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
         private int _age = 0;           // accumulates how much time has passed since the object spawned
 
+        internal Sprite Renderer;
+
         internal Entity(Vector2 location)
         {
             Location = location;
             Status = Status.New;
             visualState = VisualStates.Idle;
+        }
 
-            // TODO:  I'm not sure I like having objects automatically add themselves to the GameEntities list
-            // Management of the game entities list is owned by the GameModel class...  this makes sure that 
-            // every object gets on the list however, and simplifies things like asteroids creating children when
-            // they collide.
-            GameModel.GameEntities.Add(this);
+        internal void GenerateID ()
+        {
+            _entityID = IDGenerator.NewID();
         }
 
         internal Entity(SerializationInfo info, StreamingContext context)
@@ -106,7 +119,8 @@ namespace Empire.Model
             _boundingCircle = new Circle(Location, radius);
             _velocity.X = (float)info.GetValue("VelocityX", typeof(float));
             _velocity.Y = (float)info.GetValue("VelocityY", typeof(float));
-            Orientation = (int)info.GetValue("Orientation", typeof(int));
+            Orientation = (float)info.GetValue("Orientation", typeof(float));
+            visualState = (VisualStates)info.GetValue("VisualState", typeof(int));
             Status = (Status)info.GetValue("Status", typeof(int));
             Type = (EntityType)info.GetValue("Type", typeof(int));
             _age = (int)info.GetValue("Age", typeof(int));
@@ -114,18 +128,19 @@ namespace Empire.Model
 
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("EntityID", _entityID);
-            info.AddValue("LocationX", Location.X);
-            info.AddValue("LocationY", Location.Y);
-            info.AddValue("Height", Height);
-            info.AddValue("Width", Width);
-            info.AddValue("Radius", BoundingCircle.Radius);
-            info.AddValue("VelocityX", Velocity.X);
-            info.AddValue("VelocityY", Velocity.Y);
-            info.AddValue("Orientation", Orientation);
-            info.AddValue("Status", (int)Status);
-            info.AddValue("Type", (int)Type);
-            info.AddValue("Age", _age);
+            info.AddValue("EntityID", _entityID, typeof(int));
+            info.AddValue("LocationX", Location.X, typeof(float));
+            info.AddValue("LocationY", Location.Y, typeof(float));
+            info.AddValue("Height", Height, typeof(int));
+            info.AddValue("Width", Width, typeof(int));
+            info.AddValue("Radius", BoundingCircle.Radius, typeof(float));
+            info.AddValue("VelocityX", _velocity.X,typeof(float));
+            info.AddValue("VelocityY", _velocity.Y, typeof(float));
+            info.AddValue("Orientation", Orientation, typeof(float));
+            info.AddValue("VisualState", (int)visualState, typeof(int));
+            info.AddValue("Status", (int)Status, typeof(int));
+            info.AddValue("Type", (int)Type, typeof(int));
+            info.AddValue("Age", _age, typeof(int));
         }
 
         internal void Rotate(float radians)
@@ -139,22 +154,22 @@ namespace Empire.Model
         {
             _location = _location + Velocity * (float)gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            if (_location.X < View.Game.PlayArea.Left)
+            if (_location.X < View.GameView.PlayArea.Left)
             {
-                _location.X += View.Game.PlayArea.Width;
+                _location.X += View.GameView.PlayArea.Width;
             }
-            else if (_location.X > View.Game.PlayArea.Right)
+            else if (_location.X > View.GameView.PlayArea.Right)
             {
-                _location.X -= View.Game.PlayArea.Width;
+                _location.X -= View.GameView.PlayArea.Width;
             }
 
-            if (_location.Y < View.Game.PlayArea.Top)
+            if (_location.Y < View.GameView.PlayArea.Top)
             {
-                _location.Y += View.Game.PlayArea.Height;
+                _location.Y += View.GameView.PlayArea.Height;
             }
-            else if (_location.Y > View.Game.PlayArea.Bottom)
+            else if (_location.Y > View.GameView.PlayArea.Bottom)
             {
-                _location.Y -= View.Game.PlayArea.Height;
+                _location.Y -= View.GameView.PlayArea.Height;
             }
 
             _boundingCircle.Center = _location;
@@ -166,9 +181,13 @@ namespace Empire.Model
             _age += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
             if (timeToLive > 0 && _age > timeToLive)
             {
-                this.Status = Status.Dead;
+                this.Status = Status.Disposable;
             }
             Move(gameTime);
+            if(Renderer!=null)
+            {
+                Renderer.Update(gameTime);
+            }
         }
 
         internal virtual void HandleCollision(Entity entityThatCollided) { }

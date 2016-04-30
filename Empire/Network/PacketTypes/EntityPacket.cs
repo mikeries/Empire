@@ -17,5 +17,6 @@ namespace Empire.Network.PacketTypes
             Type = PacketType.Entity;
             EnclosedEntity = entity;
         }
+
     }
 }

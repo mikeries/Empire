@@ -30,6 +30,11 @@ namespace Empire.Network
             return true;
         }
 
+        internal bool IsNewerThan(NetworkPacket networkPacket)
+        {
+            return (this.Timestamp > networkPacket.Timestamp);
+        }
+
         internal static NetworkPacket ConstructPacketFromMessage(byte[] message)
         {
             NetworkPacket packet = null;

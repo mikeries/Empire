@@ -1,4 +1,5 @@
 ﻿using Empire.Network;
+using Empire.Network.PacketTypes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Empire.View;
 
 namespace Empire.Model
 {
@@ -17,6 +19,8 @@ namespace Empire.Model
         // all the game entities that exist
         private static Dictionary<int,Entity> _gameEntities = new Dictionary<int, Entity>();
         public static List<Entity> GameEntities { get { return _gameEntities.Values.ToList(); } }
+
+        private static GameView _game;
 
         private static List<Entity> _entityUpdates = new List<Entity>();
 
@@ -41,42 +45,35 @@ namespace Empire.Model
         }
 
         public static Random Random = new Random();
-        public const int InitialAsteroidCount = 4000;
+        public const int InitialAsteroidCount = 2000;
         public const int InitialShipCount = 2;
-
-        public GameModel()
-        {
-
-        }
 
         // a basic world initialization.  This needs to be replaced with
         // a class that can generate a new 'world' as well as saving and restoring one.
-        public static void Initialize()
+        public static void Initialize(GameView game)
+        {
+            _game = game;
+        }
+
+        internal static void LoadWorld()
         {
             if (ConnectionManager.IsHost)
             {
-                //for (int i = 0; i < InitialShipCount; i++)
-                //{
-                //    Ship ship = new Ship(new Vector2(View.Game.PlayArea.Width / 2, View.Game.PlayArea.Height / 2));
-                //    //_ships.Add(ship);
-                //    AddGameEntity(ship);
-                //}
 
-                //for (int i = 0; i < (int)Planets.Count; i++)
-                //{
-                //    Planet planet = ModelHelper.SpawnPlanet(new Vector2(Random.Next(-10000, 10000), Random.Next(-10000, 10000)), (Planets)i);
-                //    AddGameEntity(planet);
-                //}
+                for (int i = 0; i < (int)Planets.Count; i++)
+                {
+                    Planet planet = ModelHelper.SpawnPlanet(new Vector2(Random.Next(-10000, 10000), Random.Next(-10000, 10000)), (Planets)i);
+                    addGameEntityFromHost(planet);
+                }
 
-                //for (int i = 0; i < InitialAsteroidCount; i++)
-                //{
-                //    Asteroid asteroid = ModelHelper.SpawnAsteroid(new Vector2(GameModel.Random.Next(View.Game.PlayArea.Left, View.Game.PlayArea.Right),
-                //        GameModel.Random.Next(View.Game.PlayArea.Left, View.Game.PlayArea.Right)));
-                //    asteroid.Velocity = new Vector2(Random.Next(-200, 200) / 1000f, Random.Next(-200, 200) / 1000f);
-                //    AddGameEntity(asteroid);
-                //}
+                for (int i = 0; i < InitialAsteroidCount; i++)
+                {
+                    Asteroid asteroid = ModelHelper.SpawnAsteroid(new Vector2(GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right),
+                        GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right)));
+                    asteroid.Velocity = new Vector2(Random.Next(-200, 200) / 1000f, Random.Next(-200, 200) / 1000f);
+                    addGameEntityFromHost(asteroid);
+                }
             }
-
         }
 
         private static bool Collision(Circle c1, Circle c2)
@@ -90,6 +87,10 @@ namespace Empire.Model
             if (!ConnectionManager.IsHost)
             {
                 ApplyUpdates();
+            }
+            else
+            {
+                //SyncManager.Sync();
             }
 
             // First, update all entities and get rid of those that are done
@@ -125,14 +126,6 @@ namespace Empire.Model
 
         }
 
-
-        internal static void NewShip(string connectionID)
-        {
-            Ship ship = new Ship(new Vector2(View.Game.PlayArea.Width / 2, View.Game.PlayArea.Height / 2));
-            ship.Owner = connectionID;
-            AddGameEntity(ship);
-        }
-
         [MethodImpl(MethodImplOptions.Synchronized)]
         internal static Ship GetShip(string connectionID)
         {
@@ -152,32 +145,67 @@ namespace Empire.Model
             return null;
         }
 
+        internal static Entity GetEntity(int entityID)
+        {
+            if (_gameEntities.ContainsKey(entityID))
+            {
+                return _gameEntities[entityID];
+            }
+            log.Warn("Unknown entity request from GameModel");
+            return null;
+        }
+
+        internal static void NewShip(string connectionID)
+        {
+            Ship ship = new Ship(new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2));
+            ship.Owner = connectionID;
+            addGameEntityFromHost(ship);
+        }
+
         internal static void AddGameEntity(Entity entity)
+        {
+            if(ConnectionManager.IsHost)
+            {
+                addGameEntityFromHost(entity);
+            }
+        }
+        
+        private static void addGameEntityFromHost(Entity entity)
         {
             if (entity != null)
             {
+                List<Animation> animationCollection = ViewHelper.AnimationFactory(entity);
+                entity.Renderer = new Sprite(animationCollection, entity);
+                if (entity.EntityID == 0)
+                {
+                    entity.GenerateID();
+                }
+                entity.Status = Status.Active;
                 _gameEntities.Add(entity.EntityID, entity);
             }
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public static void ApplyUpdates()
         {
-            foreach (Entity update in _entityUpdates.ToList())
+            UpdateQueue queue = SyncManager.RetrieveUpdatesAndClear();
+
+            foreach (EntityPacket packet in queue.Packets)
             {
-                if (_gameEntities.ContainsKey(update.EntityID))
+                TimeSpan lag = DateTime.Now - packet.Timestamp;
+                Entity entity = packet.EnclosedEntity;
+
+                if (_gameEntities.ContainsKey(entity.EntityID))
                 {
-                    _gameEntities[update.EntityID] = update;
+                    // Replace the object, but copy over the Renderer and point it at this object
+                    Sprite renderer = _gameEntities[entity.EntityID].Renderer;
+                    renderer.SetEntity(entity);
+                    _gameEntities[entity.EntityID] = entity;
+                    _gameEntities[entity.EntityID].Renderer = renderer;
                 }
                 else
                 {
-                    if(update.Status==Status.Active)
-                    {
-                        update.Status = Status.New;
-                    }
-                    AddGameEntity(update);
+                    addGameEntityFromHost(entity);
                 }
-                _entityUpdates.Remove(update);
             }
         }
 
@@ -187,10 +215,5 @@ namespace Empire.Model
             _entityUpdates.Add(entity);
         }
 
-        //public static event EventHandler<GameEventArgs> GameChanged = delegate { };
-        //private static void OnGameChanged(string property, int value)
-        //{
-        //        GameChanged(null, new GameEventArgs(property,value));
-        //}
     }
 }

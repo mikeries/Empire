@@ -20,9 +20,9 @@ namespace Empire.View
         
         // collection of gui elements
         private Dictionary<string, IGUIElement> _gui = new Dictionary<string, IGUIElement>();
-        private Game _gameManager;
+        private GameView _gameManager;
 
-        public GraphicalUserInterface(Game gameManager)
+        public GraphicalUserInterface(GameView gameManager)
         {
             _gameManager = gameManager;
 
@@ -87,7 +87,7 @@ namespace Empire.View
             shieldBar.Value = _gameManager.ShieldEnergy / 100f;
 
             StatusBar timeBar = _gui["timeRemaining"] as StatusBar;
-            timeBar.Value = _gameManager.TimeRemaining / (float)Game.GameDuration;
+            timeBar.Value = _gameManager.TimeRemaining / (float)GameView.GameDuration;
             if (_gameManager.TimeRemaining < 0)
             {
                 _gameManager.GameOver = true;
@@ -125,7 +125,7 @@ namespace Empire.View
                         break;
                     case "timeRemaining":
                         bar = _gui["timeRemaining"] as StatusBar;
-                        bar.Value = (float)e.Value / (float)Game.GameDuration;
+                        bar.Value = (float)e.Value / (float)GameView.GameDuration;
                         if (e.Value < 0)
                         {
                             _gameManager.GameOver = true;

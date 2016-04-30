@@ -73,6 +73,7 @@
     <Compile Include="Model\IDGenerator.cs" />
     <Compile Include="Network\PacketTypes\EntityPacket.cs" />
     <Compile Include="Network\SyncManager.cs" />
+    <Compile Include="Network\UpdateQueue.cs" />
     <Compile Include="View\CanvasLayer.cs" />
     <Compile Include="Model\Circle.cs" />
     <Compile Include="Model\EntityTypes.cs" />
@@ -103,7 +104,7 @@
     <Compile Include="View\StatusBar.cs" />
     <Compile Include="View\TextBlock.cs" />
     <Compile Include="View\ViewHelper.cs" />
-    <Compile Include="View\Game.cs" />
+    <Compile Include="View\GameView.cs" />
     <Compile Include="Model\GameModel.cs" />
     <Compile Include="Model\Ship.cs" />
     <Compile Include="Program.cs" />

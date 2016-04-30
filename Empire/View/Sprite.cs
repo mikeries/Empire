@@ -12,10 +12,15 @@ namespace Empire.View
     internal class Sprite
     {
         private List<Animation> _animations;    // each sprite contains a list of animations that can be drawn
-        private Entity _entity;                 // the entity that this sprite is attached to
+        private Entity _entity;
 
         internal Sprite(List<Animation> animations, Entity entity) {
             _animations = animations;
+            SetEntity(entity);
+        }
+
+        internal void SetEntity(Entity entity)
+        {
             _entity = entity;
         }
 
@@ -29,7 +34,7 @@ namespace Empire.View
 
         internal void Draw(SpriteBatch spriteBatch, Model.Ship player)
         {
-            if ((player.Location - _entity.Location).Length() > 800) return;        // quick exit for stuff that's too far away
+            //if ((player.Location - _entity.Location).Length() > 800) return;        // quick exit for stuff that's too far away
 
             Vector2 position;
 
@@ -39,7 +44,7 @@ namespace Empire.View
             }
             else
             {
-                position = Game.ViewCenter;
+                position = GameView.ViewCenter;
             }
 
             // VisualState is an integer with bits set based on the state of the object

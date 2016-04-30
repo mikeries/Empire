@@ -36,9 +36,9 @@ namespace Empire.Model
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-            info.AddValue("Stage", Stage);
-            info.AddValue("RollRate", RollRate);
-            info.AddValue("Style", Style);
+            info.AddValue("Stage", Stage, typeof(int));
+            info.AddValue("RollRate", RollRate, typeof(float));
+            info.AddValue("Style", Style, typeof(int));
         }
 
         internal override void Update(GameTime gameTime)
@@ -69,7 +69,7 @@ namespace Empire.Model
 
         internal override void HandleCollision(Entity entityThatCollided)
         {
-            if (Status == Status.Active) // ignore dead or new asteroids
+             if (Status == Status.Active) // ignore dead or new asteroids
             {
                 if (Stage > 0)
                 {
@@ -78,7 +78,7 @@ namespace Empire.Model
                         GameModel.AddGameEntity(spawnChildAsteroid());
                     }
                 }
-                Status = Status.Dead;
+                Status = Status.Disposable;
                 if (entityThatCollided is Ship)
                 {
                     Ship ship = entityThatCollided as Ship;

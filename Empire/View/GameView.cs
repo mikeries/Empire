@@ -11,7 +11,7 @@ using System;
 
 namespace Empire.View
 {
-    public class Game : Microsoft.Xna.Framework.Game
+    public class GameView : Microsoft.Xna.Framework.Game
     {
         private static readonly log4net.ILog log = 
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -64,7 +64,7 @@ namespace Empire.View
         private Dictionary<int, Sprite> _sprites = new Dictionary<int, Sprite>();
         private Dictionary<string, Animation> _animations = new Dictionary<string, Animation>();
 
-        internal Game()
+        internal GameView()
         {
             _graphics = new GraphicsDeviceManager(this);
             _gui = new GraphicalUserInterface(this);
@@ -85,22 +85,8 @@ namespace Empire.View
 
             SpaceBackground.Initialize();
             ConnectionManager.Initialize();
-            GameModel.Initialize();
-
-            ConnectionManager.Join("Mike");
-
-            while (ConnectionManager.ConnectionID == null)
-            {
-                System.Threading.Thread.Sleep(1000);
-            }
-
+            GameModel.Initialize(this);
             SyncManager.Start();
-
-            while(_player == null)
-            {
-                GameModel.ApplyUpdates(); // need to stop doing this this way.
-                _player = GameModel.GetShip(ConnectionManager.ConnectionID);
-            }
 
             _gui.Initialize();
 
@@ -109,11 +95,21 @@ namespace Empire.View
             base.Initialize();
         }
 
+        private void WaitForConnection()
+        {
+            ConnectionManager.Join("Mike");
+            while(ConnectionManager.ConnectionID==null)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+        }
+
         protected override void LoadContent()
         {
             SpaceBackground.LoadContent(Content);
             ViewHelper.LoadContent(Content);
             _gui.LoadContent(Content);
+            GameModel.LoadWorld();
         }
 
         protected override void UnloadContent()
@@ -124,16 +120,22 @@ namespace Empire.View
 
         protected override void Update(GameTime gameTime)
         {
+
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            if(ConnectionManager.ConnectionID == null)
+            {
+                WaitForConnection();
+            }
 
             _player = ConnectionManager.GetShip();
             ProcessLocalInput();
 
-            _ai.Update();
+            //_ai.Update();
 
             GameModel.Update(gameTime);
-            updateSprites(gameTime);
+            //updateSprites(gameTime);
             _gui.Update(gameTime);
 
             TimeRemaining -= (int)gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -186,6 +188,11 @@ namespace Empire.View
         {
             GraphicsDevice.Clear(Color.Black);
 
+            if(_player == null)
+            {
+                return;
+            }
+
             // Spacebackground first
             _spriteBatch.Begin();
             SpaceBackground.Draw(_spriteBatch,
@@ -197,15 +204,10 @@ namespace Empire.View
             _spriteBatch.End();
 
             // game entities next
-            // Use front-to-back sort mode so that the zOrder works correctly.  
-            // An alternative choice would be to plot each entity type in a separate spriteBatch.
-            //_spriteBatch.Begin(SpriteSortMode.FrontToBack);
-            // Note: front-to-back causes asteroids to randomly shimmer infront/behind each other because they are all at the
-            // same depth.  So let them sort themselves out...
             _spriteBatch.Begin();
-            foreach (Sprite sprite in _sprites.Values)
+            foreach (Entity entity in GameModel.GameEntities)
             {
-                sprite.Draw(_spriteBatch, _player);
+                entity.Renderer.Draw(_spriteBatch, _player);
             }
             _spriteBatch.End();
 
@@ -219,38 +221,12 @@ namespace Empire.View
             base.Draw(gameTime);
         }
 
-        private void updateSprites(GameTime gameTime)
-        {
-            // remove dead entities
-            var deadEntities =
-                from entity in GameModel.GameEntities
-                where entity.Status == Status.Dead
-                select entity;
-            foreach (Entity entity in deadEntities)
-            {
-                _sprites.Remove(entity.EntityID);
-                entity.Status = Status.Disposable;
-            }
-
-            // add new ones
-            var newEntities =
-                from entity in GameModel.GameEntities
-                where entity.Status == Status.New
-                select entity;
-            foreach (Entity entity in newEntities)
-            {
-                List<Animation> animationCollection = ViewHelper.AnimationFactory(entity);
-                Sprite newSprite = new Sprite(animationCollection, entity);
-                _sprites.Add(entity.EntityID, newSprite);
-                entity.Status = Status.Active;
-            }
-
-            // update all
-            foreach (Sprite sprite in _sprites.Values)
-            {
-                sprite.Update(gameTime);
-            }
-        }
+        //internal void GenerateSprite(Entity entity)
+        //{
+        //    List<Animation> animationCollection = ViewHelper.AnimationFactory(entity);
+        //    Sprite newSprite = new Sprite(animationCollection, entity);
+        //    _sprites.Add(entity.EntityID, newSprite);
+        //}
 
         internal void EndGame()
         {

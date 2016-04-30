@@ -15,7 +15,7 @@ namespace Empire
         [STAThread]
         static void Main()
         {
-            using (var game = new View.Game())
+            using (var game = new View.GameView())
                 game.Run();
         }
     }

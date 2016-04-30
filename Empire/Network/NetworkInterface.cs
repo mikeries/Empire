@@ -80,6 +80,7 @@ namespace Empire.Network
                 }
                 {
                     log.Fatal("Fatal network error", e);
+                    
                     throw e;
                 }
             }

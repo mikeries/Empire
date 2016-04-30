@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Empire.Model;
 using Empire.Network.PacketTypes;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace Empire.Network
 {
@@ -14,9 +15,10 @@ namespace Empire.Network
         private static readonly log4net.ILog log =
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static TimerCallback callback = SyncShips;
+        private static TimerCallback callback = SyncTimer;
         private static AutoResetEvent autoEvent = new AutoResetEvent(false);
         private static Timer timer;
+        private static UpdateQueue _updateQueue = new UpdateQueue();
 
         static SyncManager()
         {
@@ -31,31 +33,35 @@ namespace Empire.Network
             if (packet.Type == PacketType.Entity)
             {
                 EntityPacket entityPacket = packet as EntityPacket;
-                Entity entity = entityPacket.EnclosedEntity;
-                GameModel.UpdateEntity(entity);
+                _updateQueue.Add(entityPacket);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal static UpdateQueue RetrieveUpdatesAndClear()
+        {
+            UpdateQueue queue = _updateQueue;
+            _updateQueue = new UpdateQueue();
+            return queue;
         }
 
         // note that the use of a timer means the callback executes on a different thread
         // so there could be concurrency issues.
         internal static void Start()
         {
-            timer = new Timer(SyncShips, autoEvent, 1000, 1000);
+            timer = new Timer(SyncTimer, autoEvent, 100, 100);
         }
 
-        internal static void SyncShips(Object stateInfo)
+        internal static void SyncTimer(Object stateInfo)
+        {
+            Sync();
+        }
+
+        internal static void Sync()
         {
             if (ConnectionManager.IsHost)
             {
-                //int entityCount = 0;
-                //foreach (Entity entity in GameModel.GameEntities)
-                //{
-                //    EntityPacket box = new EntityPacket(entity);
-                //    ConnectionManager.SendToAllGamers(box);
-                //    entityCount++;
-                //}
-
-                foreach(Entity entity in GameModel.Ships)
+                foreach (Entity entity in GameModel.GameEntities)
                 {
                     EntityPacket box = new EntityPacket(entity);
                     ConnectionManager.SendToAllGamers(box);

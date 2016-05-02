@@ -10,26 +10,31 @@ namespace Empire.Model
 {
     // A very simple class to distinguish planets from other game entities.
     // Maybe someday planets will have populations, sovereignty, exports, etc.
-    [Serializable]
-    class Planet : Entity, ISerializable
+    class Planet : Entity
     {
-        public Planets PlanetID { get; private set; }
+        public Planets PlanetID { get; set; }
 
-        public Planet(Vector2 location, Planets ID = Planets.planet1) : base(location) {
-            Location = location;
+        public Planet(Planets ID = Planets.planet1) : base() {
+            Initialize();
             PlanetID = ID;
+        }
+
+        internal override void Initialize()
+        {
             this.Type = EntityType.Planet;
+            this.visualState = VisualStates.Idle;
         }
 
-        internal Planet(SerializationInfo info, StreamingContext context) : base(info,context)
+        internal override void SetState(ObjectState info)
         {
-            PlanetID = (Planets)info.GetValue("PlanetID", typeof(int));
+            base.SetState(info);
+            PlanetID = (Planets)info.GetInt("PlanetID");
         }
 
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        public override void GetState(ObjectState info)
         {
-            base.GetObjectData(info, context);
-            info.AddValue("PlanetID", PlanetID);
+            base.GetState(info);
+            info.AddValue("PlanetID", (int)PlanetID);
         }
 
     }

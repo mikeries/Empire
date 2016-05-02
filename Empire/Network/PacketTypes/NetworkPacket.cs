@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Empire.Model;
+using Empire.Network.PacketTypes;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

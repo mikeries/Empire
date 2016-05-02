@@ -97,10 +97,10 @@ namespace Empire.View
 
         private void WaitForConnection()
         {
-            ConnectionManager.Join("Mike");
-            while(ConnectionManager.ConnectionID==null)
+            while (ConnectionManager.ConnectionID==null)
             {
-                System.Threading.Thread.Sleep(100);
+                ConnectionManager.Join("Mike");
+                System.Threading.Thread.Sleep(1000);
             }
         }
 
@@ -126,6 +126,7 @@ namespace Empire.View
 
             if(ConnectionManager.ConnectionID == null)
             {
+                System.Threading.Thread.Sleep(1000);
                 WaitForConnection();
             }
 

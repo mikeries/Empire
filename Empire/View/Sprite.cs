@@ -24,11 +24,11 @@ namespace Empire.View
             _entity = entity;
         }
 
-        internal void Update(GameTime gameTime)
+        internal void Update(int elapsedTime)
         {
             foreach (Animation animation in _animations)
             {
-                animation.Update(gameTime);
+                animation.Update(elapsedTime);
             }
         }
 

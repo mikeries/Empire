@@ -7,27 +7,33 @@ using System.Threading.Tasks;
 
 namespace Empire.Model
 {
-    [Serializable]
-    class Laser : Entity, ISerializable
+    class Laser : Entity
     {
         const int Lifetime = 800; // how long a laser bullet lasts, in milliseconds
         internal string Owner;
 
-        public Laser(string owner) : base(new Microsoft.Xna.Framework.Vector2(0,0))
+        public Laser()  : base()
         {
-            this.timeToLive = Lifetime;
-            this.Type = EntityType.Laser;
-            Owner = owner;
+            Initialize();
         }
 
-        internal Laser(SerializationInfo info, StreamingContext context) : base(info,context)
+        internal override void Initialize()
         {
-            Owner = (string)info.GetValue("Owner", typeof(string));
+            age = 0;
+            timeToLive = Lifetime;
+            Type = EntityType.Laser;
+            visualState = VisualStates.Idle;
         }
 
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        internal override void SetState(ObjectState info)
         {
-            base.GetObjectData(info, context);
+            base.SetState(info);
+            Owner = info.GetString("Owner");
+        }
+
+        public override void GetState(ObjectState info)
+        {
+            base.GetState(info);
             info.AddValue("Owner", Owner);
         }
 

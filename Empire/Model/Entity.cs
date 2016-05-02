@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 
 namespace Empire.Model
 {
-    [Serializable]
-    class Entity : ISerializable
+    abstract class Entity
     {
         private int _entityID = 0;
         internal int EntityID { get { return _entityID; }  } 
@@ -92,55 +91,55 @@ namespace Empire.Model
         internal EntityType Type { get; set; }
 
         internal int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
-        private int _age = 0;           // accumulates how much time has passed since the object spawned
+        protected int age = 0;           // accumulates how much time has passed since the object spawned
 
         internal Sprite Renderer;
 
-        internal Entity(Vector2 location)
+        internal Entity()
         {
-            Location = location;
-            Status = Status.New;
-            visualState = VisualStates.Idle;
+            Initialize();
         }
 
+        internal abstract void Initialize();
+   
         internal void GenerateID ()
         {
             _entityID = IDGenerator.NewID();
         }
 
-        internal Entity(SerializationInfo info, StreamingContext context)
+        internal virtual void SetState(ObjectState info)
         {
-            _entityID = (int)info.GetValue("EntityID", typeof(int));
-            _location.X = (float)info.GetValue("LocationX", typeof(float));
-            _location.Y = (float)info.GetValue("LocationY", typeof(float));
-            _height = (int)info.GetValue("Height", typeof(int));
-            _width = (int)info.GetValue("Width", typeof(int));
-            float radius = (float)info.GetValue("Radius", typeof(float));
+            _entityID = info.GetInt("EntityID");
+            _location.X = info.GetFloat("LocationX");
+            _location.Y = info.GetFloat("LocationY");
+            _height = info.GetInt("Height");
+            _width = info.GetInt("Width");
+            float radius = info.GetFloat("Radius");
             _boundingCircle = new Circle(Location, radius);
-            _velocity.X = (float)info.GetValue("VelocityX", typeof(float));
-            _velocity.Y = (float)info.GetValue("VelocityY", typeof(float));
-            Orientation = (float)info.GetValue("Orientation", typeof(float));
-            visualState = (VisualStates)info.GetValue("VisualState", typeof(int));
-            Status = (Status)info.GetValue("Status", typeof(int));
-            Type = (EntityType)info.GetValue("Type", typeof(int));
-            _age = (int)info.GetValue("Age", typeof(int));
+            _velocity.X = info.GetFloat("VelocityX");
+            _velocity.Y = info.GetFloat("VelocityY");
+            Orientation = info.GetFloat("Orientation");
+            visualState = (VisualStates)info.GetInt("VisualState");
+            Status = (Status)info.GetInt("Status");
+            Type = (EntityType)info.GetInt("Type");
+            age = info.GetInt("Age");
         }
 
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        public virtual void GetState(ObjectState info)
         {
-            info.AddValue("EntityID", _entityID, typeof(int));
-            info.AddValue("LocationX", Location.X, typeof(float));
-            info.AddValue("LocationY", Location.Y, typeof(float));
-            info.AddValue("Height", Height, typeof(int));
-            info.AddValue("Width", Width, typeof(int));
-            info.AddValue("Radius", BoundingCircle.Radius, typeof(float));
-            info.AddValue("VelocityX", _velocity.X,typeof(float));
-            info.AddValue("VelocityY", _velocity.Y, typeof(float));
-            info.AddValue("Orientation", Orientation, typeof(float));
-            info.AddValue("VisualState", (int)visualState, typeof(int));
-            info.AddValue("Status", (int)Status, typeof(int));
-            info.AddValue("Type", (int)Type, typeof(int));
-            info.AddValue("Age", _age, typeof(int));
+            info.AddValue("EntityID", _entityID);
+            info.AddValue("LocationX", Location.X);
+            info.AddValue("LocationY", Location.Y);
+            info.AddValue("Height", Height);
+            info.AddValue("Width", Width);
+            info.AddValue("Radius", BoundingCircle.Radius);
+            info.AddValue("VelocityX", _velocity.X);
+            info.AddValue("VelocityY", _velocity.Y);
+            info.AddValue("Orientation", Orientation);
+            info.AddValue("VisualState", (int)visualState);
+            info.AddValue("Status", (int)Status);
+            info.AddValue("Type", (int)Type);
+            info.AddValue("Age", age);
         }
 
         internal void Rotate(float radians)
@@ -150,9 +149,9 @@ namespace Empire.Model
 
         // move the entity in the correct direction, then check  to make sure it hasn't left the
         // play area
-        internal void Move(GameTime gameTime)
+        internal void Move(int elapsedTime)
         {
-            _location = _location + Velocity * (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            _location = _location + Velocity * (float)elapsedTime;
 
             if (_location.X < View.GameView.PlayArea.Left)
             {
@@ -177,16 +176,16 @@ namespace Empire.Model
 
         // accumulate age in milliseconds, and mark the object for removal if beyond its timeToLive
         // then move the object
-        internal virtual void Update(GameTime gameTime) {
-            _age += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (timeToLive > 0 && _age > timeToLive)
+        internal virtual void Update(int elapsedTime) {
+            age += elapsedTime;
+            if (timeToLive > 0 && age > timeToLive)
             {
                 this.Status = Status.Disposable;
             }
-            Move(gameTime);
+            Move(elapsedTime);
             if(Renderer!=null)
             {
-                Renderer.Update(gameTime);
+                Renderer.Update(elapsedTime);
             }
         }
 

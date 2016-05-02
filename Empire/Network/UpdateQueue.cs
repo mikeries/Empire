@@ -23,7 +23,7 @@ namespace Empire.Network
         [MethodImpl(MethodImplOptions.Synchronized)]
         internal void Add(EntityPacket packet)
         {
-            int entityID = packet.EnclosedEntity.EntityID;
+            int entityID = packet.EntityID;
             if (_updateQueue.ContainsKey(entityID))
             {
                 if (packet.IsNewerThan(_updateQueue[entityID]))

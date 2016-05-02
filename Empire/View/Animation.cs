@@ -48,9 +48,9 @@ namespace Empire.View
            return new Animation(_spriteStrip, _frameWidth, _frameHeight, _frameCount, _frameDuration, _looping, _canvasLayer);
         }
 
-        internal void Update(GameTime gameTime)
+        internal void Update(int elapsedTime)
         {
-            _elapsedTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
+            _elapsedTime += elapsedTime;
 
             // If the elapsed time is larger than the frame time
             // we need to switch frames

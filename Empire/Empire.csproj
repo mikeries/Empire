@@ -71,9 +71,12 @@
   <ItemGroup>
     <Compile Include="Model\CommandFlags.cs" />
     <Compile Include="Model\IDGenerator.cs" />
+    <Compile Include="Model\SerializationExtensions.cs" />
     <Compile Include="Network\PacketTypes\EntityPacket.cs" />
     <Compile Include="Network\SyncManager.cs" />
     <Compile Include="Network\UpdateQueue.cs" />
+    <Compile Include="ObjectState.cs" />
+    <Compile Include="Pool.cs" />
     <Compile Include="View\CanvasLayer.cs" />
     <Compile Include="Model\Circle.cs" />
     <Compile Include="Model\EntityTypes.cs" />

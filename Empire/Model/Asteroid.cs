@@ -8,8 +8,7 @@ using System.Runtime.Serialization;
 
 namespace Empire.Model
 {
-    [Serializable]
-    class Asteroid : Entity, ISerializable
+    class Asteroid : Entity
     {
         internal int Stage { get; set; }  // track how many times this rock can split, also influences score value.
         internal float RollRate { get; set; }  // how rapidly it rotates
@@ -20,37 +19,46 @@ namespace Empire.Model
         private const int maxSizePercent = 60;
         private const int minAsteroidSize = 20;
 
-        internal Asteroid(Vector2 location) : base (location) {
+        internal Asteroid() : base ()
+        {
+            Initialize();
+        }
+
+        internal override void Initialize()
+        {
             this.Status = Status.New;
+            this.visualState = VisualStates.Idle;
             this.Orientation = (float)GameModel.Random.Next(0, 100);
             RollRate = GameModel.Random.Next(-300, 300) / 100f;
         }
 
-        internal Asteroid(SerializationInfo info, StreamingContext context) : base(info,context)
+        internal override void SetState(ObjectState info)
         {
-            Stage = (int)info.GetValue("Stage", typeof(int));
-            RollRate = (float)info.GetValue("RollRate", typeof(float));
-            Style = (int)info.GetValue("Style", typeof(int));
+            base.SetState(info);
+            Stage = info.GetInt("Stage");
+            RollRate = info.GetFloat("RollRate");
+            Style = info.GetInt("Style");
         }
 
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        public override void GetState(ObjectState info)
         {
-            base.GetObjectData(info, context);
-            info.AddValue("Stage", Stage, typeof(int));
-            info.AddValue("RollRate", RollRate, typeof(float));
-            info.AddValue("Style", Style, typeof(int));
+            base.GetState(info);
+            info.AddValue("Stage", Stage);
+            info.AddValue("RollRate", RollRate);
+            info.AddValue("Style", Style);
         }
 
-        internal override void Update(GameTime gameTime)
+        internal override void Update(int elapsedTime)
         {
-            this.Orientation += (float)(RollRate * Math.PI/18000*gameTime.ElapsedGameTime.TotalMilliseconds);
-            base.Update(gameTime);
+            this.Orientation += (float)(RollRate * Math.PI/18000*elapsedTime);
+            base.Update(elapsedTime);
         }
 
         // spawns a child asteroid with smaller size, new rotation rate, and slightly different velocity vector
         internal Asteroid spawnChildAsteroid()
         {
-            Asteroid newAsteroid = new Asteroid(Location);
+            Asteroid newAsteroid = ModelHelper.AsteroidFactory();
+            newAsteroid.Location = this.Location;
             newAsteroid.Velocity = Velocity + randomVelocityVector();
 
             int newSize = GameModel.Random.Next(minSizePercent, maxSizePercent) * Height / 100;

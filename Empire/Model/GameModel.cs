@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Empire.View;
+using System.Collections.Concurrent;
 
 namespace Empire.Model
 {
@@ -17,7 +18,7 @@ namespace Empire.Model
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         // all the game entities that exist
-        private static Dictionary<int,Entity> _gameEntities = new Dictionary<int, Entity>();
+        private static ConcurrentDictionary<int,Entity> _gameEntities = new ConcurrentDictionary<int, Entity>();
         public static List<Entity> GameEntities { get { return _gameEntities.Values.ToList(); } }
 
         private static GameView _game;
@@ -45,32 +46,33 @@ namespace Empire.Model
         }
 
         public static Random Random = new Random();
-        public const int InitialAsteroidCount = 2000;
-        public const int InitialShipCount = 2;
 
-        // a basic world initialization.  This needs to be replaced with
-        // a class that can generate a new 'world' as well as saving and restoring one.
         public static void Initialize(GameView game)
         {
             _game = game;
+
+            ModelHelper.Initialize();
         }
 
+        // a basic world initialization.  This needs to be replaced with
+        // a class that can generate a new 'world' as well as saving and restoring one.
         internal static void LoadWorld()
         {
             if (ConnectionManager.IsHost)
             {
 
-                for (int i = 0; i < (int)Planets.Count; i++)
+                for (int i = 0; i < 1; i++)
                 {
-                    Planet planet = ModelHelper.SpawnPlanet(new Vector2(Random.Next(-10000, 10000), Random.Next(-10000, 10000)), (Planets)i);
+                    Planet planet = ModelHelper.PlanetFactory(new Vector2(Random.Next(-10000, 10000), Random.Next(-10000, 10000)), (Planets)i);
                     addGameEntityFromHost(planet);
                 }
 
-                for (int i = 0; i < InitialAsteroidCount; i++)
+                for (int i = 0; i < ModelHelper.InitialAsteroidCount; i++)
                 {
-                    Asteroid asteroid = ModelHelper.SpawnAsteroid(new Vector2(GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right),
-                        GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right)));
+                    Asteroid asteroid = ModelHelper.AsteroidFactory();
                     asteroid.Velocity = new Vector2(Random.Next(-200, 200) / 1000f, Random.Next(-200, 200) / 1000f);
+                    asteroid.Location = new Vector2(GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right),
+                        GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right));
                     addGameEntityFromHost(asteroid);
                 }
             }
@@ -83,7 +85,8 @@ namespace Empire.Model
 
         public static void Update(GameTime gameTime)
         {
-            // first apply any updates we got from the host
+            int elapsedTime = (int)gameTime.ElapsedGameTime.TotalMilliseconds;
+
             if (!ConnectionManager.IsHost)
             {
                 ApplyUpdates();
@@ -93,12 +96,19 @@ namespace Empire.Model
                 //SyncManager.Sync();
             }
 
-            // First, update all entities and get rid of those that are done
+            //update all entities and get rid of those that are done
             foreach (Entity entity in _gameEntities.Values.ToList())
             {
                 if (entity.Status == Status.Disposable)
-                    _gameEntities.Remove(entity.EntityID);
-                else entity.Update(gameTime);
+                {
+                    Entity entityToRemove = entity;
+                    _gameEntities.TryRemove(entity.EntityID, out entityToRemove);
+                    ModelHelper.Return(entityToRemove);
+                }
+                else
+                {
+                    entity.Update(elapsedTime);
+                }
             }
 
             // Pull out only the asteroids and check them against the non-asteroids.
@@ -157,7 +167,8 @@ namespace Empire.Model
 
         internal static void NewShip(string connectionID)
         {
-            Ship ship = new Ship(new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2));
+            Ship ship = ModelHelper.ShipFactory();
+            ship.Location = new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2);
             ship.Owner = connectionID;
             addGameEntityFromHost(ship);
         }
@@ -181,7 +192,7 @@ namespace Empire.Model
                     entity.GenerateID();
                 }
                 entity.Status = Status.Active;
-                _gameEntities.Add(entity.EntityID, entity);
+                _gameEntities.TryAdd(entity.EntityID, entity);                
             }
         }
 
@@ -192,15 +203,19 @@ namespace Empire.Model
             foreach (EntityPacket packet in queue.Packets)
             {
                 TimeSpan lag = DateTime.Now - packet.Timestamp;
-                Entity entity = packet.EnclosedEntity;
+;
+                Entity entity = ModelHelper.EntityFactory(packet.EntityType, packet.EntityState);
 
                 if (_gameEntities.ContainsKey(entity.EntityID))
                 {
                     // Replace the object, but copy over the Renderer and point it at this object
                     Sprite renderer = _gameEntities[entity.EntityID].Renderer;
                     renderer.SetEntity(entity);
+                    ModelHelper.Return(_gameEntities[entity.EntityID]);
+
+                    entity.Renderer = renderer;
+                    entity.Update((int)lag.TotalMilliseconds);
                     _gameEntities[entity.EntityID] = entity;
-                    _gameEntities[entity.EntityID].Renderer = renderer;
                 }
                 else
                 {

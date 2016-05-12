@@ -14,15 +14,14 @@ namespace Empire.Model
 
         public Laser()  : base()
         {
-            Initialize();
         }
 
         internal override void Initialize()
         {
+            base.Initialize();
             age = 0;
             timeToLive = Lifetime;
             Type = EntityType.Laser;
-            visualState = VisualStates.Idle;
         }
 
         internal override void SetState(ObjectState info)

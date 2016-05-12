@@ -7,7 +7,7 @@ using Empire.Network;
 using System.Linq;
 using System;
 
-// TODO: Move the spites into a class of their own
+// TODO: Move the sprites into a class of their own
 
 namespace Empire.View
 {
@@ -16,7 +16,7 @@ namespace Empire.View
         private static readonly log4net.ILog log = 
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         internal static Rectangle PlayArea = new Rectangle(0, 0, 20000, 20000);
-        internal static Vector2 WindowSize = new Vector2(1280f, 760f);
+        internal static Vector2 WindowSize = new Vector2(1280f, 720f);
         internal static Vector2 ViewCenter = new Vector2(WindowSize.X/2, WindowSize.Y/2);
         internal static int GameDuration = 1000 * 60 * 2;  // 2 minute timer in milliseconds
 
@@ -27,7 +27,7 @@ namespace Empire.View
             {
                 if (_player != null)
                 {
-                    return _player.Score;
+                    return ConnectionManager.Gamers[_player.Owner].Score;                    
                 }
                 else
                 {
@@ -58,11 +58,10 @@ namespace Empire.View
         private GraphicalUserInterface _gui;
         private AIComponent _ai = new AIComponent();
 
-        private Model.Ship _player;
-        internal Model.Ship Player { get { return _player; } }
+        private Ship _player;
+        internal Ship Player { get { return _player; } }
 
         private Dictionary<int, Sprite> _sprites = new Dictionary<int, Sprite>();
-        private Dictionary<string, Animation> _animations = new Dictionary<string, Animation>();
 
         internal GameView()
         {
@@ -130,13 +129,12 @@ namespace Empire.View
                 WaitForConnection();
             }
 
-            _player = ConnectionManager.GetShip();
-            ProcessLocalInput();
+            InputManager.Update();
 
             //_ai.Update();
 
             GameModel.Update(gameTime);
-            //updateSprites(gameTime);
+
             _gui.Update(gameTime);
 
             TimeRemaining -= (int)gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -149,52 +147,48 @@ namespace Empire.View
             base.Update(gameTime);
         }
 
-        // process input and handle it, or dispatch it to the GameModel to be processed
-        internal void ProcessLocalInput()
-        {
-            KeyboardState keyboardState = Keyboard.GetState();
-
-            // eventually, there will be commands to bring up the local minimap, or zoom in/out, chat, etc, but
-            // for now, we only have commands to be passed to the ship.
-
-            // In the future, dispatching commands to the world will be done through the network interface
-            // currently, we'll just send the command directly.
-
-            int commands = 0;
-            if (keyboardState.IsKeyDown(Keys.Left))
-            {
-                commands += (int)CommandFlags.Left;
-            }
-            if (keyboardState.IsKeyDown(Keys.Right))
-            {
-                commands += (int)CommandFlags.Right;
-            }
-            if (keyboardState.IsKeyDown(Keys.Up))
-            {
-                commands += (int)CommandFlags.Thrust;
-            }
-            if (keyboardState.IsKeyDown(Keys.Down))
-            {
-                commands += (int)CommandFlags.Shields;
-            }
-            if (keyboardState.IsKeyDown(Keys.Space))
-            {
-                commands += (int)CommandFlags.Shoot;
-            }
-            ConnectionManager.SendShipCommand(new ShipCommand(ConnectionManager.ConnectionID, commands));
-
-        }
-
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
 
-            if(_player == null)
+            _player = ConnectionManager.GetShip();
+
+            if (_player == null)
             {
                 return;
             }
 
-            // Spacebackground first
+            DrawBackground();
+            DrawGameEntities();
+            DrawGUI();
+
+            base.Draw(gameTime);
+        }
+
+        private void DrawGUI()
+        {
+            _spriteBatch.Begin();
+            _gui.Draw(_spriteBatch);
+            _spriteBatch.End();
+        }
+
+        private void DrawGameEntities()
+        {
+            _spriteBatch.Begin();
+            foreach (Entity entityToDraw in GameModel.GameEntities)
+            {
+                if(entityToDraw.Renderer == null)
+                {
+                    List<Animation> animationCollection = ViewHelper.AnimationFactory(entityToDraw);
+                    entityToDraw.Renderer = new Sprite(animationCollection, entityToDraw);
+                }
+                entityToDraw.Renderer.Draw(_spriteBatch, _player);
+            }
+            _spriteBatch.End();
+        }
+
+        private void DrawBackground()
+        {
             _spriteBatch.Begin();
             SpaceBackground.Draw(_spriteBatch,
                 (int)_player.Location.X,
@@ -203,31 +197,7 @@ namespace Empire.View
                 GraphicsDevice.Viewport.Height
             );
             _spriteBatch.End();
-
-            // game entities next
-            _spriteBatch.Begin();
-            foreach (Entity entity in GameModel.GameEntities)
-            {
-                entity.Renderer.Draw(_spriteBatch, _player);
-            }
-            _spriteBatch.End();
-
-            // Now the GUI elements
-            // use a new Begin() to draw the GUI elements so that they always appear on top
-            // of everything else
-            _spriteBatch.Begin();
-            _gui.Draw(_spriteBatch);
-            _spriteBatch.End();
-
-            base.Draw(gameTime);
         }
-
-        //internal void GenerateSprite(Entity entity)
-        //{
-        //    List<Animation> animationCollection = ViewHelper.AnimationFactory(entity);
-        //    Sprite newSprite = new Sprite(animationCollection, entity);
-        //    _sprites.Add(entity.EntityID, newSprite);
-        //}
 
         internal void EndGame()
         {

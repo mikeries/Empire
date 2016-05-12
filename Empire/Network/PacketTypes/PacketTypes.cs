@@ -7,5 +7,6 @@
         Ping,
         Entity,
         ShipCommand,
+        PlayerData,
     }
 }

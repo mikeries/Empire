@@ -71,8 +71,8 @@
   <ItemGroup>
     <Compile Include="Model\CommandFlags.cs" />
     <Compile Include="Model\IDGenerator.cs" />
-    <Compile Include="Model\SerializationExtensions.cs" />
     <Compile Include="Network\PacketTypes\EntityPacket.cs" />
+    <Compile Include="Network\PacketTypes\PlayerData.cs" />
     <Compile Include="Network\SyncManager.cs" />
     <Compile Include="Network\UpdateQueue.cs" />
     <Compile Include="ObjectState.cs" />
@@ -98,6 +98,8 @@
     <Compile Include="Network\PacketTypes\SalutationPacket.cs" />
     <Compile Include="Model\Planets.cs" />
     <Compile Include="Model\Status.cs" />
+    <Compile Include="View\CommandReceivedEventArgs.cs" />
+    <Compile Include="View\InputManager.cs" />
     <Compile Include="View\TextProperties.cs" />
     <Compile Include="View\Animation.cs" />
     <Compile Include="Model\Direction.cs" />
@@ -130,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Icon.ico" />
+    <Content Include="TextFile1.txt" />
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
@@ -138,6 +141,7 @@
     <None Include="app.config" />
     <None Include="Empire.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </None>
     <None Include="Empire_TemporaryKey.pfx" />
     <None Include="packages.config">

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using System.Runtime.Serialization;
+using Empire.Network;
 
 namespace Empire.Model
 {
@@ -21,12 +22,12 @@ namespace Empire.Model
 
         internal Asteroid() : base ()
         {
-            Initialize();
+ 
         }
 
         internal override void Initialize()
         {
-            this.Status = Status.New;
+            base.Initialize();
             this.visualState = VisualStates.Idle;
             this.Orientation = (float)GameModel.Random.Next(0, 100);
             RollRate = GameModel.Random.Next(-300, 300) / 100f;
@@ -87,17 +88,19 @@ namespace Empire.Model
                     }
                 }
                 Status = Status.Disposable;
+                string owner = "";
                 if (entityThatCollided is Ship)
                 {
                     Ship ship = entityThatCollided as Ship;
-                    ship.Score += (Stage + 1) * 30;
+                    owner = ship.Owner;
                 }
                 else if (entityThatCollided is Laser)
                 {
                     Laser laser = entityThatCollided as Laser;
-                    GameModel.GetShip(laser.Owner).Score += (Stage+1) * 30;
+                    owner = laser.Owner;
                 }
-                
+                ConnectionManager.IncreaseScore(owner, (Stage + 1) * 30);
+
             }
         }
 

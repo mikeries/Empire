@@ -1,4 +1,5 @@
-﻿using Empire.View;
+﻿using Empire.Network;
+using Empire.View;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ namespace Empire.Model
 {
     abstract class Entity
     {
+
         private int _entityID = 0;
         internal int EntityID { get { return _entityID; }  } 
 
@@ -29,7 +31,8 @@ namespace Empire.Model
         }
 
         // Height and Width specify the dimensions of the entity
-        // Bounding Circle needs to be updated whenever they change
+        // Radius needs to be updated whenever they change
+        internal float Radius { get; private set; }
         private int _height;
         internal int Height
         {
@@ -40,7 +43,7 @@ namespace Empire.Model
             set
             {
                 _height = value;
-                _boundingCircle.Radius = (_height + _width) / 4;
+                Radius = (_height + _width) / 4;
             }
         }
         private int _width;
@@ -53,16 +56,7 @@ namespace Empire.Model
             set
             {
                 _width = value;
-                _boundingCircle.Radius = (_height + _width) / 4;
-            }
-        }
-        
-        private Circle _boundingCircle = new Circle(new Vector2(0,0), 0);
-        internal Circle BoundingCircle
-        {
-            get
-            {
-                return _boundingCircle;
+                Radius = (_height + _width) / 4;
             }
         }
 
@@ -78,11 +72,6 @@ namespace Empire.Model
                 _velocity = value;
             }
         }
-  
-        internal double Speed {
-            get { return Velocity.Length(); }
-            set { Velocity = Vector2.Normalize(Velocity) * (float)value; }
-        }
 
         internal float Orientation { get; set; }
 
@@ -90,17 +79,24 @@ namespace Empire.Model
         internal VisualStates visualState { get; set; } // used to tell the view what animations to show
         internal EntityType Type { get; set; }
 
-        internal int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
-        protected int age = 0;           // accumulates how much time has passed since the object spawned
+        internal Sprite Renderer { get; set; }
 
-        internal Sprite Renderer;
+        internal int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
+        internal DateTime LastUpdated { get; private set; }
+
+        protected int age = 0;           // accumulates how much time has passed since the object spawned
 
         internal Entity()
         {
-            Initialize();
+
         }
 
-        internal abstract void Initialize();
+        internal virtual void Initialize()
+        {
+            Status = Status.Disposable;
+            _entityID = 0;
+            visualState = VisualStates.Idle;
+        }
    
         internal void GenerateID ()
         {
@@ -114,8 +110,7 @@ namespace Empire.Model
             _location.Y = info.GetFloat("LocationY");
             _height = info.GetInt("Height");
             _width = info.GetInt("Width");
-            float radius = info.GetFloat("Radius");
-            _boundingCircle = new Circle(Location, radius);
+            float Radius = info.GetFloat("Radius");
             _velocity.X = info.GetFloat("VelocityX");
             _velocity.Y = info.GetFloat("VelocityY");
             Orientation = info.GetFloat("Orientation");
@@ -132,7 +127,7 @@ namespace Empire.Model
             info.AddValue("LocationY", Location.Y);
             info.AddValue("Height", Height);
             info.AddValue("Width", Width);
-            info.AddValue("Radius", BoundingCircle.Radius);
+            info.AddValue("Radius", Radius);
             info.AddValue("VelocityX", _velocity.X);
             info.AddValue("VelocityY", _velocity.Y);
             info.AddValue("Orientation", Orientation);
@@ -170,26 +165,26 @@ namespace Empire.Model
             {
                 _location.Y -= View.GameView.PlayArea.Height;
             }
-
-            _boundingCircle.Center = _location;
         }
 
-        // accumulate age in milliseconds, and mark the object for removal if beyond its timeToLive
-        // then move the object
         internal virtual void Update(int elapsedTime) {
             age += elapsedTime;
             if (timeToLive > 0 && age > timeToLive)
             {
                 this.Status = Status.Disposable;
             }
-            Move(elapsedTime);
-            if(Renderer!=null)
+
+            if(Renderer != null)
             {
                 Renderer.Update(elapsedTime);
             }
+
+            Move(elapsedTime);
+
+            LastUpdated = DateTime.Now;  // used to calculate lag updates on packets coming from the network
         }
 
-        internal virtual void HandleCollision(Entity entityThatCollided) { }
+        internal abstract void HandleCollision(Entity entityThatCollided);
 
     }
 }

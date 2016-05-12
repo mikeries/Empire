@@ -5,6 +5,9 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Empire.Model;
+using Empire.View;
+using System.Collections.Concurrent;
+using Empire.Network.PacketTypes;
 
 namespace Empire.Network
 {
@@ -13,7 +16,8 @@ namespace Empire.Network
         private static readonly log4net.ILog log =
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static Dictionary<string, Gamer> _gamerList = new Dictionary<string, Gamer>();
+        internal static ConcurrentDictionary<string, Gamer> Gamers = new ConcurrentDictionary<string, Gamer>();
+
         private const int MaximumPlayers = 5;
         public static bool IsHost { get { return NetworkInterface.IsHost; } }
         public static string ConnectionID { get; private set; }
@@ -52,24 +56,43 @@ namespace Empire.Network
 
         internal static void SendToAllGamers(NetworkPacket packet)
         {
-            foreach (Gamer gamer in _gamerList.Values.ToList())
+            foreach (Gamer gamer in Gamers.Values.ToList())
             {
                 NetworkInterface.SendPacket(gamer.EndPoint, packet);
             }
         }
 
+        internal static void SendSyncUpdatesToPlayer(string player, List<EntityPacket> updates)
+        {
+            Gamer gamer = Gamers[player];
+            IPEndPoint destination = gamer.EndPoint;
+            foreach(EntityPacket update in updates)
+            {
+                NetworkInterface.SendPacket(destination, update);
+            }
+        }
+
+        internal static void SendPlayerDataToAll()
+        {
+            foreach(Gamer gamer in Gamers.Values.ToList())
+            {
+                PlayerData data = new PlayerData(gamer);
+                SendToAllGamers(data);
+            }
+        }
+
         private static void AddNewGamer(SalutationPacket salutation)
         {
-            Gamer gamer = new Gamer(salutation.Name, salutation.Source);
-            _gamerList.Add(salutation.Name, gamer);
-            GameModel.NewShip(gamer.ConnectionID);
-            log.Info(gamer.Name + " has joined the game from " + salutation.Source);
+            Gamer gamer = new Gamer(salutation.Name, salutation.SourceIP);
+            Gamers.TryAdd(salutation.Name, gamer);
+            gamer.ShipID = GameModel.NewShip(gamer.ConnectionID);
+            log.Info(gamer.ConnectionID + " has joined the game from " + salutation.SourceIP);
         }
 
         private static void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)
         {
             NetworkPacket packet = e.Packet;
-            packet.Source = e.Source;
+            packet.SourceIP = e.SourceIP;
 
             switch (packet.Type)
             {
@@ -85,19 +108,31 @@ namespace Empire.Network
                     ProcessAcknowledge(packet);
                     break;
 
-                case PacketType.ShipCommand:
-                    ShipCommand command = packet as ShipCommand;
-                    Ship ship = GameModel.GetShip(command.Owner);
-                    if (ship != null)
-                    {
-                        ship.Command = command;
-                    }
+                case PacketType.PlayerData:
+                    ProcessPlayerData(packet);
                     break;
 
                 default:
                     // ignore other packet types -- they may be for someone else
                     break;
             }
+        }
+
+        private static void ProcessPlayerData(NetworkPacket packet)
+        {
+            PlayerData data = packet as PlayerData;
+            Gamer gamer;
+            if(Gamers.ContainsKey(data.ConnectionID))
+            {
+                gamer = Gamers[data.ConnectionID]; 
+            }
+            else
+            {
+                gamer = new Gamer(data.ConnectionID, data.EndPoint);
+                Gamers.TryAdd(data.ConnectionID, gamer);
+            }
+
+            gamer.CopyFromPlayerData(data);
         }
 
         private static void ProcessAcknowledge(NetworkPacket packet)
@@ -128,26 +163,31 @@ namespace Empire.Network
                 {
                     AddNewGamer(salutation);
                 }
-                NetworkInterface.SendPacket(packet.Source, ack);
+                NetworkInterface.SendPacket(packet.SourceIP, ack);
             }
+        }
+
+        internal static void IncreaseScore(string gamer, int v)
+        {
+            Gamers[gamer].Score += v;
         }
 
         private static AcknowledgePacket.Acknowledgement DetermineAppropriateResponse(SalutationPacket salutation)
         {
             AcknowledgePacket.Acknowledgement response = AcknowledgePacket.Acknowledgement.OK;
-            if (_gamerList.ContainsKey(salutation.Source.ToString()))
+            if (Gamers.ContainsKey(salutation.SourceIP.ToString()))
             {
                 response = AcknowledgePacket.Acknowledgement.MultipleConnectionFromOneEndPoint;
             }
-            else if (_gamerList.Count >= MaximumPlayers)
+            else if (Gamers.Count >= MaximumPlayers)
             {
                 response = AcknowledgePacket.Acknowledgement.GameFull;
             }
             else
             {
-                foreach (Gamer gamer in _gamerList.Values)
+                foreach (Gamer gamer in Gamers.Values)
                 {
-                    if (gamer.Name == salutation.Name)
+                    if (gamer.ConnectionID == salutation.Name)
                     {
                         response = AcknowledgePacket.Acknowledgement.DuplicateName;
                     }
@@ -166,10 +206,21 @@ namespace Empire.Network
             PingPacket ping = packet as PingPacket;
         }
 
-
-        internal static Ship GetShip()
+        internal static Ship GetShip(string owner = null)
         {
-            return GameModel.GetShip(ConnectionID);
+            if(owner == null)
+            {
+                owner = ConnectionID;
+            }
+
+            if (Gamers.ContainsKey(owner))
+            {
+                int shipID = Gamers[owner].ShipID;
+                //if (!IsHost) log.Debug("Requested ship: " + owner);
+                return GameModel.GetEntity(shipID) as Ship;
+            }
+            log.Warn("Unknown ship requested.  Owner = " + owner);
+            return null;
         }
     }
 }

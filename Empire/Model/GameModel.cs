@@ -17,35 +17,13 @@ namespace Empire.Model
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        public static Random Random = new Random();
+
         // all the game entities that exist
         private static ConcurrentDictionary<int,Entity> _gameEntities = new ConcurrentDictionary<int, Entity>();
-        public static List<Entity> GameEntities { get { return _gameEntities.Values.ToList(); } }
-
+        public static List<Entity> GameEntities { get {return _gameEntities.Values.ToList(); } }
+        public static List<int> GameEntityIDs { get { return _gameEntities.Keys.ToList(); } }
         private static GameView _game;
-
-        private static List<Entity> _entityUpdates = new List<Entity>();
-
-        private static List<Ship> _ships;
-        public static List<Ship> Ships
-        {
-            get
-            {
-                var ships =
-                    from entity in _gameEntities.Values
-                    where (entity is Ship)
-                    select entity;
-
-                _ships = new List<Ship>();
-                foreach (Ship ship in ships.ToList())
-                {
-                    _ships.Add(ship);
-                }
-
-                return _ships as List<Ship>;
-            }
-        }
-
-        public static Random Random = new Random();
 
         public static void Initialize(GameView game)
         {
@@ -78,11 +56,6 @@ namespace Empire.Model
             }
         }
 
-        private static bool Collision(Circle c1, Circle c2)
-        {
-            return ((c1.Center - c2.Center).Length() < (c1.Radius + c2.Radius-1));
-        }
-
         public static void Update(GameTime gameTime)
         {
             int elapsedTime = (int)gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -91,19 +64,13 @@ namespace Empire.Model
             {
                 ApplyUpdates();
             }
-            else
-            {
-                //SyncManager.Sync();
-            }
 
-            //update all entities and get rid of those that are done
-            foreach (Entity entity in _gameEntities.Values.ToList())
+            List<Entity> deadEntities = new List<Entity>();
+            foreach (Entity entity in _gameEntities.Values)
             {
                 if (entity.Status == Status.Disposable)
                 {
-                    Entity entityToRemove = entity;
-                    _gameEntities.TryRemove(entity.EntityID, out entityToRemove);
-                    ModelHelper.Return(entityToRemove);
+                    deadEntities.Add(entity);
                 }
                 else
                 {
@@ -111,21 +78,46 @@ namespace Empire.Model
                 }
             }
 
-            // Pull out only the asteroids and check them against the non-asteroids.
-            var asteroids =
-                from entity in _gameEntities.Values
-                where (entity is Asteroid)
-                select entity;
+            RemoveDeadEntities(deadEntities);
 
-            // next loop through again doing collision detection
+            if (ConnectionManager.IsHost)
+            {
+                var asteroids =
+                    from entity in _gameEntities.Values
+                    where (entity is Asteroid)
+                    select entity;
+                DetectCollisionsWith(asteroids);
+            }
+        }
+
+        private static void RemoveDeadEntities(List<Entity> deadEntities)
+        {
+            if (ConnectionManager.IsHost)
+            {
+                SyncManager.RemoveEntities(deadEntities);
+            }
+
+            foreach (Entity entity in deadEntities)
+            {
+                Entity entityToRemove = entity;
+                if (!_gameEntities.TryRemove(entity.EntityID, out entityToRemove))
+                {
+                    log.Warn("Failed to remove a game entity from the collection");
+                }
+                ModelHelper.ReturnToPool(entityToRemove);
+            }
+        }
+
+        private static void DetectCollisionsWith(IEnumerable<Entity> asteroids)
+        {
             foreach (Entity entity in _gameEntities.Values.ToList())
             {
-                if (entity.Type != EntityType.Asteroid && 
+                if (entity.Type != EntityType.Asteroid &&
                     entity.Type != EntityType.Planet) // non-asteroids can only collide with asteroids
                 {
-                    foreach(Entity asteroid in asteroids.ToList())
+                    foreach (Entity asteroid in asteroids.ToList())
                     {
-                        if (Collision(entity.BoundingCircle, asteroid.BoundingCircle))
+                        if (Collision(entity, asteroid))
                         {
                             entity.HandleCollision(asteroid);
                             asteroid.HandleCollision(entity);
@@ -133,26 +125,11 @@ namespace Empire.Model
                     }
                 }
             }
-
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal static Ship GetShip(string connectionID)
+        private static bool Collision(Entity e1, Entity e2)
         {
-            var ships =
-                from entity in _gameEntities.Values
-                where (entity is Ship)
-                select entity;
-
-            foreach(Ship s in ships.ToList())
-            {
-                if (s.Owner == connectionID)
-                {
-                    return s;               // early exit
-                }
-            }
-
-            return null;
+            return ((e1.Location - e2.Location).Length() < (e1.Radius + e2.Radius));
         }
 
         internal static Entity GetEntity(int entityID)
@@ -165,12 +142,12 @@ namespace Empire.Model
             return null;
         }
 
-        internal static void NewShip(string connectionID)
+        internal static int NewShip(string connectionID)
         {
             Ship ship = ModelHelper.ShipFactory();
-            ship.Location = new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2);
             ship.Owner = connectionID;
             addGameEntityFromHost(ship);
+            return ship.EntityID;
         }
 
         internal static void AddGameEntity(Entity entity)
@@ -179,56 +156,49 @@ namespace Empire.Model
             {
                 addGameEntityFromHost(entity);
             }
+            else
+            {
+                ModelHelper.ReturnToPool(entity);
+            }
         }
         
         private static void addGameEntityFromHost(Entity entity)
         {
             if (entity != null)
             {
-                List<Animation> animationCollection = ViewHelper.AnimationFactory(entity);
-                entity.Renderer = new Sprite(animationCollection, entity);
                 if (entity.EntityID == 0)
                 {
                     entity.GenerateID();
                 }
+
                 entity.Status = Status.Active;
                 _gameEntities.TryAdd(entity.EntityID, entity);                
+            } else
+            {
+                log.Warn("Null entity attempted to be added to the game.");
             }
         }
 
-        public static void ApplyUpdates()
+        private static void ApplyUpdates()
         {
             UpdateQueue queue = SyncManager.RetrieveUpdatesAndClear();
 
             foreach (EntityPacket packet in queue.Packets)
             {
-                TimeSpan lag = DateTime.Now - packet.Timestamp;
-;
-                Entity entity = ModelHelper.EntityFactory(packet.EntityType, packet.EntityState);
 
-                if (_gameEntities.ContainsKey(entity.EntityID))
+                if (_gameEntities.ContainsKey(packet.EntityID))
                 {
-                    // Replace the object, but copy over the Renderer and point it at this object
-                    Sprite renderer = _gameEntities[entity.EntityID].Renderer;
-                    renderer.SetEntity(entity);
-                    ModelHelper.Return(_gameEntities[entity.EntityID]);
-
-                    entity.Renderer = renderer;
-                    entity.Update((int)lag.TotalMilliseconds);
-                    _gameEntities[entity.EntityID] = entity;
+                    Entity entityToReplace = _gameEntities[packet.EntityID];
+                    entityToReplace.SetState(packet.EntityState);
+                    TimeSpan lag = DateTime.Now - entityToReplace.LastUpdated;
+                    entityToReplace.Update((int)lag.TotalMilliseconds);
                 }
                 else
                 {
-                    addGameEntityFromHost(entity);
+                    Entity updatedEntity = ModelHelper.EntityFactory(packet.EntityType, packet.EntityState);
+                    addGameEntityFromHost(updatedEntity);
                 }
             }
         }
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal static void UpdateEntity(Entity entity)
-        {
-            _entityUpdates.Add(entity);
-        }
-
     }
 }

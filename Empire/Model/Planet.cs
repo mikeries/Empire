@@ -15,14 +15,13 @@ namespace Empire.Model
         public Planets PlanetID { get; set; }
 
         public Planet(Planets ID = Planets.planet1) : base() {
-            Initialize();
             PlanetID = ID;
         }
 
         internal override void Initialize()
         {
+            base.Initialize();
             this.Type = EntityType.Planet;
-            this.visualState = VisualStates.Idle;
         }
 
         internal override void SetState(ObjectState info)
@@ -37,5 +36,9 @@ namespace Empire.Model
             info.AddValue("PlanetID", (int)PlanetID);
         }
 
+        internal override void HandleCollision(Entity entityThatCollided)
+        {
+            throw new NotImplementedException();  // at the moment, nothing can collide with a planet.  But if this gets called, it's a bug!
+        }
     }
 }

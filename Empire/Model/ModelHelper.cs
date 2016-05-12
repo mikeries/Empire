@@ -20,7 +20,7 @@ namespace Empire.Model
         const int LaserHeight = 3;
         const int LaserWidth = 3;
         const float LaserSpeed = 1.0f;
-        public const int InitialAsteroidCount = 200;
+        public const int InitialAsteroidCount = 2000;
         public const int InitialShipCount = 1;
 
         private static EntityPool<Asteroid> asteroidPool;
@@ -31,9 +31,17 @@ namespace Empire.Model
         public static void Initialize()
         {
             asteroidPool = new EntityPool<Asteroid>(() => { return new Asteroid(); }, 3*InitialAsteroidCount);
-            laserPool = new EntityPool<Laser>(() => { return new Laser(); }, 200);
-            shipPool = new EntityPool<Ship>(() => { return new Ship(); }, 4 * InitialShipCount);
+            laserPool = new EntityPool<Laser>(() => { return new Laser(); }, 300);
+            shipPool = new EntityPool<Ship>(() => { return new Ship(); }, 8 * InitialShipCount);
             planetPool = new EntityPool<Planet>(() => { return new Planet(); }, 3*(int)Planets.Count );
+        }
+
+        internal static Ship ShipFactory()
+        {
+            Ship newShip = shipPool.GetNew() as Ship;
+            newShip.Location = new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2);
+            newShip.Renderer = null;
+            return newShip;
         }
 
         internal static Planet PlanetFactory(Vector2 location, Planets ID)
@@ -45,6 +53,7 @@ namespace Empire.Model
             int size = GameModel.Random.Next(PlanetMinSize, PlanetMaxSize);
             newPlanet.Height = size;
             newPlanet.Width = size;
+            newPlanet.Renderer = null;
 
             return newPlanet;
         }
@@ -58,29 +67,32 @@ namespace Empire.Model
             newAsteroid.Width = size;
             newAsteroid.Stage = AsteroidInitialStage;
             newAsteroid.Style = GameModel.Random.Next(1, 4);
+            newAsteroid.Renderer = null;
 
             return newAsteroid;
         }
 
         internal static Laser LaserFactory(Ship ship)
         {
-            Laser laser = laserPool.GetNew() as Laser;
+            Laser newLaser = laserPool.GetNew() as Laser;
             if (ship != null)
             {
-                laser.Owner = ship.Owner;
+                newLaser.Owner = ship.Owner;
 
-                laser.Location = new Vector2(ship.Location.X, ship.Location.Y);
-                laser.Height = LaserHeight;
-                laser.Width = LaserWidth;
-                laser.Orientation = ship.Orientation;
-                laser.Velocity = ship.Velocity + thrustVector(LaserSpeed, ship.Orientation);
+                newLaser.Location = new Vector2(ship.Location.X, ship.Location.Y);
+                newLaser.Height = LaserHeight;
+                newLaser.Width = LaserWidth;
+                newLaser.Orientation = ship.Orientation;
+                newLaser.Velocity = ship.Velocity + thrustVector(LaserSpeed, ship.Orientation);
             }
             else
             {
                 log.Warn("Null ship in the laser factory.");
             }
 
-            return laser;
+            newLaser.Renderer = null;
+
+            return newLaser;
         }
 
         internal static Entity EntityFactory(EntityType entityType, ObjectState entityState)
@@ -116,15 +128,9 @@ namespace Empire.Model
             }
         }
 
-        internal static Ship ShipFactory()
-        {
-            Ship ship = shipPool.GetNew() as Ship;
-            return ship;
-        }
-
-        // TODO: replace this function by creating a delegate in the entity that
-        // the factory methods will set to return the entity to the correct pool.
-        internal static void Return(Entity entityToReturn)
+        //// TODO: replace this function by creating a delegate in the entity that
+        //// the factory methods will set to return the entity to the correct pool.
+        internal static void ReturnToPool(Entity entityToReturn)
         {
             if (entityToReturn is Asteroid)
             {

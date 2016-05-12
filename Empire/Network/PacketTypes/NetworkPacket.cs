@@ -19,7 +19,7 @@ namespace Empire.Network
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         internal PacketType Type;
-        internal IPEndPoint Source;
+        internal IPEndPoint SourceIP;
         internal DateTime Timestamp { get; }  // when the packet was sent.  Used for determining lag time and as a packet ID
 
         internal NetworkPacket()

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+//TODO:  Clean up the abstraction here.  Maybe implement an IPoolable interface and make this class
+// not be specific to Entities?
 namespace Empire
 {
     // Class to implement a pool of entities, allowing object reuse to avoid heap fragmentation.
@@ -14,12 +16,12 @@ namespace Empire
         private static readonly log4net.ILog log =
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private Entity[] _objects;
-        private Func<Entity> _objectGenerator;
+        private Func<T> _objectGenerator;
         private int nextNew;
         private int _maxSize;
         private static object _accessLock;
 
-        internal EntityPool(Func<Entity> objectGenerator, int maxSize)
+        internal EntityPool(Func<T> objectGenerator, int maxSize)
         {
             _maxSize = maxSize;
             _objects = new Entity[_maxSize];
@@ -27,8 +29,9 @@ namespace Empire
 
             for (int i = 0; i < maxSize; i++)
             {
-                Entity item = _objectGenerator();
+                Entity item = _objectGenerator() as Entity;
                 item.Status = Status.Disposable;
+                item.Initialize();
                 _objects[i] = item;
             }
             nextNew = 0;
@@ -45,10 +48,9 @@ namespace Empire
                     log.Fatal("Attempted to exceed maximum number of objects in the pool.  Increase the pool size.");
                     throw new OverflowException();
                 }
-
-                item.Status = Status.Active;
-
+                
                 item.Initialize();
+                item.Status = Status.Active;
 
                 nextNew = nextNew + 1;
                 if (nextNew == _maxSize) nextNew = 0;
@@ -67,15 +69,15 @@ namespace Empire
                     throw new OverflowException();
                 }
 
-                // mark it as disposable, just in case the caller forgot.
                 Entity item = _objects[index];
-                item.Status = Status.Disposable;
 
                 if (index >= nextNew)
                 {
                     log.Warn("Attempted to return an item that was already available.");
                     return;
                 }
+
+                item.Status = Status.Disposable;
 
                 // now swap the disposable item with the last active item in the array,
                 // which is located at nextNew - 1

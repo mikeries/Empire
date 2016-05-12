@@ -7,13 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Empire.Network;
 using System.Runtime.Serialization;
+using Empire.View;
 
 namespace Empire.Model
 {
 
     class Ship : Entity
     {
-        internal ShipCommand Command = new ShipCommand("",0);        // container for commands issued by player, network, AI
+        private ShipCommand Command = new ShipCommand("",0);        // container for commands issued by player, network, AI
 
         private static readonly log4net.ILog log =
             log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -35,32 +36,41 @@ namespace Empire.Model
         private const int ShipHeight = 64;                  // nominal ship height;
         private const int ShipWidth = 64;                   // nominal ship width;
 
-        internal int Score;                                 // Number of points this ship has scored
-
-        internal int ShieldEnergy { get; set; }
+        internal int ShieldEnergy { get; private set; }
 
         internal string Owner { get; set; }     
 
         internal Ship() : base()
         {
-            Initialize();
+            InputManager.CommandReceived -= CommandReceivedHandler;
+            InputManager.CommandReceived += CommandReceivedHandler;
+        }
+
+        internal void CommandReceivedHandler(object sender, CommandReceivedEventArgs args)
+        {
+            ShipCommand packet = args.CommandPacket;
+            if (Owner == packet.Owner)
+            {
+                Command = packet;
+            }
         }
 
         internal override void Initialize()
         {
+            base.Initialize();
             Location = new Vector2(0, 0);
             Velocity = new Vector2(Stopped, 0);
             this.Type = EntityType.Ship;
             Height = ShipHeight;
             Width = ShipWidth;
             ShieldEnergy = 100;
+            Command = new ShipCommand("", 0);
         }
 
         internal override void SetState(ObjectState info)
         {
             base.SetState(info);
             //_timeSinceLastShot = (int)info.GetValue("timeSinceLastShot", typeof(int));
-            Score = info.GetInt("Score");
             ShieldEnergy = info.GetInt("ShieldEnergy");
             Owner = info.GetString("Owner");
         }
@@ -69,19 +79,14 @@ namespace Empire.Model
         {
             base.GetState(info);
             //info.AddValue("timeSinceLastShot", _timeSinceLastShot);
-            info.AddValue("Score", Score);
             info.AddValue("ShieldEnergy", ShieldEnergy);
             info.AddValue("Owner", Owner);
         }
 
         internal override void Update(int elapsedTime)
         {
-
-            if (ConnectionManager.IsHost)
-            {
-                ProcessInput(elapsedTime);
-            }
-
+            ProcessInput(elapsedTime);
+            
             ShieldEnergy += (int)(elapsedTime * ShieldRegenerationRate);
             ShieldEnergy = MathHelper.Clamp(ShieldEnergy, 0, 100);
 
@@ -91,16 +96,15 @@ namespace Empire.Model
 
         private void ProcessInput(int elapsedTime)
         {
-
             visualState = VisualStates.Idle; // reset visual state
 
             if (Command.Left)
             {
-                RotateShip(Direction.Left, elapsedTime);
+                Rotate(-1 * RotationRate * elapsedTime);
             }
             if (Command.Right)
             {
-                RotateShip(Direction.Right, elapsedTime);
+                Rotate(RotationRate * elapsedTime);
             }
             if (Command.Thrust)
             {
@@ -114,12 +118,10 @@ namespace Empire.Model
             _timeSinceLastShot += elapsedTime;
             if (Command.Shoot)
             {
-                if (_timeSinceLastShot > millisecondsPerShot)
-                {
-                    Fire(elapsedTime);
-                    _timeSinceLastShot = 0;
-                }
+                Fire(elapsedTime);
             }
+
+            Command = new ShipCommand("", 0);
 
         }
 
@@ -132,42 +134,33 @@ namespace Empire.Model
             }
         }
 
-        internal void RotateShip(Direction direction,int elapsedTime) {
-            switch (direction)
-            {
-                case Direction.Left:
-                    Rotate(-1* RotationRate * elapsedTime);
-                    break;
-                case Direction.Right:
-                    Rotate(RotationRate * elapsedTime);
-                    break;
-                default: break;
-            }
-        }
-
         internal void AccelerateShip(int elapsedTime)
         {
             visualState |= VisualStates.Thrusting;
             Vector2 acceleration = ModelHelper.thrustVector(engineThrust*elapsedTime, Orientation);
             Velocity = Velocity + acceleration;
-            if (Speed > MaxSpeed)
+            if (Velocity.Length() > MaxSpeed)
             {
-                Speed = MaxSpeed;
+                Velocity = Vector2.Normalize(Velocity) * (float)MaxSpeed;
             }
         }
 
         internal void Fire(int elapsedTime)
         {
-            Laser laser = ModelHelper.LaserFactory(this);
-             laser.Update(elapsedTime);
-            GameModel.AddGameEntity(laser);
+            if (_timeSinceLastShot > millisecondsPerShot)
+            {
+                Laser laser = ModelHelper.LaserFactory(this);
+                laser.Update(elapsedTime);
+                GameModel.AddGameEntity(laser);
+                _timeSinceLastShot = 0;
+            }
         }
 
         internal override void HandleCollision(Entity entityThatCollided)
         {
             if(ShieldsAreDown())
             {
-                Score -= 100;  
+                ConnectionManager.IncreaseScore(Owner,-100);  
             }
         }
 

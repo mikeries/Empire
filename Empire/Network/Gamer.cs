@@ -9,15 +9,24 @@ namespace Empire.Network
 {
     public class Gamer
     {
-        public string Name { get; set; }
         public string ConnectionID { get; private set; }                   // the ID corresponding to this gamer
         public IPEndPoint EndPoint { get; private set; }
+        public int ShipID { get; set; }
+        public int Score { get; set; }
 
         public Gamer(string name, IPEndPoint endpoint)
         {
-            Name = name;
             EndPoint = endpoint;
             ConnectionID = name;
+            ShipID = 0;
+            Score = 0;
+        }
+
+        internal void CopyFromPlayerData(PlayerData data)
+        {
+            ShipID = data.ShipID;
+            Score = data.Score;
+            EndPoint = data.EndPoint;
         }
     }
 }

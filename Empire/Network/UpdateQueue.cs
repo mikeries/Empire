@@ -1,5 +1,6 @@
 ﻿using Empire.Network.PacketTypes;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,7 +11,7 @@ namespace Empire.Network
 {
     class UpdateQueue
     {
-        private Dictionary<int, EntityPacket> _updateQueue = new Dictionary<int, EntityPacket>();
+        private ConcurrentDictionary<int, EntityPacket> _updateQueue = new ConcurrentDictionary<int, EntityPacket>();
 
         internal List<EntityPacket> Packets
         {
@@ -20,7 +21,6 @@ namespace Empire.Network
             }
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         internal void Add(EntityPacket packet)
         {
             int entityID = packet.EntityID;
@@ -34,7 +34,7 @@ namespace Empire.Network
             }
             else
             {
-                _updateQueue.Add(entityID, packet);
+                _updateQueue.TryAdd(entityID, packet);
             }
         }
     }

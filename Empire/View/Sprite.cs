@@ -16,11 +16,6 @@ namespace Empire.View
 
         internal Sprite(List<Animation> animations, Entity entity) {
             _animations = animations;
-            SetEntity(entity);
-        }
-
-        internal void SetEntity(Entity entity)
-        {
             _entity = entity;
         }
 
@@ -32,13 +27,13 @@ namespace Empire.View
             }
         }
 
-        internal void Draw(SpriteBatch spriteBatch, Model.Ship player)
+        internal void Draw(SpriteBatch spriteBatch, Ship player)
         {
             //if ((player.Location - _entity.Location).Length() > 800) return;        // quick exit for stuff that's too far away
 
             Vector2 position;
 
-            if (!(_entity == player))
+            if (_entity != player)
             {
                 position = ViewHelper.TranslateModelCoordsToViewCoords(_entity.Location, player.Location);
             }

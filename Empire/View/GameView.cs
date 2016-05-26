@@ -2,14 +2,14 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using Empire.Model;
-using Empire.Network;
+using EmpireUWP.Model;
+using EmpireUWP.Network;
 using System.Linq;
 using System;
 
 // TODO: Move the sprites into a class of their own
 
-namespace Empire.View
+namespace EmpireUWP.View
 {
     public class GameView : Microsoft.Xna.Framework.Game
     {

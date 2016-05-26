@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Empire.Network
+namespace EmpireUWP.Network
 {
     [Serializable]
     internal class SalutationPacket : NetworkPacket

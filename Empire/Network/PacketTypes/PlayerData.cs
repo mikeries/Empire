@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Empire.Network
+namespace EmpireUWP.Network
 {
     [Serializable]
     internal class PlayerData : NetworkPacket

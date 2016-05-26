@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
 
-namespace Empire.Model
+namespace EmpireUWP.Model
 {
     static class ModelHelper
     {
@@ -85,11 +85,6 @@ namespace Empire.Model
                 newLaser.Orientation = ship.Orientation;
                 newLaser.Velocity = ship.Velocity + thrustVector(LaserSpeed, ship.Orientation);
             }
-            else
-            {
-                log.Warn("Null ship in the laser factory.");
-            }
-
             newLaser.Renderer = null;
 
             return newLaser;

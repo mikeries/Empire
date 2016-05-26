@@ -1,4 +1,4 @@
-﻿using Empire.Model;
+﻿using EmpireUWP.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Empire.View
+namespace EmpireUWP.View
 {
     // The Graphical User Interface class is responsible for creating and updating the
     // elements of the user interface that are not part of the game world.  This includes

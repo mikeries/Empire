@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Empire.Model;
-using Empire.Network;
+using EmpireUWP.Model;
+using EmpireUWP.Network;
 using System.Threading;
 using System.Runtime.CompilerServices;
 using System.Net;
 using System.Collections;
-using Empire.Network.PacketTypes;
+using EmpireUWP.Network.PacketTypes;
 using System.Collections.Concurrent;
 
-namespace Empire.Network
+namespace EmpireUWP.Network
 {
     internal static class SyncManager
     {
@@ -30,6 +30,8 @@ namespace Empire.Network
         static SyncManager()
         {
             NetworkInterface.PacketReceived += ProcessIncomingPacket;
+
+            GameModel.EntitiesRemoved += RemoveEntities;
         }
 
         private static void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)
@@ -52,11 +54,7 @@ namespace Empire.Network
             return queue;
         }
 
-
-        // TODO: figure out how to do this with a thread that just contains a while and updates players as fast as it can
-        // then figure out how to get it to go as fast as it can, but with a 'minumum' time between updates so that it doesn't
-        // eat all available bandwidth/CPU time.
-        // Need to remember to have a way to stop it.
+        // TODO: figure out how to do this with async/await tasks
         internal static void Start()
         {
             _timer = new Timer(SyncTimer, _autoEvent, 50, 50);
@@ -130,11 +128,6 @@ namespace Empire.Network
             ConnectionManager.SendSyncUpdatesToPlayer(player, updates);
         }
 
-        internal static void RemoveEntities(List<Entity> deadEntities)
-        {
-            throw new NotImplementedException();
-        }
-
         internal static void RemoveEntity(Entity entity)
         {
             if (ConnectionManager.IsHost)
@@ -147,6 +140,25 @@ namespace Empire.Network
         private static int DistanceBetween(Ship ship, Entity entity)
         {
             return (int)(ship.Location - entity.Location).Length();
+        }
+
+        // Note:  Technically, all the clients need is a list of entities IDs
+        // and they could be passed within a single packet which would save bandwidth.
+        // But this works too and is simpler.
+
+        // TODO: Develop TCP networking capability, as UDP is not reliable enough in
+        // this case.  (For now, let's just send the packets 5X)
+        private static void RemoveEntities(object sender, EntitiesRemovedEventAgs e)
+        {
+            List<Entity> entitiesToRemove = e.EntitiesRemoved;
+            for (int i = 0; i < 5; i++)
+            {
+                foreach (Entity entity in entitiesToRemove)
+                {
+                    EntityPacket packet = new EntityPacket(entity);
+                    ConnectionManager.SendToAllGamers(packet);
+                }
+            }
         }
     }
 }

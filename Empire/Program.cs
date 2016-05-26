@@ -1,7 +1,7 @@
 ﻿using System;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
-namespace Empire
+namespace EmpireUWP
 {
 #if WINDOWS || LINUX
     /// <summary>

@@ -1,5 +1,5 @@
-﻿using Empire.Network;
-using Empire.Network.PacketTypes;
+﻿using EmpireUWP.Network;
+using EmpireUWP.Network.PacketTypes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -8,10 +8,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using Empire.View;
+using EmpireUWP.View;
 using System.Collections.Concurrent;
 
-namespace Empire.Model
+namespace EmpireUWP.Model
 {
     class GameModel
     {
@@ -94,7 +94,7 @@ namespace Empire.Model
         {
             if (ConnectionManager.IsHost)
             {
-                SyncManager.RemoveEntities(deadEntities);
+                OnEntitiesRemoved(deadEntities);
             }
 
             foreach (Entity entity in deadEntities)
@@ -199,6 +199,12 @@ namespace Empire.Model
                     addGameEntityFromHost(updatedEntity);
                 }
             }
+        }
+
+        public static event EventHandler<EntitiesRemovedEventAgs> EntitiesRemoved = delegate { };
+        private static void OnEntitiesRemoved(List<Entity> deadEntities)
+        {
+            EntitiesRemoved?.Invoke(null, new EntitiesRemovedEventAgs(deadEntities));
         }
     }
 }

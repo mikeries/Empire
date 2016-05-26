@@ -1,4 +1,4 @@
-﻿using Empire.Model;
+﻿using EmpireUWP.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 //TODO:  Clean up the abstraction here.  Maybe implement an IPoolable interface and make this class
 // not be specific to Entities?
-namespace Empire
+namespace EmpireUWP
 {
     // Class to implement a pool of entities, allowing object reuse to avoid heap fragmentation.
     public class EntityPool<T>

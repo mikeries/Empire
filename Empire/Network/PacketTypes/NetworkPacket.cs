@@ -1,5 +1,5 @@
-﻿using Empire.Model;
-using Empire.Network.PacketTypes;
+﻿using EmpireUWP.Model;
+using EmpireUWP.Network.PacketTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Empire.Network
+namespace EmpireUWP.Network
 {
     [Serializable]
     abstract class NetworkPacket

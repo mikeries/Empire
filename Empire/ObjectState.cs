@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Empire
+namespace EmpireUWP
 {
     
     // ObjectStates can be created by calling GetState on an entity object and can
@@ -18,7 +18,7 @@ namespace Empire
     // parallel.  There could also be issues if the sender and receiver are using different revisions.
 
     [Serializable]
-    class ObjectState : ISerializable
+    public class ObjectState : ISerializable
     {
         public Dictionary<string,byte[]> Data = new Dictionary<string, byte[]>();
 

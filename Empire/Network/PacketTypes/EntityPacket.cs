@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Empire.Model;
+using EmpireUWP.Model;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
-namespace Empire.Network.PacketTypes
+namespace EmpireUWP.Network.PacketTypes
 {
     [Serializable]
     class EntityPacket : NetworkPacket

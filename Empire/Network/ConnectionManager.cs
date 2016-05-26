@@ -4,12 +4,12 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Empire.Model;
-using Empire.View;
+using EmpireUWP.Model;
+using EmpireUWP.View;
 using System.Collections.Concurrent;
-using Empire.Network.PacketTypes;
+using EmpireUWP.Network.PacketTypes;
 
-namespace Empire.Network
+namespace EmpireUWP.Network
 {
     public static class ConnectionManager
     {

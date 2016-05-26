@@ -1,4 +1,4 @@
-﻿using Empire.Network.PacketTypes;
+﻿using EmpireUWP.Network.PacketTypes;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Empire.Network
+namespace EmpireUWP.Network
 {
     class UpdateQueue
     {

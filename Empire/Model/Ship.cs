@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Empire.Network;
+using EmpireUWP.Network;
 using System.Runtime.Serialization;
-using Empire.View;
+using EmpireUWP.View;
 
-namespace Empire.Model
+namespace EmpireUWP.Model
 {
 
     class Ship : Entity

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Empire.Model;
+using EmpireUWP.Model;
 
-namespace Empire.Network
+namespace EmpireUWP.Network
 {
     [Serializable]
     internal class ShipCommand : NetworkPacket

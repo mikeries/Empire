@@ -13,8 +13,6 @@ namespace EmpireUWP
     // Class to implement a pool of entities, allowing object reuse to avoid heap fragmentation.
     public class EntityPool<T>
     {
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("EntityPool");
         private Entity[] _objects;
         private Func<T> _objectGenerator;
         private int nextNew;
@@ -45,7 +43,7 @@ namespace EmpireUWP
                 Entity item = _objects[nextNew];
                 if (item.Status != Status.Disposable)
                 {
-                    log.Fatal("Attempted to exceed maximum number of objects in the pool.  Increase the pool size.");
+                    //log.Fatal("Attempted to exceed maximum number of objects in the pool.  Increase the pool size.");
                     throw new OverflowException();
                 }
                 
@@ -65,7 +63,7 @@ namespace EmpireUWP
 
                 if (index < 0)
                 {
-                    log.Fatal("Attempted to return a non-pool object to the pool. Type:" + itemToReturn.Type);
+                    //log.Fatal("Attempted to return a non-pool object to the pool. Type:" + itemToReturn.Type);
                     throw new OverflowException();
                 }
 
@@ -73,7 +71,7 @@ namespace EmpireUWP
 
                 if (index >= nextNew)
                 {
-                    log.Warn("Attempted to return an item that was already available.");
+                    //log.Warn("Attempted to return an item that was already available.");
                     return;
                 }
 

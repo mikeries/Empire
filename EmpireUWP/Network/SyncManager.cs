@@ -15,8 +15,6 @@ namespace EmpireUWP.Network
 {
     internal static class SyncManager
     {
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("SyncManager");
 
         private const int MaxSyncDistance = 1000;
 
@@ -25,18 +23,17 @@ namespace EmpireUWP.Network
         private static Timer _timer;
         private static UpdateQueue _updateQueue = new UpdateQueue();
         private static int _lastUpdated = 0;
+        private static ConnectionManager _connectionManager;
 
         static SyncManager()
         {
-            NetworkInterface.PacketReceived += ProcessIncomingPacket;
-
             GameModel.EntitiesRemoved += RemoveEntities;
         }
 
         private static void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)
         {
             NetworkPacket packet = e.Packet;
-            packet.SourceIP = e.SourceIP;
+            //packet.SourceIP = e.SourceIP;
 
             if (packet.Type == PacketType.Entity)
             {
@@ -53,29 +50,29 @@ namespace EmpireUWP.Network
         }
 
         // TODO: figure out how to do this with async/await tasks
-        internal static void Start()
+        internal static void Start(ConnectionManager connection)
         {
+            _connectionManager = connection;
+            _connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
             _timer = new Timer(SyncTimer, _autoEvent, 50, 50);
         }
 
         internal static void SyncTimer(object stateInfo)
         {
-            if (ConnectionManager.IsHost)
+            if (_connectionManager.Host)
             {
-                ConnectionManager.SendPlayerDataToAll();
-
-                Gamer player = NextGamerToUpdate();
+                Player player = NextGamerToUpdate();
 
                 if (player != null)
                 {
-                    SyncPlayer(player.ConnectionID);
+                    SyncPlayer(player.PlayerID);
                 }
             }
         }
 
-        private static Gamer NextGamerToUpdate()
+        private static Player NextGamerToUpdate()
         {
-            List<Gamer> gamers = ConnectionManager.Gamers.Values.ToList();
+            List<Player> gamers = _connectionManager.Gamers;
 
             if (gamers.Count <= 1)
             {
@@ -83,14 +80,14 @@ namespace EmpireUWP.Network
             }
 
             IncrementGamerIndex(gamers);
-            if (gamers[_lastUpdated].ConnectionID == ConnectionManager.ConnectionID)
+            if (gamers[_lastUpdated].PlayerID == _connectionManager.PlayerID)
             {
                 IncrementGamerIndex(gamers);
             }
             return gamers[_lastUpdated];
         }
 
-        private static void IncrementGamerIndex(List<Gamer> gamers)
+        private static void IncrementGamerIndex(List<Player> gamers)
         {
             _lastUpdated++;
             if (_lastUpdated >= gamers.Count)
@@ -101,19 +98,19 @@ namespace EmpireUWP.Network
 
         internal static void SyncAll()
         {
-            if (ConnectionManager.IsHost)
+            if (_connectionManager.Host)
             {
                 foreach (Entity entity in GameModel.GameEntities)
                 {
                     EntityPacket packet = new EntityPacket(entity);
-                    ConnectionManager.SendToAllGamers(packet);
+                    _connectionManager.SendPacketToAllClients(packet);
                 }
             }
         }
         
         private static void SyncPlayer(string player)
         {
-            Ship ship = ConnectionManager.GetShip(player);
+            Ship ship = _connectionManager.GetShip(player);
             List<EntityPacket> updates = new List<EntityPacket>();
             foreach(Entity entity in GameModel.GameEntities)
             {
@@ -123,15 +120,15 @@ namespace EmpireUWP.Network
                     updates.Add(packet);
                 }
             }
-            ConnectionManager.SendSyncUpdatesToPlayer(player, updates);
+            _connectionManager.SendSyncUpdatesToPlayer(player, updates);
         }
 
         internal static void RemoveEntity(Entity entity)
         {
-            if (ConnectionManager.IsHost)
+            if (_connectionManager.Host)
             {
                 EntityPacket packet = new EntityPacket(entity);
-                ConnectionManager.SendToAllGamers(packet);
+                _connectionManager.SendPacketToAllClients(packet);
             }
         }
 
@@ -154,7 +151,7 @@ namespace EmpireUWP.Network
                 foreach (Entity entity in entitiesToRemove)
                 {
                     EntityPacket packet = new EntityPacket(entity);
-                    ConnectionManager.SendToAllGamers(packet);
+                    _connectionManager.SendPacketToAllClients(packet);
                 }
             }
         }

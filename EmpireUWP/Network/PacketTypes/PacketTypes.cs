@@ -1,4 +1,5 @@
-﻿namespace EmpireUWP.Network
+﻿
+namespace EmpireUWP.Network
 {
     public enum PacketType : int
     {
@@ -8,5 +9,6 @@
         Entity,
         ShipCommand,
         PlayerData,
+        LobbyCommand,
     }
 }

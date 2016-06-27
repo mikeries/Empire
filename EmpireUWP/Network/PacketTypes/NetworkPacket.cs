@@ -13,15 +13,11 @@ namespace EmpireUWP.Network
     [DataContract]
     abstract class NetworkPacket
     {
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("NetworkPacket");
 
         [DataMember]
         internal PacketType Type;
         [DataMember]
-        internal IPEndPoint SourceIP;
-        [DataMember]
-        internal DateTime Timestamp { get; }  // when the packet was sent.  Used for determining lag time and as a packet ID
+        internal DateTime Timestamp { get; private set; }  // when the packet was sent.  Used for determining lag time and as a packet ID
 
         internal NetworkPacket()
         {

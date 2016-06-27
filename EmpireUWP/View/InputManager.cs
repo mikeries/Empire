@@ -9,61 +9,66 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.View
 {
-    static class InputManager
+    class InputManager
     {
-        static InputManager()
+        private ConnectionManager _connectionManager;
+
+        public InputManager(ConnectionManager connection)
         {
-            NetworkInterface.PacketReceived += ProcessIncomingPacket;
+            _connectionManager = connection;
+            _connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
         }
 
-        internal static void Update()
+        internal void Update()
         {
             ProcessLocalInput();
         }
 
-        internal static void ProcessRemoteInput(ShipCommand commandPacket)
+        internal void ProcessRemoteInput(ShipCommand commandPacket)
         {
-            if (commandPacket.Owner != ConnectionManager.ConnectionID)
+            if (commandPacket.Owner != _connectionManager.PlayerID)
             { 
                 OnCommandReceived(commandPacket);
             }
         }
 
-        internal static void ProcessLocalInput()
+        internal void ProcessLocalInput()
         {
             KeyboardState keyboardState = Keyboard.GetState();
 
-                int commands = 0;
-                if (keyboardState.IsKeyDown(Keys.Left))
-                {
-                    commands += (int)CommandFlags.Left;
-                }
-                if (keyboardState.IsKeyDown(Keys.Right))
-                {
-                    commands += (int)CommandFlags.Right;
-                }
-                if (keyboardState.IsKeyDown(Keys.Up))
-                {
-                    commands += (int)CommandFlags.Thrust;
-                }
-                if (keyboardState.IsKeyDown(Keys.Down))
-                {
-                    commands += (int)CommandFlags.Shields;
-                }
-                if (keyboardState.IsKeyDown(Keys.Space))
-                {
-                    commands += (int)CommandFlags.Shoot;
-                }
+            int commands = 0;
+            if (keyboardState.IsKeyDown(Keys.Left))
+            {
+                commands += (int)CommandFlags.Left;
+            }
+            if (keyboardState.IsKeyDown(Keys.Right))
+            {
+                commands += (int)CommandFlags.Right;
+            }
+            if (keyboardState.IsKeyDown(Keys.Up))
+            {
+                commands += (int)CommandFlags.Thrust;
+            }
+            if (keyboardState.IsKeyDown(Keys.Down))
+            {
+                commands += (int)CommandFlags.Shields;
+            }
+            if (keyboardState.IsKeyDown(Keys.Space))
+            {
+                commands += (int)CommandFlags.Shoot;
+            }
 
-                string source = ConnectionManager.ConnectionID;
+            string source = _connectionManager.PlayerID;
+            if (source != null)
+            {
                 ShipCommand commandPacket = new ShipCommand(source, commands);
                 OnCommandReceived(commandPacket);
 
-                ConnectionManager.SendShipCommand(commandPacket);
-
+                _connectionManager.SendShipCommand(commandPacket);
+            }
         }
 
-        private static void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)
+        private void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)
         {
             if (e.Packet.Type == PacketType.ShipCommand)
             {
@@ -72,8 +77,8 @@ namespace EmpireUWP.View
             }
         }
 
-        public static event EventHandler<CommandReceivedEventArgs> CommandReceived = delegate { };
-        private static void OnCommandReceived(ShipCommand command)
+        public event EventHandler<CommandReceivedEventArgs> CommandReceived = delegate { };
+        private void OnCommandReceived(ShipCommand command)
         {
             CommandReceived?.Invoke(null, new CommandReceivedEventArgs(command));
         }

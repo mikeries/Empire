@@ -7,27 +7,25 @@ using EmpireUWP.Network;
 using System.Linq;
 using System;
 
-// TODO: Move the sprites into a class of their own
-
 namespace EmpireUWP.View
 {
     public class GameView : Microsoft.Xna.Framework.Game
     {
-        private static readonly log4net.ILog log = 
-            log4net.LogManager.GetLogger("GameView");
         internal static Rectangle PlayArea = new Rectangle(0, 0, 20000, 20000);
         internal static Vector2 WindowSize = new Vector2(1280f, 720f);
         internal static Vector2 ViewCenter = new Vector2(WindowSize.X/2, WindowSize.Y/2);
         internal static int GameDuration = 1000 * 60 * 2;  // 2 minute timer in milliseconds
 
         internal bool GameOver { get; set; }
+
+        //TODO: fix scoring system
         internal int Score
         {
             get
             {
-                if (_player != null)
+                if (_player.Owner != null)
                 {
-                    return ConnectionManager.Gamers[_player.Owner].Score;                    
+                    return 0;                    
                 }
                 else
                 {
@@ -40,7 +38,7 @@ namespace EmpireUWP.View
         {
             get
             {
-                if (_player != null)
+                if (_player.Owner != null)
                 {
                     return _player.ShieldEnergy;
                 }
@@ -57,8 +55,10 @@ namespace EmpireUWP.View
         private SpriteBatch _spriteBatch;
         private GraphicalUserInterface _gui;
         private AIComponent _ai = new AIComponent();
+        private ConnectionManager _connectionManager = new ConnectionManager();
+        private InputManager _inputManager;
 
-        private Ship _player;
+        private Ship _player = GameModel.NullShip;
         internal Ship Player { get { return _player; } }
 
         private Dictionary<int, Sprite> _sprites = new Dictionary<int, Sprite>();
@@ -67,7 +67,8 @@ namespace EmpireUWP.View
         {
             _graphics = new GraphicsDeviceManager(this);
             _gui = new GraphicalUserInterface(this);
-
+            _inputManager = new InputManager(_connectionManager);
+            this.IsMouseVisible = true;
             Content.RootDirectory = "Content";
         }
 
@@ -83,31 +84,21 @@ namespace EmpireUWP.View
             TimeRemaining = GameDuration;
 
             SpaceBackground.Initialize();
-            ConnectionManager.Initialize();
-            GameModel.Initialize(this);
-            SyncManager.Start();
+            GameModel.Initialize(this, _connectionManager, _inputManager);
+            //SyncManager.Start();
 
-            _gui.Initialize();
+            //_gui.Initialize();
 
             GameOver = false;
 
             base.Initialize();
         }
 
-        private void WaitForConnection()
-        {
-            while (ConnectionManager.ConnectionID==null)
-            {
-                ConnectionManager.Join("Mike");
-                //System.Threading.Thread.Sleep(1000);
-            }
-        }
-
         protected override void LoadContent()
         {
             SpaceBackground.LoadContent(Content);
             ViewHelper.LoadContent(Content);
-            _gui.LoadContent(Content);
+            //_gui.LoadContent(Content);
             GameModel.LoadWorld();
         }
 
@@ -123,19 +114,9 @@ namespace EmpireUWP.View
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            if(ConnectionManager.ConnectionID == null)
-            {
-                //System.Threading.Thread.Sleep(1000);
-                WaitForConnection();
-            }
-
-            InputManager.Update();
-
-            //_ai.Update();
+            _inputManager.Update();
 
             GameModel.Update(gameTime);
-
-            _gui.Update(gameTime);
 
             TimeRemaining -= (int)gameTime.ElapsedGameTime.TotalMilliseconds;
 
@@ -151,8 +132,7 @@ namespace EmpireUWP.View
         {
             GraphicsDevice.Clear(Color.Black);
 
-            _player = ConnectionManager.GetShip();
-
+            _player = _connectionManager.GetShip();
             if (_player == null)
             {
                 return;
@@ -160,7 +140,6 @@ namespace EmpireUWP.View
 
             DrawBackground();
             DrawGameEntities();
-            DrawGUI();
 
             base.Draw(gameTime);
         }

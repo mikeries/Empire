@@ -1,0 +1,34 @@
+﻿<Page
+    x:Class="EmpireUWP.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:EmpireUWP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <StackPanel>
+        <Grid HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="textBlock" Grid.Row="0" HorizontalAlignment="Center" TextWrapping="Wrap" Text="Welcome to Empire" VerticalAlignment="Top" Margin="0,50,0,0" FontSize="38" Grid.ColumnSpan="2" Foreground="#FFCFB307"/>
+            <TextBlock x:Name="textBlock1" Grid.Row="1" HorizontalAlignment="Center" Margin="0,20,0,4" TextWrapping="Wrap" Text="Please log in" VerticalAlignment="Top" FontSize="20" Grid.ColumnSpan="2" Foreground="#FFCFB307"/>
+            <TextBlock x:Name="username" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Right" Margin="4" TextWrapping="Wrap" Text="Username" VerticalAlignment="Center" Foreground="#FFCFB307"/>
+            <TextBox x:Name="Username" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left" Margin="4" TextWrapping="Wrap" Text="" VerticalAlignment="Center" MinWidth="150" Width="150" MaxWidth="150"/>
+            <TextBlock x:Name="password" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Right" Margin="4" TextWrapping="Wrap" Text="Password" VerticalAlignment="Center" Foreground="#FFCFB307"/>
+            <PasswordBox x:Name="passwordBox" Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left" Margin="4" VerticalAlignment="Center" MinWidth="150" HorizontalContentAlignment="Left" Padding="10,0,0,0" Width="150" MaxWidth="150"/>
+            <Button x:Name="submitBitton" Content="Submit" HorizontalAlignment="Center" Grid.Row="4" Margin="4" VerticalAlignment="Top" Grid.ColumnSpan="2" Click="submitButton_Click" Background="#7FD39A37" Foreground="#FFCFB307"/>
+            <TextBlock x:Name="loginFailText" Text="Unknown username or incorrect password.  Please try again." TextWrapping="Wrap" Foreground="Red" HorizontalAlignment="Center" Grid.Row="5" Grid.ColumnSpan="2" Visibility="Collapsed"/>
+        </Grid>
+    </StackPanel>
+</Page>

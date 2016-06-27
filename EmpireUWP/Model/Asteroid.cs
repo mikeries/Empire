@@ -99,7 +99,7 @@ namespace EmpireUWP.Model
                     Laser laser = entityThatCollided as Laser;
                     owner = laser.Owner;
                 }
-                ConnectionManager.IncreaseScore(owner, (Stage + 1) * 30);
+                //ConnectionManager.IncreaseScore(owner, (Stage + 1) * 30);
 
             }
         }

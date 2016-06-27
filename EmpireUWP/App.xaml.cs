@@ -17,7 +17,6 @@ using Windows.UI.Xaml.Navigation;
 
 // The Blank Application template is documented at http://go.microsoft.com/fwlink/?LinkId=402347&clcid=0x409
 
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace EmpireUWP
 {
@@ -43,13 +42,6 @@ namespace EmpireUWP
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-
-#if DEBUG
-            if (System.Diagnostics.Debugger.IsAttached)
-            {
-                this.DebugSettings.EnableFrameRateCounter = true;
-            }
-#endif
 
             Frame rootFrame = Window.Current.Content as Frame;
 

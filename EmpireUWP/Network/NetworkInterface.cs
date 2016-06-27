@@ -12,10 +12,8 @@ using Windows.Storage.Streams;
 
 namespace EmpireUWP.Network
 {
-    internal static class NetworkInterface
+    internal static class NetworkInterfaceOld
     {
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("NetworkInterface");
 
         private const string hostName = "Mike-PC";
         private const string hostAddress = "ries.asuscomm.com";
@@ -31,24 +29,24 @@ namespace EmpireUWP.Network
 
         public static bool IsHost = false;
 
-        static NetworkInterface() { }
+        static NetworkInterfaceOld() { }
 
         public async static void Initialize()
         {
             try
             {
-                Uri server = new Uri("localhost:1967");
-                _socket = new MessageWebSocket();
-                _socket.Control.MessageType = SocketMessageType.Binary;
-                _socket.MessageReceived += MessageReceived;
+                //Uri server = new Uri("localhost:1967");
+                //_socket = new MessageWebSocket();
+                //_socket.Control.MessageType = SocketMessageType.Binary;
+                //_socket.MessageReceived += MessageReceived;
 
-                await _socket.ConnectAsync(server);
-                _writer = new DataWriter(_socket.OutputStream);
+                //await _socket.ConnectAsync(server);
+                //_writer = new DataWriter(_socket.OutputStream);
 
-                if (server.DnsSafeHost == hostName)
-                {
-                    IsHost = true;
-                }
+                //if (server.DnsSafeHost == hostName)
+                //{
+                //    IsHost = true;
+                //}
             }
             catch (SocketException e)
             {
@@ -90,10 +88,10 @@ namespace EmpireUWP.Network
 
         private static void SendDataToClient(IPEndPoint endpoint, byte[] message)
         {
-            //if (message.Length > MaximumPacketSize)
-            //{
-            //    log.Warn("Packet size exceeds maximum. (" + message.Length+")");
-            //}
+            if (message.Length > MaximumPacketSize)
+            {
+                //log.Warn("Packet size exceeds maximum. (" + message.Length + ")");
+            }
             //_socket.Send(message, message.Length, endpoint);
         }
 
@@ -105,18 +103,8 @@ namespace EmpireUWP.Network
 
         private static byte[] CreateMessageFromPacket(NetworkPacket packet)
         {
-            //TODO:  Figure out a better way to handle the list of possible packet types
             byte[] message = null;
-            DataContractSerializer serializer = new DataContractSerializer(packet.GetType(), new Type[]
-                {
-                    typeof(NetworkPacket),
-                    typeof(AcknowledgePacket),
-                    typeof(EntityPacket),
-                    typeof(PingPacket),
-                    typeof(PlayerData),
-                    typeof(SalutationPacket),
-                    typeof(ShipCommand)
-                });
+            DataContractSerializer serializer = new DataContractSerializer(packet.GetType());
 
             try
             {
@@ -128,7 +116,7 @@ namespace EmpireUWP.Network
             }
             catch (SerializationException e)
             {
-                log.Fatal("Serialization exception", e);
+                //log.Fatal("Serialization exception", e);
                 throw new Exception(e.Message);
             }
 
@@ -149,7 +137,7 @@ namespace EmpireUWP.Network
             }
             catch (Exception e)
             {
-                log.Fatal("Deserialization exception", e);
+                //log.Fatal("Deserialization exception", e);
             }
 
             return packet;
@@ -157,7 +145,7 @@ namespace EmpireUWP.Network
 
 
         public static event EventHandler<PacketReceivedEventArgs> PacketReceived = delegate { };
-        private static void OnPacketReceived(IPEndPoint source, NetworkPacket packet)
+        private static void OnPacketReceived(StreamSocket source, NetworkPacket packet)
         {
             PacketReceived?.Invoke(null, new PacketReceivedEventArgs(source, packet));
         }

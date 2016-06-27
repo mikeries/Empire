@@ -12,21 +12,21 @@ namespace EmpireUWP.Network
     internal class PlayerData : NetworkPacket
     {
         [DataMember]
-        internal string ConnectionID { get; private set; }                   // the ID corresponding to this gamer
+        internal string PlayerID { get; private set; }                   // the ID corresponding to this gamer
         [DataMember]
         internal int ShipID { get; set; }
         [DataMember]
         internal int Score { get; set; }
         [DataMember]
-        internal IPEndPoint EndPoint { get; set; }
+        internal int GameID { get; set; }
 
-        internal PlayerData(Gamer player) : base()
+        internal PlayerData(Player player) : base()
         {
             Type = PacketType.PlayerData;
-            ConnectionID = player.ConnectionID;
+            PlayerID = player.PlayerID;
             ShipID = player.ShipID;
             Score = player.Score;
-            EndPoint = player.EndPoint;
+            GameID = player.GameID;
         }
 
     }

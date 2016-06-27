@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
+using EmpireUWP.View;
 
 namespace EmpireUWP.Model
 {
     static class ModelHelper
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("ModelHelper");
 
         const int PlanetMinSize = 150;
         const int PlanetMaxSize = 250;
@@ -27,13 +27,16 @@ namespace EmpireUWP.Model
         private static EntityPool<Laser> laserPool;
         private static EntityPool<Planet> planetPool;
         private static EntityPool<Ship> shipPool;
+        private static InputManager _inputManager;
 
-        public static void Initialize()
+        public static void Initialize(InputManager inputManager)
         {
             asteroidPool = new EntityPool<Asteroid>(() => { return new Asteroid(); }, 3*InitialAsteroidCount);
             laserPool = new EntityPool<Laser>(() => { return new Laser(); }, 300);
             shipPool = new EntityPool<Ship>(() => { return new Ship(); }, 8 * InitialShipCount);
             planetPool = new EntityPool<Planet>(() => { return new Planet(); }, 3*(int)Planets.Count );
+
+            _inputManager = inputManager;
         }
 
         internal static Ship ShipFactory()
@@ -41,6 +44,8 @@ namespace EmpireUWP.Model
             Ship newShip = shipPool.GetNew() as Ship;
             newShip.Location = new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2);
             newShip.Renderer = null;
+            _inputManager.CommandReceived -= newShip.CommandReceivedHandler;
+            _inputManager.CommandReceived += newShip.CommandReceivedHandler;
             return newShip;
         }
 
@@ -118,7 +123,7 @@ namespace EmpireUWP.Model
             }
             else
             {
-                log.Warn("Unknown entity type.");
+                //log.Warn("Unknown entity type.");
                 return null;
             }
         }

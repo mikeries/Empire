@@ -98,6 +98,13 @@
       <DependentUpon>GamePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Game1.cs" />
+    <Compile Include="LoginHelper.cs" />
+    <Compile Include="LoginPage.xaml.cs">
+      <DependentUpon>LoginPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MainMenu.xaml.cs">
+      <DependentUpon>MainMenu.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Model\AIComponent.cs" />
     <Compile Include="Model\Asteroid.cs" />
     <Compile Include="Model\Circle.cs" />
@@ -113,10 +120,15 @@
     <Compile Include="Model\ModelHelper.cs" />
     <Compile Include="Model\Planet.cs" />
     <Compile Include="Model\Planets.cs" />
+    <Compile Include="Model\NullShip.cs" />
     <Compile Include="Model\Ship.cs" />
     <Compile Include="Model\Status.cs" />
     <Compile Include="Network\ConnectionManager.cs" />
-    <Compile Include="Network\Gamer.cs" />
+    <Compile Include="Network\PacketTypes\LobbyCommandPacket.cs" />
+    <Compile Include="Network\LobbyCommands.cs" />
+    <Compile Include="Network\Player.cs" />
+    <Compile Include="Network\LobbyService.cs" />
+    <Compile Include="Network\NetworkConnection.cs" />
     <Compile Include="Network\NetworkInterface.cs" />
     <Compile Include="Network\PacketReceivedEventArgs.cs" />
     <Compile Include="Network\PacketTypes\AcknowledgePacket.cs" />
@@ -139,6 +151,7 @@
     <Compile Include="View\GraphicalUserInterface.cs" />
     <Compile Include="View\IGUIElement.cs" />
     <Compile Include="View\InputManager.cs" />
+    <Compile Include="View\MenuManager.cs" />
     <Compile Include="View\SpaceBackground.cs" />
     <Compile Include="View\Sprite.cs" />
     <Compile Include="View\StatusBar.cs" />
@@ -181,11 +194,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="LoginPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainMenu.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
-    </Reference>
     <Reference Include="MonoGame.Framework">
       <HintPath>C:\Program Files (x86)\MonoGame\v3.0\Assemblies\WindowsUniversal\MonoGame.Framework.dll</HintPath>
     </Reference>

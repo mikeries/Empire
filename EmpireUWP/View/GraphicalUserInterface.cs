@@ -15,8 +15,6 @@ namespace EmpireUWP.View
     // status bars, text boxes, minimap, etc.
     class GraphicalUserInterface
     {
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("GraphicalUserInterface");
         
         // collection of gui elements
         private Dictionary<string, IGUIElement> _gui = new Dictionary<string, IGUIElement>();
@@ -133,7 +131,7 @@ namespace EmpireUWP.View
                         }
                         break;
                     default:
-                        log.Warn("GameModel threw unknown event.");
+                        //log.Warn("GameModel threw unknown event.");
                         break;
                         
                 } // case

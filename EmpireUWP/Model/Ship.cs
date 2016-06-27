@@ -14,18 +14,15 @@ namespace EmpireUWP.Model
 
     class Ship : Entity
     {
-        private ShipCommand Command = new ShipCommand("",0);        // container for commands issued by player, network, AI
-
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("Ship");
+        protected ShipCommand Command = new ShipCommand("",0);        // container for commands issued by player, network, AI
 
         private const double MaxSpeed = .8;                  // max velocity
         private const float engineThrust = 0.001f;           // factor controlling how rapidly velocity increases
-        private const float Stopped = 0.0001f;              // velocity when stopped.  We can't use 0 because we need to preserve
-                                                            // the direction of the vector
+        protected const float Stopped = 0.0001f;             // velocity when stopped.  We can't use 0 because we need to preserve
+                                                             // the direction of the vector
 
         private const int millisecondsPerShot = 200;         // minimum number of ms between shots
-        private static int _timeSinceLastShot;              // accumulated time since the weapon last fired
+        private static int _timeSinceLastShot;               // accumulated time since the weapon last fired
 
         private const float RotationRate = (float)Math.PI / 1500f;
         private const int millisecondsPerRotation = 10;     // minimum number of ms between rotations
@@ -36,14 +33,12 @@ namespace EmpireUWP.Model
         private const int ShipHeight = 64;                  // nominal ship height;
         private const int ShipWidth = 64;                   // nominal ship width;
 
-        internal int ShieldEnergy { get; private set; }
+        public int ShieldEnergy { get; protected set; }
 
         internal string Owner { get; set; }     
 
         internal Ship() : base()
         {
-            InputManager.CommandReceived -= CommandReceivedHandler;
-            InputManager.CommandReceived += CommandReceivedHandler;
         }
 
         internal void CommandReceivedHandler(object sender, CommandReceivedEventArgs args)
@@ -160,7 +155,7 @@ namespace EmpireUWP.Model
         {
             if(ShieldsAreDown())
             {
-                ConnectionManager.IncreaseScore(Owner,-100);  
+                //ConnectionManager.IncreaseScore(Owner,-100);  
             }
         }
 

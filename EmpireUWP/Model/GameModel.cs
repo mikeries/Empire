@@ -14,7 +14,6 @@ namespace EmpireUWP.Model
 {
     class GameModel
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("GameModel");
 
         public static Random Random = new Random();
 
@@ -22,20 +21,27 @@ namespace EmpireUWP.Model
         private static ConcurrentDictionary<int,Entity> _gameEntities = new ConcurrentDictionary<int, Entity>();
         public static List<Entity> GameEntities { get {return _gameEntities.Values.ToList(); } }
         public static List<int> GameEntityIDs { get { return _gameEntities.Keys.ToList(); } }
-        private static GameView _game;
+        private static Ship _nullShip = new NullShip();
+        public static Ship NullShip { get { return _nullShip; } }
 
-        public static void Initialize(GameView game)
+        private static GameView _game;
+        private static ConnectionManager _connectionManager;
+        private static InputManager _inputManager;
+
+        public static void Initialize(GameView game, ConnectionManager connectionManager, InputManager inputManager)
         {
             _game = game;
+            _connectionManager = connectionManager;
+            _inputManager = inputManager;
 
-            ModelHelper.Initialize();
+            ModelHelper.Initialize(_inputManager);
         }
 
         // a basic world initialization.  This needs to be replaced with
         // a class that can generate a new 'world' as well as saving and restoring one.
         internal static void LoadWorld()
         {
-            if (ConnectionManager.IsHost)
+            if (_connectionManager.Host || !_connectionManager.Connected)
             {
 
                 for (int i = 0; i < 1; i++)
@@ -59,7 +65,7 @@ namespace EmpireUWP.Model
         {
             int elapsedTime = (int)gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            if (!ConnectionManager.IsHost)
+            if (!_connectionManager.Host)
             {
                 ApplyUpdates();
             }
@@ -79,7 +85,7 @@ namespace EmpireUWP.Model
 
             RemoveDeadEntities(deadEntities);
 
-            if (ConnectionManager.IsHost)
+            if (_connectionManager.Host)
             {
                 var asteroids =
                     from entity in _gameEntities.Values
@@ -91,7 +97,7 @@ namespace EmpireUWP.Model
 
         private static void RemoveDeadEntities(List<Entity> deadEntities)
         {
-            if (ConnectionManager.IsHost)
+            if (_connectionManager.Host)
             {
                 OnEntitiesRemoved(deadEntities);
             }
@@ -101,7 +107,7 @@ namespace EmpireUWP.Model
                 Entity entityToRemove = entity;
                 if (!_gameEntities.TryRemove(entity.EntityID, out entityToRemove))
                 {
-                    log.Warn("Failed to remove a game entity from the collection");
+                    //log.Warn("Failed to remove a game entity from the collection");
                 }
                 ModelHelper.ReturnToPool(entityToRemove);
             }
@@ -137,7 +143,7 @@ namespace EmpireUWP.Model
             {
                 return _gameEntities[entityID];
             }
-            log.Warn("Unknown entity request from GameModel");
+            //log.Warn("Unknown entity request from GameModel");
             return null;
         }
 
@@ -151,7 +157,7 @@ namespace EmpireUWP.Model
 
         internal static void AddGameEntity(Entity entity)
         {
-            if(ConnectionManager.IsHost)
+            if(_connectionManager.Host)
             {
                 addGameEntityFromHost(entity);
             }
@@ -174,7 +180,7 @@ namespace EmpireUWP.Model
                 _gameEntities.TryAdd(entity.EntityID, entity);                
             } else
             {
-                log.Warn("Null entity attempted to be added to the game.");
+                //log.Warn("Null entity attempted to be added to the game.");
             }
         }
 

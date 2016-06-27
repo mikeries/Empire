@@ -7,219 +7,153 @@ using System.Threading.Tasks;
 using EmpireUWP.Model;
 using EmpireUWP.View;
 using System.Collections.Concurrent;
+using Windows.Networking.Sockets;
+using Windows.Networking;
 
 namespace EmpireUWP.Network
 {
-    public static class ConnectionManager
+    public class ConnectionManager
     {
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("ConnectionManager");
-
-        internal static ConcurrentDictionary<string, Gamer> Gamers = new ConcurrentDictionary<string, Gamer>();
+        internal Dictionary<string, Player> _playerList = new Dictionary<string, Player>();
+        internal bool Host { get; private set; }
+        internal List<Player> Gamers { get { return _playerList.Values.ToList(); } }
+        internal string PlayerID = null;
+        internal bool Connected {
+            get
+            {
+                if (PlayerID == null)
+                    return false;
+                else
+                    return true;
+            }
+        }
+        internal NetworkConnection GetNetworkConnection { get { return _networkConnection; } }
 
         private const int MaximumPlayers = 5;
-        public static bool IsHost { get { return NetworkInterface.IsHost; } }
-        public static string ConnectionID { get; private set; }
+        private string _myAddress;
+        private const string _hostPort = "1967";
+        private NetworkConnection _networkConnection;
 
-        static ConnectionManager()
+        public ConnectionManager()
         {
-            ConnectionID = null;
+            var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
+            _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
+            _networkConnection = new NetworkConnection();
+            _networkConnection.PacketReceived += OnPacketReceived;
         }
 
-        public static void Join(string name)
+        public async Task Join(string playerID, string hostAddress, string hostPort)
         {
-            SalutationPacket requestToJoin = new SalutationPacket(name);
-            SendToHost(requestToJoin);
+            // send a request to the designated host to join
+            PlayerID = playerID;
+            Player player = new Player(PlayerID);
+            PlayerData packet = new PlayerData(player);
+            await _networkConnection.ConnectAsync(hostAddress, hostPort);
+            _networkConnection.SendPacketToHost(packet);
         }
 
-        public static void Leave()
+        public void Leave()
         {
-
+            // leave game -- need to remember to handle host disconnection
         }
 
-        public static void HostGame()
+        public async void HostGame()
         {
-
+            // set self up as host and start listening
+            await _networkConnection.StartListening(_hostPort);
+            Host = true;
         }
 
-        public static void Initialize()
+        internal void SendSyncUpdatesToPlayer(string player, List<EntityPacket> updates)
         {
-            NetworkInterface.Initialize();
-            NetworkInterface.PacketReceived += ProcessIncomingPacket;
-        }
+            if (!Host) return;
 
-        internal static void SendToHost(NetworkPacket packet)
-        {
-            NetworkInterface.SendPacket(NetworkInterface.HostEndPoint, packet);
-        }
+            Player gamer = _playerList[player];
 
-        internal static void SendToAllGamers(NetworkPacket packet)
-        {
-            foreach (Gamer gamer in Gamers.Values.ToList())
+            foreach (EntityPacket update in updates)
             {
-                NetworkInterface.SendPacket(gamer.EndPoint, packet);
+                _networkConnection.SendPacketTo(gamer.Location, update);
             }
         }
 
-        internal static void SendSyncUpdatesToPlayer(string player, List<EntityPacket> updates)
+        private void AddNewGamer(SalutationPacket salutation)
         {
-            Gamer gamer = Gamers[player];
-            IPEndPoint destination = gamer.EndPoint;
-            foreach(EntityPacket update in updates)
-            {
-                NetworkInterface.SendPacket(destination, update);
-            }
+            //Gamer gamer = new Gamer(salutation.Name, salutation.SourceIP);
+            //Gamers.TryAdd(salutation.Name, gamer);
+            //gamer.ShipID = GameModel.NewShip(gamer.ConnectionID);
+            //log.Info(gamer.ConnectionID + " has joined the game from " + salutation.SourceIP);
         }
 
-        internal static void SendPlayerDataToAll()
+        internal void OnPacketReceived(object network, PacketReceivedEventArgs args)
         {
-            foreach(Gamer gamer in Gamers.Values.ToList())
+            StreamSocket source = args.Source;
+            NetworkPacket packet = args.Packet;
+            if (packet.Type == PacketType.PlayerData)
             {
-                PlayerData data = new PlayerData(gamer);
-                SendToAllGamers(data);
-            }
-        }
-
-        private static void AddNewGamer(SalutationPacket salutation)
-        {
-            Gamer gamer = new Gamer(salutation.Name, salutation.SourceIP);
-            Gamers.TryAdd(salutation.Name, gamer);
-            gamer.ShipID = GameModel.NewShip(gamer.ConnectionID);
-            log.Info(gamer.ConnectionID + " has joined the game from " + salutation.SourceIP);
-        }
-
-        private static void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)
-        {
-            NetworkPacket packet = e.Packet;
-            packet.SourceIP = e.SourceIP;
-
-            switch (packet.Type)
-            {
-                case PacketType.Ping:
-                    ProcessPing(packet);
-                    break;
-
-                case PacketType.Salutation:
-                    ProcessSalutation(packet);
-                    break;
-
-                case PacketType.Acknowledge:
-                    ProcessAcknowledge(packet);
-                    break;
-
-                case PacketType.PlayerData:
-                    ProcessPlayerData(packet);
-                    break;
-
-                default:
-                    // ignore other packet types -- they may be for someone else
-                    break;
-            }
-        }
-
-        private static void ProcessPlayerData(NetworkPacket packet)
-        {
-            PlayerData data = packet as PlayerData;
-            Gamer gamer;
-            if(Gamers.ContainsKey(data.ConnectionID))
-            {
-                gamer = Gamers[data.ConnectionID]; 
-            }
-            else
-            {
-                gamer = new Gamer(data.ConnectionID, data.EndPoint);
-                Gamers.TryAdd(data.ConnectionID, gamer);
-            }
-
-            gamer.CopyFromPlayerData(data);
-        }
-
-        private static void ProcessAcknowledge(NetworkPacket packet)
-        {
-            // TODO: work on the joining stuff
-            AcknowledgePacket ack = packet as AcknowledgePacket;
-            if (ack.Response == AcknowledgePacket.Acknowledgement.OK)
-            {
-                ConnectionID = ack.Name;
-            }
-            else if (ack.Response == AcknowledgePacket.Acknowledgement.DuplicateName)
-            {
-                string newID = ack.Name + GameModel.Random.Next(0, 10);
-                SalutationPacket newSalutation = new SalutationPacket(newID);
-                SendToHost(newSalutation);
-            }
-        }
-
-        private static void ProcessSalutation(NetworkPacket packet)
-        {
-            if (NetworkInterface.IsHost)
-            {
-                SalutationPacket salutation = packet as SalutationPacket;
-
-                AcknowledgePacket ack = new AcknowledgePacket(salutation.Name,salutation.Timestamp);
-                ack.Response = DetermineAppropriateResponse(salutation);
-                if (ack.Response == AcknowledgePacket.Acknowledgement.OK)
+                PlayerData data = packet as PlayerData;
+                if (_playerList.ContainsKey(data.PlayerID))
                 {
-                    AddNewGamer(salutation);
+                    Player player = _playerList[data.PlayerID];
+                    player.CopyFromPlayerData(data);
+                    player.Location = source;
                 }
-                NetworkInterface.SendPacket(packet.SourceIP, ack);
-            }
-        }
-
-        internal static void IncreaseScore(string gamer, int v)
-        {
-            Gamers[gamer].Score += v;
-        }
-
-        private static AcknowledgePacket.Acknowledgement DetermineAppropriateResponse(SalutationPacket salutation)
-        {
-            AcknowledgePacket.Acknowledgement response = AcknowledgePacket.Acknowledgement.OK;
-            if (Gamers.ContainsKey(salutation.SourceIP.ToString()))
-            {
-                response = AcknowledgePacket.Acknowledgement.MultipleConnectionFromOneEndPoint;
-            }
-            else if (Gamers.Count >= MaximumPlayers)
-            {
-                response = AcknowledgePacket.Acknowledgement.GameFull;
-            }
-            else
-            {
-                foreach (Gamer gamer in Gamers.Values)
+                else
                 {
-                    if (gamer.ConnectionID == salutation.Name)
-                    {
-                        response = AcknowledgePacket.Acknowledgement.DuplicateName;
-                    }
+                    Player player = new Player(data);
+                    _playerList.Add(player.PlayerID, player);
+                    player.Location = source;
+                }
+
+                if (Host)
+                {
+                    SendPacketToAllClients(packet);
                 }
             }
-            return response;
         }
 
-        internal static void SendShipCommand(ShipCommand shipCommand)
+        internal void SendPacketToAllClients(NetworkPacket packet)
         {
-            SendToHost(shipCommand);
+            if (!Host) return;
+
+            var destinationSockets =
+                from player in _playerList.Values
+                select player.Location;
+
+            _networkConnection.SendPacketToAll(destinationSockets.ToList(), packet);
         }
 
-        private static void ProcessPing(NetworkPacket packet)
+        internal void IncreaseScore(string gamer, int v)
         {
-            PingPacket ping = packet as PingPacket;
+            _playerList[gamer].Score += v;
         }
 
-        internal static Ship GetShip(string owner = null)
+        internal void SendShipCommand(ShipCommand shipCommand)
+        {
+            _networkConnection.SendPacketToHost(shipCommand);
+        }
+
+        internal Ship GetShip(string owner = null)
         {
             if(owner == null)
             {
-                owner = ConnectionID;
+                if (PlayerID != null)
+                {
+                    owner = PlayerID;
+                }
+                else
+                {
+                    return GameModel.NullShip;
+                }
             }
 
-            if (Gamers.ContainsKey(owner))
+            if (_playerList.ContainsKey(owner))
             {
-                int shipID = Gamers[owner].ShipID;
-                //if (!IsHost) log.Debug("Requested ship: " + owner);
+                int shipID = _playerList[owner].ShipID;
+                //if (!Host) log.Debug("Requested ship: " + owner);
                 return GameModel.GetEntity(shipID) as Ship;
             }
-            log.Warn("Unknown ship requested.  Owner = " + owner);
-            return null;
+            //log.Warn("Unknown ship requested.  Owner = " + owner);
+            return GameModel.NullShip;
         }
     }
 }

@@ -11,8 +11,6 @@ namespace EmpireUWP.View
 {
     static class ViewHelper
     {
-        private static readonly log4net.ILog log =
-            log4net.LogManager.GetLogger("ViewHelper");
 
         private static Dictionary<string, Animation> _templates = new Dictionary<string, Animation>();
         private static Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
@@ -66,7 +64,7 @@ namespace EmpireUWP.View
             }
 
             // if we reach here, it is an error, so log it and throw an exception
-            log.Error("Unable to create sprite -- unknown entity in the collection.");
+            //log.Error("Unable to create sprite -- unknown entity in the collection.");
             throw new Exception();
 
         }
@@ -121,7 +119,7 @@ namespace EmpireUWP.View
             _templates.Add("asteroid3", new Animation(_textures["asteroid3"], _textures["asteroid3"].Width, _textures["asteroid3"].Height, 1, 100, true, CanvasLayer.Asteroid));
             _templates.Add("laser", new Animation(_textures["laser"], _textures["laser"].Width, _textures["laser"].Height, 1, 100, true, CanvasLayer.Laser));
 
-            log.Info("Textures loaded.");
+            //log.Info("Textures loaded.");
         }
 
         internal static void UnloadContent()
@@ -156,7 +154,7 @@ namespace EmpireUWP.View
             }
             else
             {
-                log.Warn("Unknown font '" + font + "' requested.");
+                //log.Warn("Unknown font '" + font + "' requested.");
                 return _fonts[_fonts.Keys.First()];
             }
         }

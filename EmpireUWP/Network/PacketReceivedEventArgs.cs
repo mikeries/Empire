@@ -5,18 +5,19 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Networking.Sockets;
 
 namespace EmpireUWP.Network
 {
     internal class PacketReceivedEventArgs : EventArgs
     {
-        internal IPEndPoint SourceIP { get; private set; }
+        internal StreamSocket Source { get; private set; }
         internal NetworkPacket Packet { get; private set; }
 
-        internal PacketReceivedEventArgs(IPEndPoint source, NetworkPacket packet)
+        internal PacketReceivedEventArgs(StreamSocket source, NetworkPacket packet)
         {
             Packet = packet;
-            SourceIP = source;
+            Source = source;
         }
     }
 }

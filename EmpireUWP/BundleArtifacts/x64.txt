@@ -1,0 +1,2 @@
+MainPackage=F:\Programming\GitHub\Repos\Empire\EmpireUWP\bin\WindowsUniversal\x64\Debug\EmpireUWP_1.0.4.0_x64_Debug.appx
+SymbolPackage=F:\Programming\GitHub\Repos\Empire\EmpireUWP\AppPackages\EmpireUWP_1.0.4.0_Debug_Test\EmpireUWP_1.0.4.0_x64_Debug.appxsym

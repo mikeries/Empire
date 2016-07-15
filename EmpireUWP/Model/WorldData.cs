@@ -9,7 +9,7 @@ using EmpireUWP.View;
 
 namespace EmpireUWP.Model
 {
-    static class ModelHelper
+    class WorldData
     {
 
         const int PlanetMinSize = 150;
@@ -23,23 +23,25 @@ namespace EmpireUWP.Model
         public const int InitialAsteroidCount = 2000;
         public const int InitialShipCount = 1;
 
-        private static EntityPool<Asteroid> asteroidPool;
-        private static EntityPool<Laser> laserPool;
-        private static EntityPool<Planet> planetPool;
-        private static EntityPool<Ship> shipPool;
-        private static InputManager _inputManager;
+        private EntityPool<Asteroid> asteroidPool;
+        private EntityPool<Laser> laserPool;
+        private EntityPool<Planet> planetPool;
+        private EntityPool<Ship> shipPool;
+        private InputManager _inputManager;
+        private GameModel _gameModel;
 
-        public static void Initialize(InputManager inputManager)
+        public void Initialize(GameModel gameModel, InputManager inputManager)
         {
-            asteroidPool = new EntityPool<Asteroid>(() => { return new Asteroid(); }, 3*InitialAsteroidCount);
-            laserPool = new EntityPool<Laser>(() => { return new Laser(); }, 300);
-            shipPool = new EntityPool<Ship>(() => { return new Ship(); }, 8 * InitialShipCount);
-            planetPool = new EntityPool<Planet>(() => { return new Planet(); }, 3*(int)Planets.Count );
+            asteroidPool = new EntityPool<Asteroid>(() => { return new Asteroid(gameModel); }, 3*InitialAsteroidCount);
+            laserPool = new EntityPool<Laser>(() => { return new Laser(gameModel); }, 300);
+            shipPool = new EntityPool<Ship>(() => { return new Ship(gameModel); }, 8 * InitialShipCount);
+            planetPool = new EntityPool<Planet>(() => { return new Planet(gameModel); }, 3*(int)Planets.Count );
 
+            _gameModel = gameModel;
             _inputManager = inputManager;
         }
 
-        internal static Ship ShipFactory()
+        internal Ship ShipFactory()
         {
             Ship newShip = shipPool.GetNew() as Ship;
             newShip.Location = new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2);
@@ -49,7 +51,7 @@ namespace EmpireUWP.Model
             return newShip;
         }
 
-        internal static Planet PlanetFactory(Vector2 location, Planets ID)
+        internal Planet PlanetFactory(Vector2 location, Planets ID)
         {
             Planet newPlanet = planetPool.GetNew() as Planet;
             newPlanet.PlanetID = ID;
@@ -63,7 +65,7 @@ namespace EmpireUWP.Model
             return newPlanet;
         }
 
-        internal static Asteroid AsteroidFactory()
+        internal Asteroid AsteroidFactory()
         {
             Asteroid newAsteroid = asteroidPool.GetNew() as Asteroid;
 
@@ -77,7 +79,7 @@ namespace EmpireUWP.Model
             return newAsteroid;
         }
 
-        internal static Laser LaserFactory(Ship ship)
+        internal Laser LaserFactory(Ship ship)
         {
             Laser newLaser = laserPool.GetNew() as Laser;
             if (ship != null)
@@ -95,7 +97,7 @@ namespace EmpireUWP.Model
             return newLaser;
         }
 
-        internal static Entity EntityFactory(EntityType entityType, ObjectState entityState)
+        internal Entity EntityFactory(EntityType entityType, ObjectState entityState)
         {
             if (entityType == EntityType.Asteroid)
             {
@@ -130,7 +132,7 @@ namespace EmpireUWP.Model
 
         //// TODO: replace this function by creating a delegate in the entity that
         //// the factory methods will set to return the entity to the correct pool.
-        internal static void ReturnToPool(Entity entityToReturn)
+        internal void ReturnToPool(Entity entityToReturn)
         {
             if (entityToReturn is Asteroid)
             {

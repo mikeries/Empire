@@ -9,6 +9,8 @@ namespace EmpireUWP.Network
         Entity,
         ShipCommand,
         PlayerData,
+        LobbyData,
+        GameData,
         LobbyCommand,
     }
 }

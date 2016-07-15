@@ -6,6 +6,7 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
@@ -22,6 +23,9 @@ namespace EmpireUWP.Network
             typeof(NetworkPacket),
             typeof(PingPacket),
             typeof(PlayerData),
+            typeof(GameData),
+            typeof(LobbyData),
+            typeof(LobbyCommandPacket),
             typeof(SalutationPacket),
             typeof(ShipCommand),
         };
@@ -40,7 +44,7 @@ namespace EmpireUWP.Network
             {
                 _hostSocket = new StreamSocket();
                 HostName hostName = new HostName(address);
-                await _hostSocket.ConnectAsync(hostName, port);
+                await _hostSocket.ConnectAsync(hostName, port).AsTask();
                 Connected = true;
             }
             catch (Exception e)
@@ -52,27 +56,27 @@ namespace EmpireUWP.Network
             }
         }
 
-        public void SendPacketToHost(NetworkPacket packet)
+        public async Task SendPacketToHost(NetworkPacket packet)
         {
-                SendPacketTo(_hostSocket, packet);
+                await SendPacketTo(_hostSocket, packet);
         }
 
-        public void SendPacketTo(StreamSocket destinationSocket, NetworkPacket packet)
+        public async Task SendPacketTo(StreamSocket destinationSocket, NetworkPacket packet)
         {
             if (Connected)
             {
                 byte[] message = CreateMessageFromPacket(packet);
-                SendTo(destinationSocket, message);
+                await SendTo(destinationSocket, message);
             }
         }
 
-        public void SendPacketToAll(List<StreamSocket> destinationSockets, NetworkPacket packet)
+        public async Task SendPacketToAll(List<StreamSocket> destinationSockets, NetworkPacket packet)
         {
             byte[] message = CreateMessageFromPacket(packet);
-            SendToAll(destinationSockets, message);
+            await SendToAll(destinationSockets, message);
         }
 
-        private async void SendTo(StreamSocket destinationSocket, byte[] message)
+        private async Task SendTo(StreamSocket destinationSocket, byte[] message)
         {
             if (destinationSocket==null)
             {
@@ -87,8 +91,6 @@ namespace EmpireUWP.Network
             try
             {
                 await writer.StoreAsync();
-                writer.DetachStream();
-                writer.Dispose();
             }
             catch (Exception e)
             {
@@ -97,20 +99,25 @@ namespace EmpireUWP.Network
                     throw;
                 }
             }
+            finally
+            {
+                writer.DetachStream();
+                writer.Dispose();
+            }
         }
 
-        private void SendToAll(List<StreamSocket> destinationSockets, byte[] message)
+        private async Task SendToAll(List<StreamSocket> destinationSockets, byte[] message)
         {
             foreach(StreamSocket socket in destinationSockets)
             {
-                SendTo(socket, message);
+                await SendTo(socket, message);
             }
         }
 
         private static byte[] CreateMessageFromPacket(NetworkPacket packet)
         {
             byte[] message = null;
-            DataContractSerializer serializer = new DataContractSerializer(packet.GetType(), _knownTypes);
+            DataContractSerializer serializer = new DataContractSerializer(typeof(NetworkPacket), _knownTypes);
 
             try
             {
@@ -132,7 +139,7 @@ namespace EmpireUWP.Network
         private static NetworkPacket ConstructPacketFromMessage(byte[] message)
         {
             NetworkPacket packet = null;
-            DataContractSerializer serializer = new DataContractSerializer(typeof(PlayerData), _knownTypes);
+            DataContractSerializer serializer = new DataContractSerializer(typeof(NetworkPacket), _knownTypes);
 
             try
             {
@@ -164,7 +171,7 @@ namespace EmpireUWP.Network
             Connected = false;
         }
 
-        internal async Task StartListening(string port)
+        internal async Task StartListeningAsync(string port)
         {
 
             if (_listener == null && !Connected)
@@ -180,6 +187,8 @@ namespace EmpireUWP.Network
                     if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.AddressAlreadyInUse)
                     {
                         // Server is already running.
+                        _listener.Dispose();
+                        throw;
                     }
                     else if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
                     {

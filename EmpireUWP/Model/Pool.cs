@@ -44,7 +44,7 @@ namespace EmpireUWP
                 if (item.Status != Status.Disposable)
                 {
                     //log.Fatal("Attempted to exceed maximum number of objects in the pool.  Increase the pool size.");
-                    throw new OverflowException();
+                    throw new OverflowException("Attempted to exceed maximum number of objects in the pool.  Increase the pool size.");
                 }
                 
                 item.Initialize();
@@ -64,7 +64,7 @@ namespace EmpireUWP
                 if (index < 0)
                 {
                     //log.Fatal("Attempted to return a non-pool object to the pool. Type:" + itemToReturn.Type);
-                    throw new OverflowException();
+                    throw new OverflowException("Attempted to return a non-pool object to the pool. Type:" + itemToReturn.Type);
                 }
 
                 Entity item = _objects[index];

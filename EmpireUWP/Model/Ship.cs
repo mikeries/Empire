@@ -37,7 +37,7 @@ namespace EmpireUWP.Model
 
         internal string Owner { get; set; }     
 
-        internal Ship() : base()
+        internal Ship(GameModel gameModel) : base(gameModel)
         {
         }
 
@@ -132,7 +132,7 @@ namespace EmpireUWP.Model
         internal void AccelerateShip(int elapsedTime)
         {
             visualState |= VisualStates.Thrusting;
-            Vector2 acceleration = ModelHelper.thrustVector(engineThrust*elapsedTime, Orientation);
+            Vector2 acceleration = WorldData.thrustVector(engineThrust*elapsedTime, Orientation);
             Velocity = Velocity + acceleration;
             if (Velocity.Length() > MaxSpeed)
             {
@@ -144,9 +144,9 @@ namespace EmpireUWP.Model
         {
             if (_timeSinceLastShot > millisecondsPerShot)
             {
-                Laser laser = ModelHelper.LaserFactory(this);
+                Laser laser = gameModel.worldData.LaserFactory(this);
                 laser.Update(elapsedTime);
-                GameModel.AddGameEntity(laser);
+                gameModel.AddGameEntity(laser);
                 _timeSinceLastShot = 0;
             }
         }

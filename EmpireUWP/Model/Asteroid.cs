@@ -20,7 +20,7 @@ namespace EmpireUWP.Model
         private const int maxSizePercent = 60;
         private const int minAsteroidSize = 20;
 
-        internal Asteroid() : base ()
+        internal Asteroid(GameModel gameModel) : base (gameModel)
         {
  
         }
@@ -58,7 +58,7 @@ namespace EmpireUWP.Model
         // spawns a child asteroid with smaller size, new rotation rate, and slightly different velocity vector
         internal Asteroid spawnChildAsteroid()
         {
-            Asteroid newAsteroid = ModelHelper.AsteroidFactory();
+            Asteroid newAsteroid = gameModel.worldData.AsteroidFactory();
             newAsteroid.Location = this.Location;
             newAsteroid.Velocity = Velocity + randomVelocityVector();
 
@@ -84,7 +84,7 @@ namespace EmpireUWP.Model
                 {
                     for (int i = 0; i < GameModel.Random.Next(3, 5); i++)
                     {
-                        GameModel.AddGameEntity(spawnChildAsteroid());
+                        gameModel.AddGameEntity(spawnChildAsteroid());
                     }
                 }
                 Status = Status.Disposable;

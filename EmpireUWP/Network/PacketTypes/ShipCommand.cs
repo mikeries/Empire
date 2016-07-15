@@ -15,15 +15,33 @@ namespace EmpireUWP.Network
         [DataMember]
         internal int Commands { get; private set; }
         [DataMember]
-        internal bool Left { get { return (Commands & (int)CommandFlags.Left) > 0; } }
+        internal bool Left { get { return (Commands & (int)CommandFlags.Left) > 0; } set { } }
+
         [DataMember]
-        internal bool Right { get { return ((Commands & (int)CommandFlags.Right) > 0); } }
+        internal bool Right { get { return ((Commands & (int)CommandFlags.Right) > 0); } set { } }
+
+
         [DataMember]
-        internal bool Shields { get { return ((Commands & (int)CommandFlags.Shields) > 0); } }
+        internal bool Shields
+        {
+            get { return ((Commands & (int)CommandFlags.Shields) > 0); }
+            set { }
+        }
+
         [DataMember]
-        internal bool Shoot { get { return ((Commands & (int)CommandFlags.Shoot) > 0); } }
+        internal bool Shoot
+        {
+            get { return ((Commands & (int)CommandFlags.Shoot) > 0); }
+            set { }
+        }
+
         [DataMember]
-        internal bool Thrust { get { return ((Commands & (int)CommandFlags.Thrust) > 0); } }
+        internal bool Thrust
+        {
+            get { return ((Commands & (int)CommandFlags.Thrust) > 0); }
+            set { }
+        }
+
         [DataMember]
         internal string Owner { get; private set; }
 

@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="EmpireUWP.MainMenu"
+    x:Class="EmpireUWP.WaitingRoom"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:EmpireUWP"
@@ -17,6 +17,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -26,13 +27,12 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock x:Name="textBlock" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" TextWrapping="Wrap" Text="Welcome to Empire" VerticalAlignment="Top" Margin="0,50,0,0" FontSize="38" Grid.ColumnSpan="2" Foreground="#FFCFB307"/>
-        <Button Name="hostGame"  Grid.Row="1" Grid.Column="1" Content="Host Game" Margin ="20" HorizontalAlignment="Center" Background="#7FD39A37" Foreground="#FFCFB307" Click="hostGame_Click"/>
-        <Button Name="joinGame"  Grid.Row="1" Grid.Column="2" Content="Join Game" Margin ="20" HorizontalAlignment="Center" Background="#7FD39A37" Foreground="#FFCFB307" Click="joinGame_Click"/>
-        <ListView x:Name="hostedGamesList" Height="Auto" Grid.Row="2" Grid.Column="1" 
+        <Button Name="startGame"  Grid.Row="1" Grid.Column="1" Content="Start Game" Margin ="20" HorizontalAlignment="Center" Background="#7FD39A37" Foreground="#FFCFB307" Click="startGame_Click"/>
+        <Button Name="exitWaitingRoom"  Grid.Row="1" Grid.Column="2" Content="Exit and return to Lobby" Margin ="20" HorizontalAlignment="Center" Background="#7FD39A37" Foreground="#FFCFB307" Click="exitToLobby_Click"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" Text="Current players" Foreground="#FFCFB307"/>
+        <ListView x:Name="gameMemberList" Height="Auto" Grid.Row="3" Grid.Column="1" 
                   HorizontalAlignment="Center" VerticalAlignment="Top" Width="200" BorderThickness="2" RequestedTheme="Light" Background="#7FD39A37"
-                  ItemsSource="{Binding hostedGames}" SelectionMode="None"/>
-        <ListView x:Name="availablePlayerList" Height="Auto" Grid.Row="2" Grid.Column="2" 
-                  HorizontalAlignment="Center" VerticalAlignment="Top" Width="200" BorderThickness="2" RequestedTheme="Light" Background="#7FD39A37"
-                  ItemsSource="{Binding availablePlayers}" SelectionMode="None"/>
+                  ItemsSource="{Binding gameMembers}" SelectionMode="None"/>
+
     </Grid>
 </Page>

@@ -12,7 +12,7 @@ namespace EmpireUWP.Model
         const int Lifetime = 800; // how long a laser bullet lasts, in milliseconds
         internal string Owner;
 
-        public Laser()  : base()
+        public Laser(GameModel gameModel)  : base(gameModel)
         {
         }
 

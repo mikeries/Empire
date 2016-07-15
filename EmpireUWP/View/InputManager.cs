@@ -19,20 +19,20 @@ namespace EmpireUWP.View
             _connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
         }
 
-        internal void Update()
+        internal async Task Update()
         {
-            ProcessLocalInput();
+            await ProcessLocalInput();
         }
 
         internal void ProcessRemoteInput(ShipCommand commandPacket)
         {
-            if (commandPacket.Owner != _connectionManager.PlayerID)
+            if (commandPacket.Owner != _connectionManager.LocalPlayerID)
             { 
                 OnCommandReceived(commandPacket);
             }
         }
 
-        internal void ProcessLocalInput()
+        internal async Task ProcessLocalInput()
         {
             KeyboardState keyboardState = Keyboard.GetState();
 
@@ -58,13 +58,13 @@ namespace EmpireUWP.View
                 commands += (int)CommandFlags.Shoot;
             }
 
-            string source = _connectionManager.PlayerID;
+            string source = _connectionManager.LocalPlayerID;
             if (source != null)
             {
                 ShipCommand commandPacket = new ShipCommand(source, commands);
                 OnCommandReceived(commandPacket);
 
-                _connectionManager.SendShipCommand(commandPacket);
+                await _connectionManager.SendShipCommand(commandPacket);
             }
         }
 

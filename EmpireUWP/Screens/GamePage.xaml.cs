@@ -28,14 +28,14 @@ namespace EmpireUWP
     /// </summary>
     public sealed partial class GamePage : Page
     {
-        GameView _game;
+        public static GameView gameInstance;
 
         public GamePage()
         {
             this.InitializeComponent();
 
             var launchArguments = string.Empty;
-            _game = MonoGame.Framework.XamlGame<GameView>.Create(launchArguments, Window.Current.CoreWindow, swapChainPanel);
+            gameInstance = MonoGame.Framework.XamlGame<GameView>.Create(launchArguments, Window.Current.CoreWindow, swapChainPanel);
 
             MyFrame.Navigate(typeof(LoginPage));
         }

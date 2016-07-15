@@ -6,6 +6,7 @@ using EmpireUWP.Model;
 using EmpireUWP.Network;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 
 namespace EmpireUWP.View
 {
@@ -13,34 +14,18 @@ namespace EmpireUWP.View
     {
         internal static Rectangle PlayArea = new Rectangle(0, 0, 20000, 20000);
         internal static Vector2 WindowSize = new Vector2(1280f, 720f);
-        internal static Vector2 ViewCenter = new Vector2(WindowSize.X/2, WindowSize.Y/2);
+        internal static Vector2 ViewCenter = new Vector2(WindowSize.X / 2, WindowSize.Y / 2);
         internal static int GameDuration = 1000 * 60 * 2;  // 2 minute timer in milliseconds
-
-        internal bool GameOver { get; set; }
+        internal GameData.GameStatus GameState = GameData.GameStatus.WaitingForPlayers;
 
         //TODO: fix scoring system
-        internal int Score
-        {
-            get
-            {
-                if (_player.Owner != null)
-                {
-                    return 0;                    
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-        }
-
         internal int ShieldEnergy
         {
             get
             {
-                if (_player.Owner != null)
+                if (_localShip.Owner != null)
                 {
-                    return _player.ShieldEnergy;
+                    return _localShip.ShieldEnergy;
                 }
                 else
                 {
@@ -55,19 +40,24 @@ namespace EmpireUWP.View
         private SpriteBatch _spriteBatch;
         private GraphicalUserInterface _gui;
         private AIComponent _ai = new AIComponent();
-        private ConnectionManager _connectionManager = new ConnectionManager();
-        private InputManager _inputManager;
+        private GameModel _gameModel;
+        private ConnectionManager _connectionManager;
 
-        private Ship _player = GameModel.NullShip;
-        internal Ship Player { get { return _player; } }
+        private Ship _localShip = GameModel.NullShip;
+        internal Ship LocalShip { get { return _localShip; } }
 
+        private string PlayerID { get; set; }
+        public string HostID { get; private set; }
+        public bool Hosting { get { return HostID == PlayerID; } }
+        
         private Dictionary<int, Sprite> _sprites = new Dictionary<int, Sprite>();
 
         public GameView()
         {
             _graphics = new GraphicsDeviceManager(this);
             _gui = new GraphicalUserInterface(this);
-            _inputManager = new InputManager(_connectionManager);
+            _gameModel = new GameModel(this);
+
             this.IsMouseVisible = true;
             Content.RootDirectory = "Content";
         }
@@ -81,15 +71,9 @@ namespace EmpireUWP.View
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            TimeRemaining = GameDuration;
-
             SpaceBackground.Initialize();
-            GameModel.Initialize(this, _connectionManager, _inputManager);
-            //SyncManager.Start();
 
-            //_gui.Initialize();
-
-            GameOver = false;
+            NewGame();
 
             base.Initialize();
         }
@@ -98,8 +82,6 @@ namespace EmpireUWP.View
         {
             SpaceBackground.LoadContent(Content);
             ViewHelper.LoadContent(Content);
-            //_gui.LoadContent(Content);
-            GameModel.LoadWorld();
         }
 
         protected override void UnloadContent()
@@ -108,22 +90,13 @@ namespace EmpireUWP.View
             ViewHelper.UnloadContent();
         }
 
-        protected override void Update(GameTime gameTime)
+        protected override async void Update(GameTime gameTime)
         {
 
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            _inputManager.Update();
-
-            GameModel.Update(gameTime);
-
-            TimeRemaining -= (int)gameTime.ElapsedGameTime.TotalMilliseconds;
-
-            if (GameOver)
-            {
-                EndGame();
-            }
+            await _gameModel.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -132,8 +105,8 @@ namespace EmpireUWP.View
         {
             GraphicsDevice.Clear(Color.Black);
 
-            _player = _connectionManager.GetShip();
-            if (_player == null)
+            _localShip = _gameModel.GetShip(PlayerID);
+            if (_localShip == null)
             {
                 return;
             }
@@ -144,24 +117,17 @@ namespace EmpireUWP.View
             base.Draw(gameTime);
         }
 
-        private void DrawGUI()
-        {
-            _spriteBatch.Begin();
-            _gui.Draw(_spriteBatch);
-            _spriteBatch.End();
-        }
-
         private void DrawGameEntities()
         {
             _spriteBatch.Begin();
-            foreach (Entity entityToDraw in GameModel.GameEntities)
+            foreach (Entity entityToDraw in _gameModel.GameEntities)
             {
                 if(entityToDraw.Renderer == null)
                 {
                     List<Animation> animationCollection = ViewHelper.AnimationFactory(entityToDraw);
                     entityToDraw.Renderer = new Sprite(animationCollection, entityToDraw);
                 }
-                entityToDraw.Renderer.Draw(_spriteBatch, _player);
+                entityToDraw.Renderer.Draw(_spriteBatch, _localShip);
             }
             _spriteBatch.End();
         }
@@ -170,20 +136,50 @@ namespace EmpireUWP.View
         {
             _spriteBatch.Begin();
             SpaceBackground.Draw(_spriteBatch,
-                (int)_player.Location.X,
-                (int)_player.Location.Y,
+                (int)_localShip.Location.X,
+                (int)_localShip.Location.Y,
                 GraphicsDevice.Viewport.Width,
                 GraphicsDevice.Viewport.Height
             );
             _spriteBatch.End();
         }
 
-        internal void EndGame()
+        internal void GameChangedEventHandler(object sender, GameChangedEventArgs e)
         {
-            GameOver = true;
-            
-            //TODO: pause here for a key and add NewGame()
-            //Console.ReadLine();
+            //TODO:  Might be helpful to look into using the State pattern to handle game states and transitions between them.
+            GameState = e.GameData.Status;
+            if(GameState == GameData.GameStatus.ReadyToStart)
+            {
+                NewGame();
+            }
+        }
+
+        private void NewGame()
+        {
+            if(_gameModel != null)
+            {
+                //_gameModel.Dispose();
+            }
+            _gameModel = new GameModel(this, _connectionManager);
+
+            _gameModel.Initialize();
+            if (Hosting || _connectionManager == null)
+            {
+                _gameModel.LoadWorld();
+            }
+
+            _gameModel.Start();
+
+            // signal host that we're good to go
+        }
+
+        internal async Task SetupConnections(string playerID, Dictionary<string, PlayerData> playerList, GameData data)
+        {
+            HostID = data.HostID;
+            PlayerID = playerID;
+            _connectionManager = new ConnectionManager(PlayerID);
+            await _connectionManager.SetupGameConnectionsAsync(playerList, data);
+            _connectionManager.GameChanged += GameChangedEventHandler;
         }
     }
 }

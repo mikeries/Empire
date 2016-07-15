@@ -11,7 +11,6 @@ namespace EmpireUWP.Network
     public class Player
     {
         public string PlayerID { get; private set; }                   // the ID corresponding to this gamer
-        public StreamSocket Location=null;
         public int GameID { get; set; }
         public int ShipID { get; set; }
         public int Score { get; set; }

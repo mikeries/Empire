@@ -8,15 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using Windows.UI.Xaml.Controls;
 
 namespace EmpireUWP.View
 {
     public class MenuManager : INotifyPropertyChanged
     {
 
-        public static List<string> hostedGames
-        {
-            get
+        public static List<string> hostedGames  {  get
             {
                 return lobby.hostedGames;
             }
@@ -25,37 +24,82 @@ namespace EmpireUWP.View
         public static List<string> availablePlayers { get
             {
                 return lobby.availablePlayers;
-            } private set { } }
+            } private set { }
+        }
+
+        public static List<string> gameMembers  { get
+            {
+                return lobby.GameMembers(PlayerID);
+            }
+            private set { }
+        }
+
+        public static string PlayerID { get; private set; }
+
+        private static MenuManager _currentPage;
+        public static MenuManager CurrentPage { get { return _currentPage; } set { _currentPage = value; } }
 
         private static LobbyService lobby;
 
         public MenuManager()
         {
-            lobby = new LobbyService(this);
-            lobby.InitializeAsync();
+            if (lobby == null) {
+                lobby = new LobbyService(this);
+            }
         }
 
-        public void ConnectToLobbyAsync(string PlayerID)
+        public static async Task ConnectToLobby(string playerID)
         {
-            lobby.ConnectToLobbyAsync(PlayerID);
+            PlayerID = playerID;
+            await lobby.Initialize();
+            await lobby.ConnectToLobbyAsync(PlayerID);
         }
 
-        public void HostGame(string playerID)
+        public static async Task HostGame()
         {
-            lobby.HostGame(playerID);
+            await lobby.HostGame(PlayerID);
+        }
+
+        public static async Task JoinGame(string hostID)
+        {
+            await lobby.JoinGame(PlayerID, hostID);
+        }
+
+        public static async Task LeaveGame()
+        {
+            await lobby.LeaveGame(PlayerID);
+        }
+
+        public static async Task EnterLobby()
+        {
+            await lobby.EnterLobby(PlayerID);
+        }
+
+        public static async Task LeaveLobby()
+        {
+            await lobby.LeaveLobby(PlayerID);
+        }
+
+        public static async Task InitializeGame()
+        {
+            await lobby.InitializeGame(PlayerID);
         }
 
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
         public void OnPropertyChanged(string propertyName)
         {
-            if (CoreWindow.GetForCurrentThread().Dispatcher.HasThreadAccess) { }
-            PropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propertyName));
+            if (CoreWindow.GetForCurrentThread().Dispatcher.HasThreadAccess)
+            {
+                PropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
-        internal async void PlayerListChanged()
+        internal static async void PlayerListChanged()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { OnPropertyChanged("availablePlayers"); });
+                () => { CurrentPage.OnPropertyChanged("availablePlayers"); });
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => { CurrentPage.OnPropertyChanged("hostedGames"); });
         }
     }
 }

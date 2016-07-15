@@ -20,6 +20,9 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PackageCertificateKeyFile>EmpireUWP_TemporaryKey.pfx</PackageCertificateKeyFile>
     <MonoGamePlatform>WindowsStoreApp</MonoGamePlatform>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -94,15 +97,21 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="GamePage.xaml.cs">
+    <Compile Include="Network\GameChangedEventArgs.cs" />
+    <Compile Include="Network\GameStartingEventArgs.cs" />
+    <Compile Include="Screens\CreateUserPage.xaml.cs">
+      <DependentUpon>CreateUserPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Screens\LoginException.cs" />
+    <Compile Include="Network\PacketTypes\GameData.cs" />
+    <Compile Include="Screens\GamePage.xaml.cs">
       <DependentUpon>GamePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Game1.cs" />
-    <Compile Include="LoginHelper.cs" />
-    <Compile Include="LoginPage.xaml.cs">
+    <Compile Include="Screens\LoginHelper.cs" />
+    <Compile Include="Screens\LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainMenu.xaml.cs">
+    <Compile Include="Screens\MainMenu.xaml.cs">
       <DependentUpon>MainMenu.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\AIComponent.cs" />
@@ -117,7 +126,7 @@
     <Compile Include="Model\GameModel.cs" />
     <Compile Include="Model\IDGenerator.cs" />
     <Compile Include="Model\Laser.cs" />
-    <Compile Include="Model\ModelHelper.cs" />
+    <Compile Include="Model\WorldData.cs" />
     <Compile Include="Model\Planet.cs" />
     <Compile Include="Model\Planets.cs" />
     <Compile Include="Model\NullShip.cs" />
@@ -126,10 +135,10 @@
     <Compile Include="Network\ConnectionManager.cs" />
     <Compile Include="Network\PacketTypes\LobbyCommandPacket.cs" />
     <Compile Include="Network\LobbyCommands.cs" />
+    <Compile Include="Network\PacketTypes\LobbyData.cs" />
     <Compile Include="Network\Player.cs" />
     <Compile Include="Network\LobbyService.cs" />
     <Compile Include="Network\NetworkConnection.cs" />
-    <Compile Include="Network\NetworkInterface.cs" />
     <Compile Include="Network\PacketReceivedEventArgs.cs" />
     <Compile Include="Network\PacketTypes\AcknowledgePacket.cs" />
     <Compile Include="Network\PacketTypes\EntityPacket.cs" />
@@ -141,9 +150,12 @@
     <Compile Include="Network\PacketTypes\ShipCommand.cs" />
     <Compile Include="Network\SyncManager.cs" />
     <Compile Include="Network\UpdateQueue.cs" />
-    <Compile Include="ObjectState.cs" />
-    <Compile Include="Pool.cs" />
+    <Compile Include="Network\ObjectState.cs" />
+    <Compile Include="Model\Pool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Screens\MainViewScreen.xaml.cs">
+      <DependentUpon>MainViewScreen.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\Animation.cs" />
     <Compile Include="View\CanvasLayer.cs" />
     <Compile Include="View\CommandReceivedEventArgs.cs" />
@@ -160,6 +172,9 @@
     <Compile Include="View\TiledTexture.cs" />
     <Compile Include="View\ViewHelper.cs" />
     <Compile Include="View\VisualStates.cs" />
+    <Compile Include="Screens\WaitingRoom.xaml.cs">
+      <DependentUpon>WaitingRoom.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
@@ -176,13 +191,15 @@
     <None Include="EmpireUWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\Square150x150.scale-200.png" />
+    <Content Include="Assets\StoreLogo.scale-100.png" />
+    <Content Include="Assets\StoreLogo.scale-200.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
@@ -190,15 +207,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="GamePage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="LoginPage.xaml">
+    <Page Include="Screens\CreateUserPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainMenu.xaml">
+    <Page Include="Screens\GamePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Screens\LoginPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Screens\MainMenu.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Screens\MainViewScreen.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Screens\WaitingRoom.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

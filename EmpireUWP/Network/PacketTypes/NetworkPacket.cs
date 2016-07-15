@@ -24,11 +24,6 @@ namespace EmpireUWP.Network
             Timestamp = DateTime.Now;
         }
 
-        internal virtual bool IsValid()
-        {
-            return true;
-        }
-
         internal bool IsNewerThan(NetworkPacket networkPacket)
         {
             return (this.Timestamp > networkPacket.Timestamp);

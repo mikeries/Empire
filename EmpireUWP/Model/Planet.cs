@@ -14,7 +14,7 @@ namespace EmpireUWP.Model
     {
         public Planets PlanetID { get; set; }
 
-        public Planet(Planets ID = Planets.planet1) : base() {
+        public Planet(GameModel gameModel, Planets ID = Planets.planet1) : base(gameModel) {
             PlanetID = ID;
         }
 

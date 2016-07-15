@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    internal class LobbyCommnandPacket : NetworkPacket
+    internal class LobbyCommandPacket : NetworkPacket
     {
         [DataMember]
         internal string PlayerID { get; private set; }                   // the ID corresponding to this gamer
@@ -18,7 +18,7 @@ namespace EmpireUWP.Network
         [DataMember]
         internal string Data { get; private set; }
 
-        internal LobbyCommnandPacket(string playerID, LobbyCommands command, string args) : base()
+        internal LobbyCommandPacket(string playerID, LobbyCommands command, string args="") : base()
         {
             Type = PacketType.LobbyCommand;
             PlayerID = playerID;

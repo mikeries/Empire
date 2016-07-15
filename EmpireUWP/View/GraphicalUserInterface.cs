@@ -79,7 +79,6 @@ namespace EmpireUWP.View
         internal void Update(GameTime gameTime)
         {
             TextBlock scoreText = _gui["score"] as TextBlock;
-            scoreText.Text = _gameManager.Score.ToString();
 
             StatusBar shieldBar = _gui["shieldEnergy"] as StatusBar;
             shieldBar.Value = _gameManager.ShieldEnergy / 100f;
@@ -88,8 +87,8 @@ namespace EmpireUWP.View
             timeBar.Value = _gameManager.TimeRemaining / (float)GameView.GameDuration;
             if (_gameManager.TimeRemaining < 0)
             {
-                _gameManager.GameOver = true;
-                _gui["gameOver"].Visible = true;
+                //_gameManager.GameOver = true;
+                //_gui["gameOver"].Visible = true;
             }
 
             foreach (string guiElement in _gui.Keys)
@@ -107,7 +106,7 @@ namespace EmpireUWP.View
         // Update GUI elements when the model indicates something changed
         private void GameChangedEventHandler(object sender, GameEventArgs e)
         {
-            if (e == null || _gameManager.GameOver) return;
+            //if (e == null || _gameManager.GameOver) return;
 
             if (_gui.ContainsKey(e.Property))
             {
@@ -126,7 +125,7 @@ namespace EmpireUWP.View
                         bar.Value = (float)e.Value / (float)GameView.GameDuration;
                         if (e.Value < 0)
                         {
-                            _gameManager.GameOver = true;
+                            //_gameManager.GameOver = true;
                             _gui["gameOver"].Visible = true;
                         }
                         break;

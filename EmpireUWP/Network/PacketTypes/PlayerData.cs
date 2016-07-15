@@ -5,6 +5,7 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Networking.Sockets;
 
 namespace EmpireUWP.Network
 {
@@ -14,15 +15,20 @@ namespace EmpireUWP.Network
         [DataMember]
         internal string PlayerID { get; private set; }                   // the ID corresponding to this gamer
         [DataMember]
+        internal string IPAddress { get; private set; }                  
+        [DataMember]
         internal int ShipID { get; set; }
         [DataMember]
         internal int Score { get; set; }
         [DataMember]
         internal int GameID { get; set; }
 
-        internal PlayerData(Player player) : base()
+        internal StreamSocket Location = null;
+
+        internal PlayerData(Player player, string ipAddress) : base()
         {
             Type = PacketType.PlayerData;
+            IPAddress = ipAddress;
             PlayerID = player.PlayerID;
             ShipID = player.ShipID;
             Score = player.Score;

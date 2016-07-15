@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.Model
 {
-    public abstract class Entity
+    internal abstract class Entity
     {
-
+        internal GameModel gameModel;
         private int _entityID = 0;
         internal int EntityID { get { return _entityID; }  } 
 
@@ -86,9 +86,9 @@ namespace EmpireUWP.Model
 
         protected int age = 0;           // accumulates how much time has passed since the object spawned
 
-        internal Entity()
+        internal Entity(GameModel gameModel)
         {
-
+            this.gameModel = gameModel;
         }
 
         internal virtual void Initialize()

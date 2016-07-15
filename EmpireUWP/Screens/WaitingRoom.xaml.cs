@@ -1,10 +1,10 @@
 ﻿using EmpireUWP.Network;
+using EmpireUWP.View;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -22,32 +22,30 @@ namespace EmpireUWP
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainMenu : Page
+    public sealed partial class WaitingRoom : Page
     {
-        string playerID;
-
-        public MainMenu()
+ 
+        public WaitingRoom()
         {
             this.InitializeComponent();
         }
-        
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            playerID = (string)e.Parameter;
-
-            //TODO:  need to figure out best way to initialize and connect to lobby asynchronously.
-            menuManager.ConnectToLobbyAsync(playerID);
             base.OnNavigatedTo(e);
+
+            MenuManager.CurrentPage = menuManager;
         }
 
-        private void joinGame_Click(object sender, RoutedEventArgs e)
+        private async void exitToLobby_Click(object sender, RoutedEventArgs e)
         {
-           
+            await MenuManager.LeaveGame();
+            Frame.Navigate(typeof(MainMenu));
         }
 
-        private void hostGame_Click(object sender, RoutedEventArgs e)
+        private void startGame_Click(object sender, RoutedEventArgs e)
         {
-            menuManager.HostGame(playerID);  
+            Frame.Navigate(typeof(MainViewScreen));
         }
     }
 }

@@ -14,131 +14,143 @@ namespace EmpireUWP.Network
 {
     public class ConnectionManager
     {
-        internal Dictionary<string, Player> _playerList = new Dictionary<string, Player>();
-        internal bool Host { get; private set; }
-        internal List<Player> Gamers { get { return _playerList.Values.ToList(); } }
-        internal string PlayerID = null;
-        internal bool Connected {
-            get
-            {
-                if (PlayerID == null)
-                    return false;
-                else
-                    return true;
-            }
-        }
+        private Dictionary<string, PlayerData> _playerList;
+        private GameData _gameData;
+        internal bool Hosting { get { return _gameData.HostID == LocalPlayerID; } }
+        internal List<PlayerData> Gamers { get { return _playerList.Values.ToList(); } }
+        internal string LocalPlayerID = null;
+        internal bool Connected { get; private set; }
+        internal bool ReadyToStart { get { return (_gameData.Status == GameData.GameStatus.InProgress); } }
         internal NetworkConnection GetNetworkConnection { get { return _networkConnection; } }
 
         private const int MaximumPlayers = 5;
         private string _myAddress;
-        private const string _hostPort = "1967";
+        private const string _hostPort = "5555";
         private NetworkConnection _networkConnection;
+        private GameModel _gameModel;
 
-        public ConnectionManager()
+        internal ConnectionManager(string playerID)
         {
+            LocalPlayerID = playerID;
             var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
             _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
             _networkConnection = new NetworkConnection();
             _networkConnection.PacketReceived += OnPacketReceived;
         }
 
-        public async Task Join(string playerID, string hostAddress, string hostPort)
+        internal void Initialize(GameModel gameModel)
         {
-            // send a request to the designated host to join
-            PlayerID = playerID;
-            Player player = new Player(PlayerID);
-            PlayerData packet = new PlayerData(player);
-            await _networkConnection.ConnectAsync(hostAddress, hostPort);
-            _networkConnection.SendPacketToHost(packet);
+            _gameModel = gameModel;
         }
 
-        public void Leave()
+        internal async Task SetupGameConnectionsAsync(Dictionary<string,PlayerData> players, GameData gameData)
         {
-            // leave game -- need to remember to handle host disconnection
+            _playerList = players;
+            _gameData = gameData;
+
+            if (Hosting)
+            {
+                await _networkConnection.StartListeningAsync(_hostPort);
+            }
+
+            string hostIPAddress = players[_gameData.HostID].IPAddress;
+            await _networkConnection.ConnectAsync(hostIPAddress, _hostPort);
+
+            //_networkConnection.SendPacketToHost(_gameData);
+
+            PlayerData packet = _playerList[LocalPlayerID];
+            await _networkConnection.SendPacketToHost(packet);
+
+            Connected = true;
         }
 
-        public async void HostGame()
+        internal async Task SendSyncUpdatesToPlayer(string player, List<EntityPacket> updates)
         {
-            // set self up as host and start listening
-            await _networkConnection.StartListening(_hostPort);
-            Host = true;
-        }
+            if (!Hosting) return;
 
-        internal void SendSyncUpdatesToPlayer(string player, List<EntityPacket> updates)
-        {
-            if (!Host) return;
-
-            Player gamer = _playerList[player];
+            PlayerData gamer = _playerList[player];
 
             foreach (EntityPacket update in updates)
             {
-                _networkConnection.SendPacketTo(gamer.Location, update);
+                await _networkConnection.SendPacketTo(gamer.Location, update);
             }
         }
 
-        private void AddNewGamer(SalutationPacket salutation)
-        {
-            //Gamer gamer = new Gamer(salutation.Name, salutation.SourceIP);
-            //Gamers.TryAdd(salutation.Name, gamer);
-            //gamer.ShipID = GameModel.NewShip(gamer.ConnectionID);
-            //log.Info(gamer.ConnectionID + " has joined the game from " + salutation.SourceIP);
-        }
+        internal async void OnPacketReceived(object network, PacketReceivedEventArgs args)
 
-        internal void OnPacketReceived(object network, PacketReceivedEventArgs args)
         {
             StreamSocket source = args.Source;
             NetworkPacket packet = args.Packet;
-            if (packet.Type == PacketType.PlayerData)
-            {
-                PlayerData data = packet as PlayerData;
-                if (_playerList.ContainsKey(data.PlayerID))
-                {
-                    Player player = _playerList[data.PlayerID];
-                    player.CopyFromPlayerData(data);
-                    player.Location = source;
-                }
-                else
-                {
-                    Player player = new Player(data);
-                    _playerList.Add(player.PlayerID, player);
-                    player.Location = source;
-                }
 
-                if (Host)
-                {
-                    SendPacketToAllClients(packet);
-                }
+            switch(packet.Type)
+            {
+                case PacketType.PlayerData:
+                    PlayerData data = packet as PlayerData;
+                    data.Location = source;
+                    if (_playerList.ContainsKey(data.PlayerID))
+                    {
+                        _playerList[data.PlayerID] = data;
+                    }
+                    else
+                    {
+                        _playerList.Add(data.PlayerID, data);
+                    }
+                    await SendPacketToAllClients(packet);
+
+                    if (Hosting)
+                    {
+                        // check if we're ready to start game
+                        // by seeing if all packets have a sourcesocket
+                        bool ReadyToStart = true;
+                        foreach(PlayerData player in _playerList.Values)
+                        {
+                            if(player.Location == null)
+                            {
+                                ReadyToStart = false;
+                            }
+                        }
+                        if (ReadyToStart)
+                        {
+                            _gameData.Status = GameData.GameStatus.ReadyToStart;
+                            await SendPacketToAllClients(_gameData);
+                            OnGameChanged(_gameData);
+                        }
+
+                    }
+                    break;
+                case PacketType.GameData:
+                    _gameData = packet as GameData;
+                    // raise game changed event;
+                    OnGameChanged(_gameData);
+                    break;
+                default:
+                    break;
             }
         }
 
-        internal void SendPacketToAllClients(NetworkPacket packet)
+        internal async Task SendPacketToAllClients(NetworkPacket packet)
         {
-            if (!Host) return;
+            if (!Hosting) return;
 
             var destinationSockets =
                 from player in _playerList.Values
                 select player.Location;
 
-            _networkConnection.SendPacketToAll(destinationSockets.ToList(), packet);
+            await _networkConnection.SendPacketToAll(destinationSockets.ToList(), packet);
         }
 
-        internal void IncreaseScore(string gamer, int v)
+        internal async Task SendShipCommand(ShipCommand shipCommand)
         {
-            _playerList[gamer].Score += v;
-        }
-
-        internal void SendShipCommand(ShipCommand shipCommand)
-        {
-            _networkConnection.SendPacketToHost(shipCommand);
+            await _networkConnection.SendPacketToHost(shipCommand);
         }
 
         internal Ship GetShip(string owner = null)
         {
-            if(owner == null)
+            if (owner == null)
             {
-                if (PlayerID != null)
+                if (LocalPlayerID != null)
                 {
-                    owner = PlayerID;
+                    owner = LocalPlayerID;
                 }
                 else
                 {
@@ -148,12 +160,22 @@ namespace EmpireUWP.Network
 
             if (_playerList.ContainsKey(owner))
             {
-                int shipID = _playerList[owner].ShipID;
+                if (_playerList[owner].ShipID == 0)
+                {
+                    _playerList[owner].ShipID = _gameModel.NewShip(owner);
+                }
                 //if (!Host) log.Debug("Requested ship: " + owner);
-                return GameModel.GetEntity(shipID) as Ship;
+                int shipID = _playerList[owner].ShipID;
+                return _gameModel.GetEntity(shipID) as Ship;
             }
             //log.Warn("Unknown ship requested.  Owner = " + owner);
             return GameModel.NullShip;
+        }
+
+        internal event EventHandler<GameChangedEventArgs> GameChanged = delegate { };
+        private void OnGameChanged(GameData data)
+        {
+            GameChanged?.Invoke(this, new GameChangedEventArgs(data));
         }
     }
 }

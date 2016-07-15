@@ -14,58 +14,66 @@ namespace EmpireUWP.Model
 {
     class GameModel
     {
-
         public static Random Random = new Random();
 
         // all the game entities that exist
-        private static ConcurrentDictionary<int,Entity> _gameEntities = new ConcurrentDictionary<int, Entity>();
-        public static List<Entity> GameEntities { get {return _gameEntities.Values.ToList(); } }
-        public static List<int> GameEntityIDs { get { return _gameEntities.Keys.ToList(); } }
-        private static Ship _nullShip = new NullShip();
+        private ConcurrentDictionary<int,Entity> _gameEntities = new ConcurrentDictionary<int, Entity>();
+        public List<Entity> GameEntities { get {return _gameEntities.Values.ToList(); } }
+        public List<int> GameEntityIDs { get { return _gameEntities.Keys.ToList(); } }
+        private static Ship _nullShip;
         public static Ship NullShip { get { return _nullShip; } }
 
-        private static GameView _game;
-        private static ConnectionManager _connectionManager;
-        private static InputManager _inputManager;
+        private GameView _game;
+        internal WorldData worldData;
+        private ConnectionManager _connectionManager;
+        private InputManager _inputManager;
+        private SyncManager _syncManager;
 
-        public static void Initialize(GameView game, ConnectionManager connectionManager, InputManager inputManager)
+        public GameModel(GameView game, ConnectionManager connection = null)
         {
             _game = game;
-            _connectionManager = connectionManager;
-            _inputManager = inputManager;
+            _connectionManager = connection;
+            if (_connectionManager != null) _inputManager = new InputManager(_connectionManager);
+            _syncManager = new SyncManager(this);
+            _nullShip = new NullShip(this);
+            worldData = new WorldData();
+        }
 
-            ModelHelper.Initialize(_inputManager);
+        public void Initialize()
+        {
+            if (_connectionManager != null) _connectionManager.Initialize(this);
+            worldData.Initialize(this,_inputManager);
         }
 
         // a basic world initialization.  This needs to be replaced with
         // a class that can generate a new 'world' as well as saving and restoring one.
-        internal static void LoadWorld()
+        internal void LoadWorld()
         {
-            if (_connectionManager.Host || !_connectionManager.Connected)
+            for (int i = 0; i < 1; i++)
             {
-
-                for (int i = 0; i < 1; i++)
-                {
-                    Planet planet = ModelHelper.PlanetFactory(new Vector2(Random.Next(-10000, 10000), Random.Next(-10000, 10000)), (Planets)i);
-                    addGameEntityFromHost(planet);
-                }
-
-                for (int i = 0; i < ModelHelper.InitialAsteroidCount; i++)
-                {
-                    Asteroid asteroid = ModelHelper.AsteroidFactory();
-                    asteroid.Velocity = new Vector2(Random.Next(-200, 200) / 1000f, Random.Next(-200, 200) / 1000f);
-                    asteroid.Location = new Vector2(GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right),
-                        GameModel.Random.Next(View.GameView.PlayArea.Left, View.GameView.PlayArea.Right));
-                    addGameEntityFromHost(asteroid);
-                }
+                Planet planet = worldData.PlanetFactory(new Vector2(Random.Next(-10000, 10000), Random.Next(-10000, 10000)), (Planets)i);
+                addGameEntityFromHost(planet);
             }
+
+            for (int i = 0; i < WorldData.InitialAsteroidCount; i++)
+            {
+                Asteroid asteroid = worldData.AsteroidFactory();
+                asteroid.Velocity = new Vector2(Random.Next(-200, 200) / 1000f, Random.Next(-200, 200) / 1000f);
+                asteroid.Location = new Vector2(Random.Next(GameView.PlayArea.Left, GameView.PlayArea.Right),
+                    Random.Next(GameView.PlayArea.Left, GameView.PlayArea.Right));
+                addGameEntityFromHost(asteroid);
+            }
+
         }
 
-        public static void Update(GameTime gameTime)
+        public async Task Update(GameTime gameTime)
         {
             int elapsedTime = (int)gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            if (!_connectionManager.Host)
+            if (_inputManager != null)
+                await _inputManager.Update();
+
+            if (!_game.Hosting)
             {
                 ApplyUpdates();
             }
@@ -85,7 +93,7 @@ namespace EmpireUWP.Model
 
             RemoveDeadEntities(deadEntities);
 
-            if (_connectionManager.Host)
+            if (_game.Hosting)
             {
                 var asteroids =
                     from entity in _gameEntities.Values
@@ -95,9 +103,9 @@ namespace EmpireUWP.Model
             }
         }
 
-        private static void RemoveDeadEntities(List<Entity> deadEntities)
+        private void RemoveDeadEntities(List<Entity> deadEntities)
         {
-            if (_connectionManager.Host)
+            if (_game.Hosting)
             {
                 OnEntitiesRemoved(deadEntities);
             }
@@ -109,11 +117,11 @@ namespace EmpireUWP.Model
                 {
                     //log.Warn("Failed to remove a game entity from the collection");
                 }
-                ModelHelper.ReturnToPool(entityToRemove);
+                worldData.ReturnToPool(entityToRemove);
             }
         }
 
-        private static void DetectCollisionsWith(IEnumerable<Entity> asteroids)
+        private void DetectCollisionsWith(IEnumerable<Entity> asteroids)
         {
             foreach (Entity entity in _gameEntities.Values.ToList())
             {
@@ -132,12 +140,12 @@ namespace EmpireUWP.Model
             }
         }
 
-        private static bool Collision(Entity e1, Entity e2)
+        private bool Collision(Entity e1, Entity e2)
         {
             return ((e1.Location - e2.Location).Length() < (e1.Radius + e2.Radius));
         }
 
-        internal static Entity GetEntity(int entityID)
+        internal Entity GetEntity(int entityID)
         {
             if (_gameEntities.ContainsKey(entityID))
             {
@@ -147,27 +155,53 @@ namespace EmpireUWP.Model
             return null;
         }
 
-        internal static int NewShip(string connectionID)
+        internal void Start()
         {
-            Ship ship = ModelHelper.ShipFactory();
-            ship.Owner = connectionID;
+            _syncManager.Start(_connectionManager);
+        }
+
+        internal void Dispose()
+        {
+            _game = null;
+            _connectionManager = null;
+            worldData = null;
+            _inputManager = null;
+            _syncManager = null;
+        }
+
+        internal Ship GetShip(string owner)
+        {
+            if (_connectionManager == null)
+            {
+                return NullShip;
+            }
+            else
+            {
+                return _connectionManager.GetShip(owner);
+            }
+        }
+
+        internal int NewShip(string playerID)
+        {
+            Ship ship = worldData.ShipFactory();
+            ship.Owner = playerID;
             addGameEntityFromHost(ship);
             return ship.EntityID;
         }
 
-        internal static void AddGameEntity(Entity entity)
+        internal void AddGameEntity(Entity entity)
         {
-            if(_connectionManager.Host)
+            if(_game.Hosting)
             {
                 addGameEntityFromHost(entity);
             }
             else
             {
-                ModelHelper.ReturnToPool(entity);
+                worldData.ReturnToPool(entity);
             }
         }
         
-        private static void addGameEntityFromHost(Entity entity)
+        private void addGameEntityFromHost(Entity entity)
         {
             if (entity != null)
             {
@@ -184,9 +218,9 @@ namespace EmpireUWP.Model
             }
         }
 
-        private static void ApplyUpdates()
+        private void ApplyUpdates()
         {
-            UpdateQueue queue = SyncManager.RetrieveUpdatesAndClear();
+            UpdateQueue queue = _syncManager.RetrieveUpdatesAndClear();
 
             foreach (EntityPacket packet in queue.Packets)
             {
@@ -200,14 +234,14 @@ namespace EmpireUWP.Model
                 }
                 else
                 {
-                    Entity updatedEntity = ModelHelper.EntityFactory(packet.EntityType, packet.EntityState);
+                    Entity updatedEntity = worldData.EntityFactory(packet.EntityType, packet.EntityState);
                     addGameEntityFromHost(updatedEntity);
                 }
             }
         }
 
-        public static event EventHandler<EntitiesRemovedEventAgs> EntitiesRemoved = delegate { };
-        private static void OnEntitiesRemoved(List<Entity> deadEntities)
+        public event EventHandler<EntitiesRemovedEventAgs> EntitiesRemoved = delegate { };
+        private void OnEntitiesRemoved(List<Entity> deadEntities)
         {
             EntitiesRemoved?.Invoke(null, new EntitiesRemovedEventAgs(deadEntities));
         }

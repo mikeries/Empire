@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.Network
 {
-    enum LobbyCommands
+    enum LobbyCommands : int
     {
-        Connect,     
+        EnterLobby,     
         HostGame,
         JoinGame,
+        LeaveGame,
         Chat,
-        Disconnect,
+        LeaveLobby,
+        SetupGame,
     }
 }

@@ -9,13 +9,13 @@ namespace EmpireUWP.Model
     // Events fired by the model are simply a property and a value.
     class GameEventArgs : EventArgs
     {
-        public int Value { get; private set; }
         public string Property { get; private set; }
+        public float Value { get; private set; }
 
-        public GameEventArgs(string property, int value)
+        public GameEventArgs(string property, float value)
         {
-            Value = value;
-            Property = property;
+            Property = Property;
+            Value = Value;
         }
     }
 }

@@ -9,23 +9,23 @@ using EmpireUWP.Network;
 
 namespace EmpireUWP.Model
 {
-    class Asteroid : Entity
+    public class Asteroid : Entity
     {
-        internal int Stage { get; set; }  // track how many times this rock can split, also influences score value.
-        internal float RollRate { get; set; }  // how rapidly it rotates
-        internal int Style { get; set; }  // which type of asteroid this is... mostly texture now, but might also be linked to score?
+        public int Stage { get; set; }  // track how many times this rock can split, also influences score value.
+        public float RollRate { get; set; }  // how rapidly it rotates
+        public int Style { get; set; }  // which type of asteroid this is... mostly texture now, but might also be linked to score?
 
         private const float maxVelocity = 0.2f;  // child volocity = this velocity plus the velocity of the parent
         private const int minSizePercent = 20; // minSizePercent and maxSizePercent are used to scale a child relative to the parent size
         private const int maxSizePercent = 60;
         private const int minAsteroidSize = 20;
 
-        internal Asteroid(GameModel gameModel) : base (gameModel)
+        public Asteroid(GameModel gameModel) : base (gameModel)
         {
  
         }
 
-        internal override void Initialize()
+        public override void Initialize()
         {
             base.Initialize();
             this.visualState = VisualStates.Idle;
@@ -33,7 +33,7 @@ namespace EmpireUWP.Model
             RollRate = GameModel.Random.Next(-300, 300) / 100f;
         }
 
-        internal override void SetState(ObjectState info)
+        public override void SetState(ObjectState info)
         {
             base.SetState(info);
             Stage = info.GetInt("Stage");
@@ -49,14 +49,14 @@ namespace EmpireUWP.Model
             info.AddValue("Style", Style);
         }
 
-        internal override void Update(int elapsedTime)
+        public override void Update(int elapsedTime)
         {
             this.Orientation += (float)(RollRate * Math.PI/18000*elapsedTime);
             base.Update(elapsedTime);
         }
 
         // spawns a child asteroid with smaller size, new rotation rate, and slightly different velocity vector
-        internal Asteroid spawnChildAsteroid()
+        public Asteroid spawnChildAsteroid()
         {
             Asteroid newAsteroid = gameModel.worldData.AsteroidFactory();
             newAsteroid.Location = this.Location;
@@ -76,7 +76,7 @@ namespace EmpireUWP.Model
             return newAsteroid;
         }
 
-        internal override void HandleCollision(Entity entityThatCollided)
+        public override void HandleCollision(Entity entityThatCollided)
         {
              if (Status == Status.Active) // ignore dead or new asteroids
             {

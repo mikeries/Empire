@@ -12,7 +12,7 @@ using System.Collections.Concurrent;
 
 namespace EmpireUWP.Model
 {
-    class GameModel
+    public class GameModel
     {
         public static Random Random = new Random();
 
@@ -24,7 +24,7 @@ namespace EmpireUWP.Model
         public static Ship NullShip { get { return _nullShip; } }
 
         private GameView _game;
-        internal WorldData worldData;
+        public WorldData worldData;
         private ConnectionManager _connectionManager;
         private InputManager _inputManager;
         private SyncManager _syncManager;
@@ -47,7 +47,7 @@ namespace EmpireUWP.Model
 
         // a basic world initialization.  This needs to be replaced with
         // a class that can generate a new 'world' as well as saving and restoring one.
-        internal void LoadWorld()
+        public void LoadWorld()
         {
             for (int i = 0; i < 1; i++)
             {
@@ -145,7 +145,7 @@ namespace EmpireUWP.Model
             return ((e1.Location - e2.Location).Length() < (e1.Radius + e2.Radius));
         }
 
-        internal Entity GetEntity(int entityID)
+        public Entity GetEntity(int entityID)
         {
             if (_gameEntities.ContainsKey(entityID))
             {
@@ -155,12 +155,12 @@ namespace EmpireUWP.Model
             return null;
         }
 
-        internal void Start()
+        public void Start()
         {
             _syncManager.Start(_connectionManager);
         }
 
-        internal void Dispose()
+        public void Dispose()
         {
             _game = null;
             _connectionManager = null;
@@ -169,7 +169,7 @@ namespace EmpireUWP.Model
             _syncManager = null;
         }
 
-        internal Ship GetShip(string owner)
+        public Ship GetShip(string owner)
         {
             if (_connectionManager == null)
             {
@@ -181,7 +181,7 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal int NewShip(string playerID)
+        public int NewShip(string playerID)
         {
             Ship ship = worldData.ShipFactory();
             ship.Owner = playerID;
@@ -189,7 +189,7 @@ namespace EmpireUWP.Model
             return ship.EntityID;
         }
 
-        internal void AddGameEntity(Entity entity)
+        public void AddGameEntity(Entity entity)
         {
             if(_game.Hosting)
             {

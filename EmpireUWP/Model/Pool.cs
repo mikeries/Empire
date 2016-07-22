@@ -19,7 +19,7 @@ namespace EmpireUWP
         private int _maxSize;
         private static object _accessLock;
 
-        internal EntityPool(Func<T> objectGenerator, int maxSize)
+        public EntityPool(Func<T> objectGenerator, int maxSize)
         {
             _maxSize = maxSize;
             _objects = new Entity[_maxSize];
@@ -36,7 +36,7 @@ namespace EmpireUWP
             _accessLock = new object();
         }
 
-        internal Entity GetNew()
+        public Entity GetNew()
         {
             lock (_accessLock)
             {
@@ -56,7 +56,7 @@ namespace EmpireUWP
             }
         }
 
-        internal void Return(Entity itemToReturn)
+        public void Return(Entity itemToReturn)
         {
             lock (_accessLock) {
                 int index = Array.IndexOf(_objects, itemToReturn);

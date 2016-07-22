@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EmpireUWP
 {
     // Enumerates the various entities that exist
-    enum EntityType
+    public enum EntityType
     {
         Asteroid,
         Ship,

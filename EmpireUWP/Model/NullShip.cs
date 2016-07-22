@@ -12,10 +12,10 @@ using EmpireUWP.View;
 namespace EmpireUWP.Model
 {
 
-    class NullShip : Ship
+    public class NullShip : Ship
     {
- 
-        internal NullShip(GameModel model) : base(model)
+
+        public NullShip(GameModel model) : base(model)
         {
             Location = new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2);
             Velocity = new Vector2(Stopped, 0);

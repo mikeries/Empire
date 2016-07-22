@@ -5,16 +5,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Sockets;
+using Windows.Storage.Streams;
 
 namespace EmpireUWP.Network
 {
     public class LobbyService
     {
-        private const string lobbyPort = "1944";
+        private const string lobbyDataPort = "1944";
+        private const string lobbyCommandPort = "1945";
         private const string lobbyAddress = "192.168.1.245";
         private string _myAddress = null;
         internal bool Server { get; private set; }
-        private NetworkConnection _lobbyConnection = new NetworkConnection();
+        private NetworkConnection _lobbyDataConnection = new NetworkConnection();
+        private NetworkConnection _lobbyCommandConnection = new NetworkConnection();
         private MenuManager _menuManager;
         public MenuManager MenuManager { set { _menuManager = value; } }
 
@@ -89,59 +92,65 @@ namespace EmpireUWP.Network
         {
             var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
             _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
-            _lobbyConnection.PacketReceived += OnPacketReceived;
+            _lobbyDataConnection.PacketReceived += OnPacketReceived;
             if (_myAddress == lobbyAddress)
             {
-                await _lobbyConnection.StartListeningAsync(lobbyPort);
+                await _lobbyDataConnection.StartListeningAsync(lobbyDataPort);
                 Server = true;
             }
+
+            _lobbyCommandConnection.PacketReceived += OnRequestReceived;
+            await _lobbyCommandConnection.StartListeningAsync(lobbyCommandPort);
+
             return;
         }
 
         public async Task ConnectToLobbyAsync(string playerID)
         {
-            await _lobbyConnection.ConnectAsync(lobbyAddress, lobbyPort);
+            await _lobbyDataConnection.ConnectAsync(lobbyAddress, lobbyDataPort);
+            //await _lobbyCommandConnection.ConnectAsync(lobbyAddress, lobbyCommandPort);
         }
 
         public void DisconnectFromLobby()
         {
-            _lobbyConnection.Close();
+            _lobbyDataConnection.Close();
+            _lobbyCommandConnection.Close();
         }
 
         public async Task EnterLobby(string playerID)
         {
             LobbyCommandPacket command = new LobbyCommandPacket(playerID, LobbyCommands.EnterLobby);
-            await _lobbyConnection.SendPacketToHost(command);
+            await _lobbyCommandConnection.WaitResponse(command);
         }
 
-        public async Task LeaveLobby(string playerID)
+        public Task LeaveLobby(string playerID)
         {
             LobbyCommandPacket command = new LobbyCommandPacket(playerID, LobbyCommands.LeaveLobby);
-            await _lobbyConnection.SendPacketToHost(command);
+            return _lobbyDataConnection.SendPacketToHost(command);
         }
 
-        public async Task HostGame(string playerID)
+        public Task HostGame(string playerID)
         {
             LobbyCommandPacket command = new LobbyCommandPacket(playerID, LobbyCommands.HostGame, _myAddress);
-            await _lobbyConnection.SendPacketToHost(command);
+            return _lobbyDataConnection.SendPacketToHost(command);
         }
 
-        public async Task JoinGame(string playerID, string hostID)
+        public Task JoinGame(string playerID, string hostID)
         {
             LobbyCommandPacket command = new LobbyCommandPacket(playerID, LobbyCommands.JoinGame, hostID);
-            await _lobbyConnection.SendPacketToHost(command);
+            return _lobbyDataConnection.SendPacketToHost(command);
         }
 
-        public async Task LeaveGame(string playerID)
+        public Task LeaveGame(string playerID)
         {
             LobbyCommandPacket command = new LobbyCommandPacket(playerID, LobbyCommands.LeaveGame);
-            await _lobbyConnection.SendPacketToHost(command);
+            return _lobbyDataConnection.SendPacketToHost(command);
         }
 
-        public async Task InitializeGame(string playerID)
+        public Task InitializeGame(string playerID)
         {
             LobbyCommandPacket command = new LobbyCommandPacket(playerID, LobbyCommands.SetupGame);
-            await _lobbyConnection.SendPacketToHost(command);
+            return _lobbyDataConnection.SendPacketToHost(command);
         }
 
         internal async void OnPacketReceived(object network, PacketReceivedEventArgs args)
@@ -149,36 +158,47 @@ namespace EmpireUWP.Network
             StreamSocket source = args.Source;
             NetworkPacket packet = args.Packet;
 
-            if(packet.Type == PacketType.LobbyCommand && Server)
+            if(packet.Type == PacketType.LobbyCommand)
             {
                 LobbyCommandPacket command = packet as LobbyCommandPacket;
                 string playerID = command.PlayerID;
 
-                switch((int)command.Command)
+                if (Server)
                 {
-                    case (int)LobbyCommands.EnterLobby:
-                        ProcessEnterLobbyCommand(playerID, source.Information.RemoteAddress.DisplayName);
-                        break;
-                    case (int)LobbyCommands.LeaveLobby:
-                        ProcessLeaveLobbyCommand(playerID);
-                        break;
-                    case (int)LobbyCommands.HostGame:
-                        string hostIPAddress = command.Data;
-                        ProcessHostGameCommand(playerID, hostIPAddress);
-                        break;
-                    case (int)LobbyCommands.JoinGame:
-                        string hostID = command.Data;
-                        ProcessJoinGameCommand(playerID, hostID);
-                        break;
-                    case (int)LobbyCommands.LeaveGame:
-                        ProcessLeaveGameCommand(playerID);
-                        break;
-                    case (int)LobbyCommands.SetupGame:
-                        await ProcessSetupGameCommand(playerID);
-                        break;
+                    switch ((int)command.Command)
+                    {
+                        case (int)LobbyCommands.EnterLobby:
+                            await ProcessEnterLobbyCommand(playerID, source.Information.RemoteAddress.DisplayName);
+                            break;
+                        case (int)LobbyCommands.LeaveLobby:
+                            ProcessLeaveLobbyCommand(playerID);
+                            break;
+                        case (int)LobbyCommands.HostGame:
+                            string hostIPAddress = command.Data;
+                            ProcessHostGameCommand(playerID, hostIPAddress);
+                            break;
+                        case (int)LobbyCommands.JoinGame:
+                            string hostID = command.Data;
+                            ProcessJoinGameCommand(playerID, hostID);
+                            break;
+                        case (int)LobbyCommands.LeaveGame:
+                            ProcessLeaveGameCommand(playerID);
+                            break;
+                        case (int)LobbyCommands.SetupGame:
+                            await ProcessSetupGameCommand(playerID);
+                            break;
+                    }
+                    await UpdateAllClients();
+                    MenuManager.PlayerListChanged();
+                } else
+                {
+                    switch ((int)command.Command)
+                    {
+                        case (int)LobbyCommands.EjectThisUser:
+                            ProcessEjectThisUserCommand();
+                            break;
+                    }
                 }
-                await UpdateAllClients();
-                MenuManager.PlayerListChanged();
             }
             else if (packet.Type == PacketType.LobbyData && !Server)
             {
@@ -186,6 +206,29 @@ namespace EmpireUWP.Network
                 _playerList = data._playerList;
                 _gameList = data._gameList;
                 MenuManager.PlayerListChanged();
+            }
+
+        }
+
+
+        private async void OnRequestReceived(object sender, PacketReceivedEventArgs e)
+        {
+            StreamSocket source = e.Source;
+            NetworkPacket packet = e.Packet;
+
+            if (packet.Type == PacketType.LobbyCommand)
+            {
+                LobbyCommandPacket command = packet as LobbyCommandPacket;
+                string playerID = command.PlayerID;
+                AcknowledgePacket response = new AcknowledgePacket();
+
+                await ProcessEnterLobbyCommand(playerID, source.Information.RemoteAddress.DisplayName);
+                DataWriter writer = new DataWriter(source.OutputStream);
+
+                writer.WriteInt32(5);
+                await writer.StoreAsync();
+                await writer.FlushAsync();
+                writer.DetachStream();
             }
         }
 
@@ -238,7 +281,7 @@ namespace EmpireUWP.Network
             }
         }
 
-        private void ProcessEnterLobbyCommand(string playerID, string ipAddress)
+        private async Task ProcessEnterLobbyCommand(string playerID, string ipAddress)
         {
             if (!_playerList.ContainsKey(playerID))
             {
@@ -248,11 +291,12 @@ namespace EmpireUWP.Network
             else
             {
                 // TODO: need to handle case where we are logging in a second time, possibly after disconnecting.
-
+                LobbyCommandPacket ejectUser = new LobbyCommandPacket(playerID, LobbyCommands.EjectThisUser);
+                await _lobbyDataConnection.SendPacketToHost(ejectUser);
             }
         }
 
-        private async Task ProcessSetupGameCommand(string playerID)
+        private Task ProcessSetupGameCommand(string playerID)
         {
             int game = _playerList[playerID].GameID;
             GameData data = _gameList[game];     
@@ -263,10 +307,16 @@ namespace EmpireUWP.Network
                 select playerdata;
 
             Dictionary<string,PlayerData> playerList = players.ToDictionary(id => id.PlayerID);
-            await GamePage.gameInstance.SetupConnections(playerID, playerList, data);
+            return GamePage.gameInstance.SetupConnections(playerID, playerList, data);
         }
 
-        private async Task UpdateAllClients()
+        private void ProcessEjectThisUserCommand()
+        {
+            // TODO:  Make this exit more graceful.  Perhaps bump user back to login page
+            App.Current.Exit();
+        }
+
+        private Task UpdateAllClients()
         {
             LobbyData data = new LobbyData(_playerList, _gameList);
 
@@ -274,7 +324,7 @@ namespace EmpireUWP.Network
                 from player in _playerList.Values
                 select player.Location;
 
-            await _lobbyConnection.SendPacketToAll(destinationSockets.ToList(), data); 
+            return _lobbyDataConnection.SendPacketToAll(destinationSockets.ToList(), data); 
         }
 
     }

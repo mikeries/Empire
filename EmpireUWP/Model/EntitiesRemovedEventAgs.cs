@@ -2,11 +2,11 @@
 
 namespace EmpireUWP.Model
 {
-    internal class EntitiesRemovedEventAgs
+    public class EntitiesRemovedEventAgs
     {
-        internal List<Entity> EntitiesRemoved;
+        public List<Entity> EntitiesRemoved;
 
-        internal EntitiesRemovedEventAgs(List<Entity> deadEntities)
+        public EntitiesRemovedEventAgs(List<Entity> deadEntities)
         {
             EntitiesRemoved = deadEntities;
         }

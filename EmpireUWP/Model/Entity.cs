@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.Model
 {
-    internal abstract class Entity
+    public abstract class Entity
     {
-        internal GameModel gameModel;
+        public GameModel gameModel;
         private int _entityID = 0;
-        internal int EntityID { get { return _entityID; }  } 
+        public int EntityID { get { return _entityID; }  } 
 
         private Vector2 _location = new Vector2(0,0);
-        internal Vector2 Location   // location in game coords
+        public Vector2 Location   // location in game coords
         {
             get
             {
@@ -32,9 +32,9 @@ namespace EmpireUWP.Model
 
         // Height and Width specify the dimensions of the entity
         // Radius needs to be updated whenever they change
-        internal float Radius { get; private set; }
+        public float Radius { get; private set; }
         private int _height;
-        internal int Height
+        public int Height
         {
             get
             {
@@ -47,7 +47,7 @@ namespace EmpireUWP.Model
             }
         }
         private int _width;
-        internal int Width
+        public int Width
         {
             get
             {
@@ -61,7 +61,7 @@ namespace EmpireUWP.Model
         }
 
         private Vector2 _velocity;
-        internal Vector2 Velocity
+        public Vector2 Velocity
         {
             get
             {
@@ -73,37 +73,37 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal float Orientation { get; set; }
+        public float Orientation { get; set; }
 
-        internal Status Status { get; set; } // active, dead, new (unitialized), or disposable (can be removed)
-        internal VisualStates visualState { get; set; } // used to tell the view what animations to show
-        internal EntityType Type { get; set; }
+        public Status Status { get; set; } // active, dead, new (unitialized), or disposable (can be removed)
+        public VisualStates visualState { get; set; } // used to tell the view what animations to show
+        public EntityType Type { get; set; }
 
-        internal Sprite Renderer { get; set; }
+        public Sprite Renderer { get; set; }
 
-        internal int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
-        internal DateTime LastUpdated { get; private set; }
+        public int timeToLive { get; set; }   // object will be removed this many milliseconds after spawning
+        public DateTime LastUpdated { get; private set; }
 
         protected int age = 0;           // accumulates how much time has passed since the object spawned
 
-        internal Entity(GameModel gameModel)
+        public Entity(GameModel gameModel)
         {
             this.gameModel = gameModel;
         }
 
-        internal virtual void Initialize()
+        public virtual void Initialize()
         {
             Status = Status.Disposable;
             _entityID = 0;
             visualState = VisualStates.Idle;
         }
-   
-        internal void GenerateID ()
+
+        public void GenerateID ()
         {
             _entityID = IDGenerator.NewID();
         }
 
-        internal virtual void SetState(ObjectState info)
+        public virtual void SetState(ObjectState info)
         {
             _entityID = info.GetInt("EntityID");
             _location.X = info.GetFloat("LocationX");
@@ -137,14 +137,14 @@ namespace EmpireUWP.Model
             info.AddValue("Age", age);
         }
 
-        internal void Rotate(float radians)
+        public void Rotate(float radians)
         {
             Orientation += radians;
         }
 
         // move the entity in the correct direction, then check  to make sure it hasn't left the
         // play area
-        internal void Move(int elapsedTime)
+        public void Move(int elapsedTime)
         {
             _location = _location + Velocity * (float)elapsedTime;
 
@@ -167,7 +167,7 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal virtual void Update(int elapsedTime) {
+        public virtual void Update(int elapsedTime) {
             age += elapsedTime;
             if (timeToLive > 0 && age > timeToLive)
             {
@@ -184,7 +184,7 @@ namespace EmpireUWP.Model
             LastUpdated = DateTime.Now;  // used to calculate lag updates on packets coming from the network
         }
 
-        internal abstract void HandleCollision(Entity entityThatCollided);
+        public abstract void HandleCollision(Entity entityThatCollided);
 
     }
 }

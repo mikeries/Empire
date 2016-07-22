@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Model
 {
     // These are the names of the planets.  I need to come up with some more creative names...
-    enum Planets
+    public enum Planets
     {
         planet1,
         planet2,

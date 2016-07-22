@@ -11,20 +11,20 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    abstract class NetworkPacket
+    public abstract class NetworkPacket
     {
 
         [DataMember]
-        internal PacketType Type;
+        public PacketType Type;
         [DataMember]
-        internal DateTime Timestamp { get; private set; }  // when the packet was sent.  Used for determining lag time and as a packet ID
+        public DateTime Timestamp { get; private set; }  // when the packet was sent.  Used for determining lag time and as a packet ID
 
-        internal NetworkPacket()
+        public NetworkPacket()
         {
             Timestamp = DateTime.Now;
         }
 
-        internal bool IsNewerThan(NetworkPacket networkPacket)
+        public bool IsNewerThan(NetworkPacket networkPacket)
         {
             return (this.Timestamp > networkPacket.Timestamp);
         }

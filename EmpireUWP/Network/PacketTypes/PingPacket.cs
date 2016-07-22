@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    internal class PingPacket : NetworkPacket
+    public class PingPacket : NetworkPacket
     {
-        internal PingPacket() : base()
+        public PingPacket() : base()
         {
             this.Type = PacketType.Ping;
         }

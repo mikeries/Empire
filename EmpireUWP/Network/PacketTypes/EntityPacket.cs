@@ -10,18 +10,18 @@ using System.IO;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    class EntityPacket : NetworkPacket
+    public class EntityPacket : NetworkPacket
     {
         // Implementation note
         // Rather than enclose an Entity object, we instead serialize the entity and pass the message which can be used to
         // initialize an existing object from an object pool rather than contstructing a new one.  This avoids
         // excessive heap fragmentation.
         [DataMember]
-        internal ObjectState EntityState;
+        public ObjectState EntityState;
         [DataMember]
-        internal EntityType EntityType;
+        public EntityType EntityType;
         [DataMember]
-        internal int EntityID;
+        public int EntityID;
 
         public EntityPacket(Entity entity) : base()
         {

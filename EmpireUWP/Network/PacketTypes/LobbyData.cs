@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    internal class LobbyData : NetworkPacket
+    public class LobbyData : NetworkPacket
     {
         [DataMember]
-        internal Dictionary<string, PlayerData> _playerList {get; private set;}
+        public Dictionary<string, PlayerData> _playerList {get; private set;}
         [DataMember]
-        internal Dictionary<int, GameData> _gameList { get; private set; }
+        public Dictionary<int, GameData> _gameList { get; private set; }
 
-        internal LobbyData(Dictionary<string, PlayerData> playerList, Dictionary<int, GameData> gameList)
+        public LobbyData(Dictionary<string, PlayerData> playerList, Dictionary<int, GameData> gameList)
         {
             _playerList = playerList;
             _gameList = gameList;

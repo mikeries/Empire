@@ -10,42 +10,42 @@ using System.Runtime.Serialization;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    internal class ShipCommand : NetworkPacket
+    public class ShipCommand : NetworkPacket
     {
         [DataMember]
-        internal int Commands { get; private set; }
+        public int Commands { get; private set; }
         [DataMember]
-        internal bool Left { get { return (Commands & (int)CommandFlags.Left) > 0; } set { } }
+        public bool Left { get { return (Commands & (int)CommandFlags.Left) > 0; } set { } }
 
         [DataMember]
-        internal bool Right { get { return ((Commands & (int)CommandFlags.Right) > 0); } set { } }
+        public bool Right { get { return ((Commands & (int)CommandFlags.Right) > 0); } set { } }
 
 
         [DataMember]
-        internal bool Shields
+        public bool Shields
         {
             get { return ((Commands & (int)CommandFlags.Shields) > 0); }
             set { }
         }
 
         [DataMember]
-        internal bool Shoot
+        public bool Shoot
         {
             get { return ((Commands & (int)CommandFlags.Shoot) > 0); }
             set { }
         }
 
         [DataMember]
-        internal bool Thrust
+        public bool Thrust
         {
             get { return ((Commands & (int)CommandFlags.Thrust) > 0); }
             set { }
         }
 
         [DataMember]
-        internal string Owner { get; private set; }
+        public string Owner { get; private set; }
 
-        internal ShipCommand(string owner, int commands)
+        public ShipCommand(string owner, int commands)
         {
             Type = PacketType.ShipCommand;
             Commands = commands;

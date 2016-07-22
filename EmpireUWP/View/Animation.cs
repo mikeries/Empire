@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace EmpireUWP.View
 {
-    class Animation
+    public class Animation
     {
         private int _elapsedTime;       // accumulate number of milliseconds since last frame switch
         private int _frameDuration;     // the duration of each frame in milliseconds
@@ -20,9 +20,9 @@ namespace EmpireUWP.View
         private bool _active;           // animation will not draw or advance while this is false
         private bool _looping;
 
-        internal float Scale { get; set; }    // scales the frame size
+        public float Scale { get; set; }    // scales the frame size
 
-        internal Animation(Texture2D texture, int frameWidth, int frameHeight, int frameCount, int frameDuration, bool looping, CanvasLayer canvasLayer)
+        public Animation(Texture2D texture, int frameWidth, int frameHeight, int frameCount, int frameDuration, bool looping, CanvasLayer canvasLayer)
         {
             _frameWidth = frameWidth;
             _frameHeight = frameHeight;
@@ -43,12 +43,12 @@ namespace EmpireUWP.View
             _active = true;
         }
 
-        internal Animation Clone()
+        public Animation Clone()
         {
            return new Animation(_spriteStrip, _frameWidth, _frameHeight, _frameCount, _frameDuration, _looping, _canvasLayer);
         }
 
-        internal void Update(int elapsedTime)
+        public void Update(int elapsedTime)
         {
             _elapsedTime += elapsedTime;
 
@@ -77,7 +77,7 @@ namespace EmpireUWP.View
         // rotation will be around the center of the frame
         // position is to be in view coords
         // Zorder ranges from 0 to 1, with lower values being shown behind higher values.
-        internal void Draw(SpriteBatch spriteBatch, Vector2 position, float orientation)
+        public void Draw(SpriteBatch spriteBatch, Vector2 position, float orientation)
         {
             if (_active)
             {

@@ -9,17 +9,17 @@ using Microsoft.Xna.Framework;
 
 namespace EmpireUWP.View
 {
-    internal class Sprite
+    public class Sprite
     {
         private List<Animation> _animations;    // each sprite contains a list of animations that can be drawn
         private Entity _entity;
 
-        internal Sprite(List<Animation> animations, Entity entity) {
+        public Sprite(List<Animation> animations, Entity entity) {
             _animations = animations;
             _entity = entity;
         }
 
-        internal void Update(int elapsedTime)
+        public void Update(int elapsedTime)
         {
             foreach (Animation animation in _animations)
             {
@@ -27,7 +27,7 @@ namespace EmpireUWP.View
             }
         }
 
-        internal void Draw(SpriteBatch spriteBatch, Ship player)
+        public void Draw(SpriteBatch spriteBatch, Ship player)
         {
             //if ((player.Location - _entity.Location).Length() > 800) return;        // quick exit for stuff that's too far away
 

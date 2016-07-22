@@ -8,7 +8,7 @@ namespace EmpireUWP
 {
     // CanvasLayer is used to determine plot order for sprites on the canvas
     // lower numbers will appear to be behind higher numbers
-    enum CanvasLayer : int
+    public enum CanvasLayer : int
     {
         Planet = 0,
         Asteroid = 1,

@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    class AcknowledgePacket : NetworkPacket
+    public class AcknowledgePacket : NetworkPacket
     {
+        public string Name;
 
         public AcknowledgePacket() : base()
         {

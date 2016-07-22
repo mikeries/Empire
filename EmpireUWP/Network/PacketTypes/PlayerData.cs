@@ -10,22 +10,22 @@ using Windows.Networking.Sockets;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    internal class PlayerData : NetworkPacket
+    public class PlayerData : NetworkPacket
     {
         [DataMember]
-        internal string PlayerID { get; private set; }                   // the ID corresponding to this gamer
+        public string PlayerID { get; private set; }                   // the ID corresponding to this gamer
         [DataMember]
-        internal string IPAddress { get; private set; }                  
+        public string IPAddress { get; private set; }                  
         [DataMember]
-        internal int ShipID { get; set; }
+        public int ShipID { get; set; }
         [DataMember]
-        internal int Score { get; set; }
+        public int Score { get; set; }
         [DataMember]
-        internal int GameID { get; set; }
+        public int GameID { get; set; }
 
-        internal StreamSocket Location = null;
+        public StreamSocket Location = null;
 
-        internal PlayerData(Player player, string ipAddress) : base()
+        public PlayerData(Player player, string ipAddress) : base()
         {
             Type = PacketType.PlayerData;
             IPAddress = ipAddress;

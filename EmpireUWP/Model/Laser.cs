@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.Model
 {
-    class Laser : Entity
+    public class Laser : Entity
     {
         const int Lifetime = 800; // how long a laser bullet lasts, in milliseconds
-        internal string Owner;
+        public string Owner;
 
         public Laser(GameModel gameModel)  : base(gameModel)
         {
         }
 
-        internal override void Initialize()
+        public override void Initialize()
         {
             base.Initialize();
             age = 0;
@@ -24,7 +24,7 @@ namespace EmpireUWP.Model
             Type = EntityType.Laser;
         }
 
-        internal override void SetState(ObjectState info)
+        public override void SetState(ObjectState info)
         {
             base.SetState(info);
             Owner = info.GetString("Owner");
@@ -36,7 +36,7 @@ namespace EmpireUWP.Model
             info.AddValue("Owner", Owner);
         }
 
-        internal override void HandleCollision(Entity entityThatCollided)
+        public override void HandleCollision(Entity entityThatCollided)
         {
             Status = Status.Dead;
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.Network
 {
-    enum LobbyCommands : int
+    public enum LobbyCommands : int
     {
         EnterLobby,     
         HostGame,
@@ -15,5 +15,6 @@ namespace EmpireUWP.Network
         Chat,
         LeaveLobby,
         SetupGame,
+        EjectThisUser,
     }
 }

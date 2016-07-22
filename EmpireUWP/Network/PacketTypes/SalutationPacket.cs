@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    internal class SalutationPacket : NetworkPacket
+    public class SalutationPacket : NetworkPacket
     {
         [DataMember]
-        internal string Name { get; private set; }
+        public string Name { get; private set; }
 
-        internal SalutationPacket(string name) : base()
+        public SalutationPacket(string name) : base()
         {
             Type = PacketType.Salutation;
             Name = name;

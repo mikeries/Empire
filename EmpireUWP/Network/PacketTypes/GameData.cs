@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 namespace EmpireUWP.Network
 {
     [DataContract]
-    internal class GameData : NetworkPacket
+    public class GameData : NetworkPacket
     {
-        internal enum GameStatus
+        public enum GameStatus
         {
             WaitingForPlayers,
             ReadyToStart,
@@ -21,16 +21,16 @@ namespace EmpireUWP.Network
             Paused,
         }
         [DataMember]
-        internal int GameID { get; private set; }
+        public int GameID { get; private set; }
         [DataMember]
-        internal string HostID { get; private set; }
+        public string HostID { get; private set; }
         [DataMember]
-        internal List<string> playerList = new List<string>();
-        internal int PlayerCount { get { return playerList.Count; } }
+        public List<string> playerList = new List<string>();
+        public int PlayerCount { get { return playerList.Count; } }
         [DataMember]
-        internal GameStatus Status;
+        public GameStatus Status;
 
-        internal GameData(int gameID, string playerID) : base()
+        public GameData(int gameID, string playerID) : base()
         {
             Type = PacketType.GameData;
             HostID = playerID;
@@ -39,12 +39,12 @@ namespace EmpireUWP.Network
             playerList.Add(playerID);
         }
 
-        internal void Join(string playerID)
+        public void Join(string playerID)
         {
             playerList.Add(playerID);
         }
 
-        internal void Leave(string playerID)
+        public void Leave(string playerID)
         {
             if(playerList.Contains(playerID))
             {

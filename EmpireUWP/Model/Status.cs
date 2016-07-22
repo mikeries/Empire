@@ -8,7 +8,7 @@ namespace EmpireUWP
 {
     // Each entity has a Status variable that is used to identity its state
     // Typically, the lifecycle is New->Alive->Dead->Disposable
-    enum Status
+    public enum Status
     {
         Active,     // the entity is 'alive' and active
         Dead,       // the entity is 'dead' and will be removed the the world.  When the sprite is removed, the Status becomes Disposable

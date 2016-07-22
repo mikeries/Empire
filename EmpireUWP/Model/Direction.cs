@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EmpireUWP
 {
     // Directions are used for handling input keys
-    enum Direction
+    public enum Direction
     {
         Right,
         Left,

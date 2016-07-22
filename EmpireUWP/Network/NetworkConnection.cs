@@ -44,7 +44,7 @@ namespace EmpireUWP.Network
             {
                 _hostSocket = new StreamSocket();
                 HostName hostName = new HostName(address);
-                await _hostSocket.ConnectAsync(hostName, port).AsTask();
+                await _hostSocket.ConnectAsync(hostName, port);
                 Connected = true;
             }
             catch (Exception e)
@@ -56,29 +56,86 @@ namespace EmpireUWP.Network
             }
         }
 
-        public async Task SendPacketToHost(NetworkPacket packet)
+        public Task SendPacketToHost(NetworkPacket packet)
         {
-                await SendPacketTo(_hostSocket, packet);
+            return SendPacketTo(_hostSocket, packet);
         }
 
-        public async Task SendPacketTo(StreamSocket destinationSocket, NetworkPacket packet)
-        {
-            if (Connected)
-            {
-                byte[] message = CreateMessageFromPacket(packet);
-                await SendTo(destinationSocket, message);
-            }
-        }
-
-        public async Task SendPacketToAll(List<StreamSocket> destinationSockets, NetworkPacket packet)
+        public Task SendPacketTo(StreamSocket destinationSocket, NetworkPacket packet)
         {
             byte[] message = CreateMessageFromPacket(packet);
-            await SendToAll(destinationSockets, message);
+            return SendTo(destinationSocket, message);
+        }
+
+        public Task SendPacketToAll(List<StreamSocket> destinationSockets, NetworkPacket packet)
+        {
+            byte[] message = CreateMessageFromPacket(packet);
+            return SendToAll(destinationSockets, message);
+        }
+
+        public async Task WaitResponse(NetworkPacket packet, StreamSocket destinationSocket = null)
+        {
+            if (destinationSocket == null)
+            {
+                destinationSocket = _hostSocket;
+            }
+
+            DataWriter writer = new DataWriter(destinationSocket.OutputStream);
+
+            writer.WriteInt32(5);
+            await writer.StoreAsync();
+            await writer.FlushAsync();
+            writer.DetachStream();
+
+            await Task.Delay(100);
+            DataReader reader = new DataReader(destinationSocket.InputStream);
+
+            await reader.LoadAsync(sizeof(uint));
+            uint x = (uint)reader.ReadInt32();
+
+        }
+
+        private async Task<byte[]> ReadBuffer(StreamSocket socket)
+        {
+            DataReader reader = new DataReader(socket.InputStream);
+
+            try
+            {
+                // Read length of the subsequent buffer.
+
+                uint x=0;
+                while (x < sizeof(int))
+                {
+                    x = reader.UnconsumedBufferLength;
+                    await Task.Delay(1);
+                }
+
+                await reader.LoadAsync(sizeof(uint));
+                uint bufferLength = reader.ReadUInt32();
+
+                uint actualBufferLength = 0;
+                while (bufferLength != actualBufferLength)
+                {
+                        actualBufferLength = await reader.LoadAsync(bufferLength);
+                }
+                byte[] message = new byte[actualBufferLength];
+                reader.ReadBytes(message);
+
+                return message;
+            }
+            catch
+            {
+                throw;
+            } finally
+            {
+                reader.Dispose();
+            }
+
         }
 
         private async Task SendTo(StreamSocket destinationSocket, byte[] message)
         {
-            if (destinationSocket==null)
+            if (destinationSocket==null || !Connected)
             {
                 return;
             }
@@ -101,8 +158,8 @@ namespace EmpireUWP.Network
             }
             finally
             {
+                await writer.FlushAsync();
                 writer.DetachStream();
-                writer.Dispose();
             }
         }
 
@@ -208,7 +265,7 @@ namespace EmpireUWP.Network
             {
                 while (true)
                 {
-                    // Read first 4 bytes (length of the subsequent buffer).
+                    // Read length of the subsequent buffer.
                     uint sizeFieldCount = await reader.LoadAsync(sizeof(uint));
                     if (sizeFieldCount != sizeof(uint))
                     {

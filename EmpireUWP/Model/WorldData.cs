@@ -9,7 +9,7 @@ using EmpireUWP.View;
 
 namespace EmpireUWP.Model
 {
-    class WorldData
+    public class WorldData
     {
 
         const int PlanetMinSize = 150;
@@ -41,7 +41,7 @@ namespace EmpireUWP.Model
             _inputManager = inputManager;
         }
 
-        internal Ship ShipFactory()
+        public Ship ShipFactory()
         {
             Ship newShip = shipPool.GetNew() as Ship;
             newShip.Location = new Vector2(View.GameView.PlayArea.Width / 2, View.GameView.PlayArea.Height / 2);
@@ -51,7 +51,7 @@ namespace EmpireUWP.Model
             return newShip;
         }
 
-        internal Planet PlanetFactory(Vector2 location, Planets ID)
+        public Planet PlanetFactory(Vector2 location, Planets ID)
         {
             Planet newPlanet = planetPool.GetNew() as Planet;
             newPlanet.PlanetID = ID;
@@ -65,7 +65,7 @@ namespace EmpireUWP.Model
             return newPlanet;
         }
 
-        internal Asteroid AsteroidFactory()
+        public Asteroid AsteroidFactory()
         {
             Asteroid newAsteroid = asteroidPool.GetNew() as Asteroid;
 
@@ -79,7 +79,7 @@ namespace EmpireUWP.Model
             return newAsteroid;
         }
 
-        internal Laser LaserFactory(Ship ship)
+        public Laser LaserFactory(Ship ship)
         {
             Laser newLaser = laserPool.GetNew() as Laser;
             if (ship != null)
@@ -97,7 +97,7 @@ namespace EmpireUWP.Model
             return newLaser;
         }
 
-        internal Entity EntityFactory(EntityType entityType, ObjectState entityState)
+        public Entity EntityFactory(EntityType entityType, ObjectState entityState)
         {
             if (entityType == EntityType.Asteroid)
             {
@@ -132,7 +132,7 @@ namespace EmpireUWP.Model
 
         //// TODO: replace this function by creating a delegate in the entity that
         //// the factory methods will set to return the entity to the correct pool.
-        internal void ReturnToPool(Entity entityToReturn)
+        public void ReturnToPool(Entity entityToReturn)
         {
             if (entityToReturn is Asteroid)
             {
@@ -152,7 +152,7 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal static Vector2 thrustVector(float thrust, float orientation)
+        public static Vector2 thrustVector(float thrust, float orientation)
         {
             return new Vector2(thrust * (float)Math.Sin(orientation), -thrust * (float)Math.Cos(orientation));
         }

@@ -9,12 +9,12 @@ namespace EmpireUWP
 {
 
     // Circle structure -- used primarily for collision detection
-    internal struct Circle
+    public struct Circle
     {
-        internal Vector2 Center { get; set; }
-        internal float Radius { get; set; }
+        public Vector2 Center { get; set; }
+        public float Radius { get; set; }
 
-        internal Circle(Vector2 center, float radius)
+        public Circle(Vector2 center, float radius)
         {
             Center = center;
             Radius = radius;

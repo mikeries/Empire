@@ -55,19 +55,19 @@ namespace EmpireUWP.View
             await lobby.ConnectToLobbyAsync(PlayerID);
         }
 
-        public static async Task HostGame()
+        public static Task HostGame()
         {
-            await lobby.HostGame(PlayerID);
+            return lobby.HostGame(PlayerID);
         }
 
-        public static async Task JoinGame(string hostID)
+        public static Task JoinGame(string hostID)
         {
-            await lobby.JoinGame(PlayerID, hostID);
+            return lobby.JoinGame(PlayerID, hostID);
         }
 
-        public static async Task LeaveGame()
+        public static Task LeaveGame()
         {
-            await lobby.LeaveGame(PlayerID);
+            return lobby.LeaveGame(PlayerID);
         }
 
         public static async Task EnterLobby()
@@ -75,14 +75,14 @@ namespace EmpireUWP.View
             await lobby.EnterLobby(PlayerID);
         }
 
-        public static async Task LeaveLobby()
+        public static Task LeaveLobby()
         {
-            await lobby.LeaveLobby(PlayerID);
+            return lobby.LeaveLobby(PlayerID);
         }
 
-        public static async Task InitializeGame()
+        public static Task InitializeGame()
         {
-            await lobby.InitializeGame(PlayerID);
+            return lobby.InitializeGame(PlayerID);
         }
 
         public event PropertyChangedEventHandler PropertyChanged = delegate { };

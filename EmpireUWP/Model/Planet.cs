@@ -10,7 +10,7 @@ namespace EmpireUWP.Model
 {
     // A very simple class to distinguish planets from other game entities.
     // Maybe someday planets will have populations, sovereignty, exports, etc.
-    class Planet : Entity
+    public class Planet : Entity
     {
         public Planets PlanetID { get; set; }
 
@@ -18,13 +18,13 @@ namespace EmpireUWP.Model
             PlanetID = ID;
         }
 
-        internal override void Initialize()
+        public override void Initialize()
         {
             base.Initialize();
             this.Type = EntityType.Planet;
         }
 
-        internal override void SetState(ObjectState info)
+        public override void SetState(ObjectState info)
         {
             base.SetState(info);
             PlanetID = (Planets)info.GetInt("PlanetID");
@@ -36,7 +36,7 @@ namespace EmpireUWP.Model
             info.AddValue("PlanetID", (int)PlanetID);
         }
 
-        internal override void HandleCollision(Entity entityThatCollided)
+        public override void HandleCollision(Entity entityThatCollided)
         {
             throw new NotImplementedException();  // at the moment, nothing can collide with a planet.  But if this gets called, it's a bug!
         }

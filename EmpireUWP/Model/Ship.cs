@@ -12,7 +12,7 @@ using EmpireUWP.View;
 namespace EmpireUWP.Model
 {
 
-    class Ship : Entity
+    public class Ship : Entity
     {
         protected ShipCommand Command = new ShipCommand("",0);        // container for commands issued by player, network, AI
 
@@ -35,13 +35,13 @@ namespace EmpireUWP.Model
 
         public int ShieldEnergy { get; protected set; }
 
-        internal string Owner { get; set; }     
+        public string Owner { get; set; }
 
-        internal Ship(GameModel gameModel) : base(gameModel)
+        public Ship(GameModel gameModel) : base(gameModel)
         {
         }
 
-        internal void CommandReceivedHandler(object sender, CommandReceivedEventArgs args)
+        public void CommandReceivedHandler(object sender, CommandReceivedEventArgs args)
         {
             ShipCommand packet = args.CommandPacket;
             if (Owner == packet.Owner)
@@ -50,7 +50,7 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal override void Initialize()
+        public override void Initialize()
         {
             base.Initialize();
             Location = new Vector2(0, 0);
@@ -62,7 +62,7 @@ namespace EmpireUWP.Model
             Command = new ShipCommand("", 0);
         }
 
-        internal override void SetState(ObjectState info)
+        public override void SetState(ObjectState info)
         {
             base.SetState(info);
             //_timeSinceLastShot = (int)info.GetValue("timeSinceLastShot", typeof(int));
@@ -78,7 +78,7 @@ namespace EmpireUWP.Model
             info.AddValue("Owner", Owner);
         }
 
-        internal override void Update(int elapsedTime)
+        public override void Update(int elapsedTime)
         {
             ProcessInput(elapsedTime);
             
@@ -120,7 +120,7 @@ namespace EmpireUWP.Model
 
         }
 
-        internal void RaiseShields(int elapsedTime)
+        public void RaiseShields(int elapsedTime)
         {
             ShieldEnergy -= (int)(elapsedTime * ShieldDecayRate);
             if (ShieldEnergy > 0)
@@ -129,7 +129,7 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal void AccelerateShip(int elapsedTime)
+        public void AccelerateShip(int elapsedTime)
         {
             visualState |= VisualStates.Thrusting;
             Vector2 acceleration = WorldData.thrustVector(engineThrust*elapsedTime, Orientation);
@@ -140,7 +140,7 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal void Fire(int elapsedTime)
+        public void Fire(int elapsedTime)
         {
             if (_timeSinceLastShot > millisecondsPerShot)
             {
@@ -151,7 +151,7 @@ namespace EmpireUWP.Model
             }
         }
 
-        internal override void HandleCollision(Entity entityThatCollided)
+        public override void HandleCollision(Entity entityThatCollided)
         {
             if(ShieldsAreDown())
             {

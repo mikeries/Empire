@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.Network
 {
-    internal class CommandReceivedEventArgs : EventArgs
+    public class CommandReceivedEventArgs : EventArgs
     {
-        internal ShipCommand CommandPacket { get; private set; }
+        public ShipCommand CommandPacket { get; private set; }
 
-        internal CommandReceivedEventArgs(ShipCommand packet)
+        public CommandReceivedEventArgs(ShipCommand packet)
         {
             CommandPacket = packet;
         }

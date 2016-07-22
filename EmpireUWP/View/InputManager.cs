@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.View
 {
-    class InputManager
+    public class InputManager
     {
         private ConnectionManager _connectionManager;
 
@@ -19,12 +19,12 @@ namespace EmpireUWP.View
             _connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
         }
 
-        internal async Task Update()
+        public async Task Update()
         {
             await ProcessLocalInput();
         }
 
-        internal void ProcessRemoteInput(ShipCommand commandPacket)
+        public void ProcessRemoteInput(ShipCommand commandPacket)
         {
             if (commandPacket.Owner != _connectionManager.LocalPlayerID)
             { 
@@ -32,7 +32,7 @@ namespace EmpireUWP.View
             }
         }
 
-        internal async Task ProcessLocalInput()
+        public async Task ProcessLocalInput()
         {
             KeyboardState keyboardState = Keyboard.GetState();
 

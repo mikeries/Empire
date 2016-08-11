@@ -1,4 +1,5 @@
 ﻿using EmpireUWP.View;
+using Microsoft.Xna.Framework.Input;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,8 @@ namespace EmpireUWP
         {
             base.OnNavigatedTo(e);
 
-            MenuManager.CurrentPage = menuManager;
+            MenuManager.CurrentPage = this;
+            MenuManager.Manager = menuManager;
         }
 
         private async void submitButton_Click(object sender, RoutedEventArgs e)
@@ -73,9 +75,13 @@ namespace EmpireUWP
                 {
                     case (int)LoginException.LoginExceptions.IncorrectPassword:
                         loginFailText.Text = "Incorrect password.  Please try again.";
+                        passwordBox.Password = "";
+                        passwordBox.Focus(FocusState.Programmatic);
                         break;
                     case (int)LoginException.LoginExceptions.UnknownUser:
                         loginFailText.Text = "Unknown user. Please check spelling or create a new account.";
+                        passwordBox.Password = "";
+                        Username.Focus(FocusState.Programmatic);
                         break;
                 }
                 loginFailText.Visibility = Visibility.Visible;
@@ -88,13 +94,30 @@ namespace EmpireUWP
 
         private async Task LoadMainMenu(string playerID)
         {
-            await MenuManager.ConnectToLobby(playerID);
+            await MenuManager.InitializeLobby(playerID);
+            await MenuManager.EnterLobby();
             Frame.Navigate(typeof(MainMenu));
         }
 
         private void createUserButton_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(CreateUserPage));
+        }
+
+        private void passwordBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if ((Keys)e.Key != Keys.Enter)
+                return;
+            e.Handled = true;
+            submitButton_Click(sender, e);
+        }
+
+        private void Username_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if ((Keys)e.Key != Keys.Enter)
+                return;
+            e.Handled = true;
+            passwordBox.Focus(FocusState.Programmatic);
         }
     }
 }

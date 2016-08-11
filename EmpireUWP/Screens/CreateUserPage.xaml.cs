@@ -1,4 +1,5 @@
 ﻿using EmpireUWP.View;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,7 +34,8 @@ namespace EmpireUWP
         {
             base.OnNavigatedTo(e);
 
-            MenuManager.CurrentPage = menuManager;
+            MenuManager.CurrentPage = this;
+            MenuManager.Manager = menuManager;
         }
 
         private void submitButton_Click(object sender, RoutedEventArgs e)
@@ -47,10 +49,13 @@ namespace EmpireUWP
             }
             catch (MySql.Data.MySqlClient.MySqlException ex)
             {
-                switch (ex.HResult)
+                switch (ex.Number)
                 {
                     case 1062:
                         loginFailText.Text = "That username already exists.  Please choose another.";
+                        passwordBox.Password = "";
+                        passwordBox2.Password = "";
+                        Username.Focus(FocusState.Programmatic);
                         break;
                     case 1042:
                         loginFailText.Text = "Cannot connect to login server.";
@@ -65,6 +70,9 @@ namespace EmpireUWP
                 if (ex.HResult == (int)LoginException.LoginExceptions.PasswordsDoNotMatch)
                 {
                     loginFailText.Text = "Passwords to not match.  Try again.";
+                    passwordBox.Password = "";
+                    passwordBox2.Password = "";
+                    passwordBox.Focus(FocusState.Programmatic);
                 } else
                 {
                     loginFailText.Text = ex.Message;
@@ -77,6 +85,36 @@ namespace EmpireUWP
         private void backButton_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(LoginPage));
+        }
+
+        private void Username_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if((Keys)e.Key != Keys.Enter)
+            {
+                return;
+            }
+            e.Handled = true;
+            passwordBox.Focus(FocusState.Programmatic);
+        }
+
+        private void passwordBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if ((Keys)e.Key != Keys.Enter)
+            {
+                return;
+            }
+            e.Handled = true;
+            passwordBox2.Focus(FocusState.Programmatic);
+        }
+
+        private void passwordBox2_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if ((Keys)e.Key != Keys.Enter)
+            {
+                return;
+            }
+            e.Handled = true;
+            submitButton_Click(sender, e);
         }
     }
 }

@@ -99,6 +99,11 @@
     </Compile>
     <Compile Include="Network\GameChangedEventArgs.cs" />
     <Compile Include="Network\GameStartingEventArgs.cs" />
+    <Compile Include="Network\ISerializer.cs" />
+    <Compile Include="Network\Lobby.cs" />
+    <Compile Include="Network\EmpireSerializer.cs" />
+    <Compile Include="Network\LobbyCommandEventArgs.cs" />
+    <Compile Include="Network\NetworkPorts.cs" />
     <Compile Include="Screens\CreateUserPage.xaml.cs">
       <DependentUpon>CreateUserPage.xaml</DependentUpon>
     </Compile>
@@ -156,22 +161,22 @@
     <Compile Include="Screens\MainViewScreen.xaml.cs">
       <DependentUpon>MainViewScreen.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\Animation.cs" />
-    <Compile Include="View\CanvasLayer.cs" />
-    <Compile Include="View\CommandReceivedEventArgs.cs" />
-    <Compile Include="View\GameView.cs" />
-    <Compile Include="View\GraphicalUserInterface.cs" />
-    <Compile Include="View\IGUIElement.cs" />
-    <Compile Include="View\InputManager.cs" />
-    <Compile Include="View\MenuManager.cs" />
-    <Compile Include="View\SpaceBackground.cs" />
-    <Compile Include="View\Sprite.cs" />
-    <Compile Include="View\StatusBar.cs" />
-    <Compile Include="View\TextBlock.cs" />
-    <Compile Include="View\TextProperties.cs" />
-    <Compile Include="View\TiledTexture.cs" />
-    <Compile Include="View\ViewHelper.cs" />
-    <Compile Include="View\VisualStates.cs" />
+    <Compile Include="Screens\View\Animation.cs" />
+    <Compile Include="Screens\View\CanvasLayer.cs" />
+    <Compile Include="Screens\View\CommandReceivedEventArgs.cs" />
+    <Compile Include="Screens\View\GameView.cs" />
+    <Compile Include="Screens\View\GraphicalUserInterface.cs" />
+    <Compile Include="Screens\View\IGUIElement.cs" />
+    <Compile Include="Screens\View\InputManager.cs" />
+    <Compile Include="Screens\View\MenuManager.cs" />
+    <Compile Include="Screens\View\SpaceBackground.cs" />
+    <Compile Include="Screens\View\Sprite.cs" />
+    <Compile Include="Screens\View\StatusBar.cs" />
+    <Compile Include="Screens\View\TextBlock.cs" />
+    <Compile Include="Screens\View\TextProperties.cs" />
+    <Compile Include="Screens\View\TiledTexture.cs" />
+    <Compile Include="Screens\View\ViewHelper.cs" />
+    <Compile Include="Screens\View\VisualStates.cs" />
     <Compile Include="Screens\WaitingRoom.xaml.cs">
       <DependentUpon>WaitingRoom.xaml</DependentUpon>
     </Compile>
@@ -201,6 +206,7 @@
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Notes.txt" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

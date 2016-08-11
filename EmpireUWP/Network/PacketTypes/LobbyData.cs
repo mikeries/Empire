@@ -17,6 +17,7 @@ namespace EmpireUWP.Network
 
         public LobbyData(Dictionary<string, PlayerData> playerList, Dictionary<int, GameData> gameList)
         {
+            Type = PacketType.LobbyData;
             _playerList = playerList;
             _gameList = gameList;
         }

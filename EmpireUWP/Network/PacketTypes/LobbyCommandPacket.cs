@@ -18,7 +18,7 @@ namespace EmpireUWP.Network
         [DataMember]
         public string Data { get; private set; }
 
-        public LobbyCommandPacket(string playerID, LobbyCommands command, string args="") : base()
+        public LobbyCommandPacket(string playerID, LobbyCommands command, string args=null) : base()
         {
             Type = PacketType.LobbyCommand;
             PlayerID = playerID;

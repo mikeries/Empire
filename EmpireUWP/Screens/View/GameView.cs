@@ -170,16 +170,27 @@ namespace EmpireUWP.View
 
             _gameModel.Start();
 
-            // signal host that we're good to go
         }
 
-        internal async Task SetupConnections(string playerID, Dictionary<string, PlayerData> playerList, GameData data)
+        internal async Task StartGameServer(string playerID, Dictionary<string, PlayerData> playerList, GameData data)
         {
             HostID = data.HostID;
             PlayerID = playerID;
             _connectionManager = new ConnectionManager(PlayerID);
-            await _connectionManager.SetupGameConnectionsAsync(playerList, data);
+            await _connectionManager.StartHosting(playerList, data);
             _connectionManager.GameChanged += GameChangedEventHandler;
+        }
+
+        internal async Task StartGame(string playerID, string hostAddress)
+        {
+            PlayerID = playerID;
+
+            if (_connectionManager == null) {
+                _connectionManager = new ConnectionManager(PlayerID);
+                _connectionManager.GameChanged += GameChangedEventHandler;
+            }
+
+            await _connectionManager.NotifyHost(hostAddress);
         }
     }
 }

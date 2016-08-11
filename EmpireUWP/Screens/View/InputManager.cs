@@ -16,7 +16,7 @@ namespace EmpireUWP.View
         public InputManager(ConnectionManager connection)
         {
             _connectionManager = connection;
-            _connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
+            //_connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
         }
 
         public async Task Update()

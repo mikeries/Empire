@@ -15,6 +15,7 @@ namespace EmpireUWP.Network
         Chat,
         LeaveLobby,
         SetupGame,
+        EnterGame,
         EjectThisUser,
     }
 }

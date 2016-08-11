@@ -17,72 +17,79 @@ namespace EmpireUWP.View
 
         public static List<string> hostedGames  {  get
             {
-                return lobby.hostedGames;
+                return _lobby.hostedGames;
             }
             private set { }
         }
         public static List<string> availablePlayers { get
             {
-                return lobby.availablePlayers;
+                return _lobby.availablePlayers;
             } private set { }
         }
 
         public static List<string> gameMembers  { get
             {
-                return lobby.GameMembers(PlayerID);
+                return _lobby.GameMembers(PlayerID);
             }
             private set { }
         }
 
         public static string PlayerID { get; private set; }
 
-        private static MenuManager _currentPage;
-        public static MenuManager CurrentPage { get { return _currentPage; } set { _currentPage = value; } }
+        private static Page _currentPage;
+        public static Page CurrentPage { get { return _currentPage; } set { _currentPage = value; } }
+        public static MenuManager Manager { get; set; }
 
-        private static LobbyService lobby;
+        private static Lobby _lobby;
 
         public MenuManager()
         {
-            if (lobby == null) {
-                lobby = new LobbyService(this);
+            if (_lobby == null) {
+                _lobby = new Lobby(this);
+                _lobby.LobbyCommand += ProcessLobbyCommand;
             }
         }
 
-        public static async Task ConnectToLobby(string playerID)
+        public static async Task InitializeLobby(string playerID)
         {
             PlayerID = playerID;
-            await lobby.Initialize();
-            await lobby.ConnectToLobbyAsync(PlayerID);
+
+            await _lobby.Initialize();
         }
 
         public static Task HostGame()
         {
-            return lobby.HostGame(PlayerID);
+            return _lobby.HostGame(PlayerID);
         }
 
         public static Task JoinGame(string hostID)
         {
-            return lobby.JoinGame(PlayerID, hostID);
+            return _lobby.JoinGame(PlayerID, hostID);
         }
 
         public static Task LeaveGame()
         {
-            return lobby.LeaveGame(PlayerID);
+            return _lobby.LeaveGame(PlayerID);
         }
 
-        public static async Task EnterLobby()
+        public static Task EnterLobby()
         {
-            await lobby.EnterLobby(PlayerID);
+            return _lobby.EnterLobby(PlayerID);
         }
 
         public static Task LeaveLobby()
         {
-            return lobby.LeaveLobby(PlayerID);
+            return _lobby.LeaveLobby(PlayerID);
         }
 
         public static Task InitializeGame()
         {
-            return lobby.InitializeGame(PlayerID);
+            return _lobby.InitializeGame(PlayerID);
+        }
+
+        public static Task StartGame()
+        {
+            return _lobby.StartGame(PlayerID);
         }
 
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
@@ -93,13 +100,22 @@ namespace EmpireUWP.View
                 PropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propertyName));
             }
         }
+        
+        private void ProcessLobbyCommand(object sender, LobbyCommandEventArgs e)
+        {
+            LobbyCommandPacket packet = e.Packet;
+            if (packet.Command == LobbyCommands.EnterGame)
+            {
+                CurrentPage.Frame.Navigate(typeof(MainViewScreen));
+            }
+        }
 
         internal static async void PlayerListChanged()
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { CurrentPage.OnPropertyChanged("availablePlayers"); });
+                () => { Manager.OnPropertyChanged("availablePlayers"); });
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { CurrentPage.OnPropertyChanged("hostedGames"); });
+                () => { Manager.OnPropertyChanged("hostedGames"); });
         }
     }
 }

@@ -41,7 +41,10 @@ namespace EmpireUWP.Model
 
         public void Initialize()
         {
-            if (_connectionManager != null) _connectionManager.Initialize(this);
+            if (_connectionManager != null)
+            {
+                _connectionManager.Initialize(this);
+            }
             worldData.Initialize(this,_inputManager);
         }
 

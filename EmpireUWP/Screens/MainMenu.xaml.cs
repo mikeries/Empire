@@ -32,12 +32,12 @@ namespace EmpireUWP
             this.InitializeComponent();         
         }
         
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
-            MenuManager.CurrentPage = menuManager;
-            await MenuManager.EnterLobby();
+            MenuManager.CurrentPage = this;
+            MenuManager.Manager = menuManager;
         }
 
         private async void joinGame_Click(object sender, RoutedEventArgs e)
@@ -45,6 +45,7 @@ namespace EmpireUWP
             if (hostedGamesList.SelectedItems.Count == 1)
             {
                 await MenuManager.JoinGame(hostedGamesList.SelectedValue.ToString());
+                Frame.Navigate(typeof(WaitingRoom));
             }
          }
 

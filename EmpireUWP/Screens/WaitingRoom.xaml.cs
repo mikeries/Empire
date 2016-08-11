@@ -34,7 +34,8 @@ namespace EmpireUWP
         {
             base.OnNavigatedTo(e);
 
-            MenuManager.CurrentPage = menuManager;
+            MenuManager.CurrentPage = this;
+            MenuManager.Manager = menuManager;
         }
 
         private async void exitToLobby_Click(object sender, RoutedEventArgs e)
@@ -45,7 +46,13 @@ namespace EmpireUWP
 
         private void startGame_Click(object sender, RoutedEventArgs e)
         {
+            MenuManager.InitializeGame();
+        }
+
+        public void EnterGame()
+        {
             Frame.Navigate(typeof(MainViewScreen));
         }
+
     }
 }

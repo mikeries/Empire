@@ -37,7 +37,7 @@ namespace EmpireUWP.Network
             if (connection != null)
             {
                 _connectionManager = connection;
-                _connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
+                //_connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
                 _timer = new Timer(SyncTimer, _autoEvent, 50, 50);
             }
         }

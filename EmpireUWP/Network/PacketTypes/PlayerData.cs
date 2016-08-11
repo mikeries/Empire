@@ -23,8 +23,6 @@ namespace EmpireUWP.Network
         [DataMember]
         public int GameID { get; set; }
 
-        public StreamSocket Location = null;
-
         public PlayerData(Player player, string ipAddress) : base()
         {
             Type = PacketType.PlayerData;

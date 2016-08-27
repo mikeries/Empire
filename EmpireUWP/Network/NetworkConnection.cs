@@ -109,7 +109,8 @@ namespace EmpireUWP.Network
 
             try
             {
-
+                while (true)
+                {
                     uint MessageSize = await reader.LoadAsync(sizeof(uint));
                     if (MessageSize != sizeof(uint))
                     {
@@ -127,7 +128,8 @@ namespace EmpireUWP.Network
                     {
                         byte[] response = await _requestCallback(data);
                         await sendResponse(socket, response);
-                    } else if (_packetRequestCallback != null)
+                    }
+                    else if (_packetRequestCallback != null)
                     {
                         NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
                         NetworkPacket responsePacket = await _packetRequestCallback(packet);
@@ -135,7 +137,7 @@ namespace EmpireUWP.Network
                         byte[] responseData = _serializer.CreateMessageFromPacket(responsePacket);
                         await sendResponse(socket, responseData);
                     }
-
+                }
             }
             catch (Exception e)
             {
@@ -183,6 +185,8 @@ namespace EmpireUWP.Network
 
             try
             {
+                while (true)
+                {
                     uint MessageSize = await reader.LoadAsync(sizeof(uint));
                     if (MessageSize != sizeof(uint))
                     {
@@ -194,7 +198,7 @@ namespace EmpireUWP.Network
                     byte[] data = new byte[dataLength];
 
                     MessageSize = await reader.LoadAsync(dataLength);
-                    if(MessageSize != dataLength)
+                    if (MessageSize != dataLength)
                     {
                         return;
                     }
@@ -203,13 +207,14 @@ namespace EmpireUWP.Network
                     if (_updateCallback != null)
                     {
                         _updateCallback(data);
-                    } else if (_packetUpdateCallback != null)
+                    }
+                    else if (_packetUpdateCallback != null)
                     {
                         NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
                         _packetUpdateCallback(packet);
                         MessageSize = 5;
                     }
-
+                }
             }
             catch (Exception e)
             {

@@ -109,8 +109,7 @@ namespace EmpireUWP.Network
 
             try
             {
-                while (true)
-                {
+
                     uint MessageSize = await reader.LoadAsync(sizeof(uint));
                     if (MessageSize != sizeof(uint))
                     {
@@ -136,7 +135,7 @@ namespace EmpireUWP.Network
                         byte[] responseData = _serializer.CreateMessageFromPacket(responsePacket);
                         await sendResponse(socket, responseData);
                     }
-                }
+
             }
             catch (Exception e)
             {
@@ -184,8 +183,6 @@ namespace EmpireUWP.Network
 
             try
             {
-                while (true)
-                {
                     uint MessageSize = await reader.LoadAsync(sizeof(uint));
                     if (MessageSize != sizeof(uint))
                     {
@@ -196,7 +193,11 @@ namespace EmpireUWP.Network
                     uint dataLength = reader.ReadUInt32();
                     byte[] data = new byte[dataLength];
 
-                    await reader.LoadAsync(dataLength);
+                    MessageSize = await reader.LoadAsync(dataLength);
+                    if(MessageSize != dataLength)
+                    {
+                        return;
+                    }
                     reader.ReadBytes(data);
 
                     if (_updateCallback != null)
@@ -206,9 +207,9 @@ namespace EmpireUWP.Network
                     {
                         NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
                         _packetUpdateCallback(packet);
+                        MessageSize = 5;
                     }
 
-                }
             }
             catch (Exception e)
             {
@@ -243,7 +244,10 @@ namespace EmpireUWP.Network
             {
                 await socket.ConnectAsync(_host, serverPort);
             }
-            catch { }
+            catch (Exception e)
+            {
+                throw new Exception("Error connecting to server: ", e);
+            }
             return socket;
         }
 

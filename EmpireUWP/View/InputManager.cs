@@ -11,17 +11,16 @@ namespace EmpireUWP.View
 {
     public class InputManager
     {
-        private ConnectionManager _connectionManager;
+        private GameClient _connectionManager;
 
-        public InputManager(ConnectionManager connection)
+        public InputManager(GameClient connection)
         {
             _connectionManager = connection;
-            //_connectionManager.GetNetworkConnection.PacketReceived += ProcessIncomingPacket;
         }
 
-        public async Task Update()
+        public void Update()
         {
-            await ProcessLocalInput();
+            ProcessLocalInput();
         }
 
         public void ProcessRemoteInput(ShipCommand commandPacket)
@@ -32,7 +31,7 @@ namespace EmpireUWP.View
             }
         }
 
-        public async Task ProcessLocalInput()
+        public void ProcessLocalInput()
         {
             KeyboardState keyboardState = Keyboard.GetState();
 
@@ -64,8 +63,9 @@ namespace EmpireUWP.View
                 ShipCommand commandPacket = new ShipCommand(source, commands);
                 OnCommandReceived(commandPacket);
 
-                await _connectionManager.SendShipCommand(commandPacket);
+                _connectionManager.SendShipCommandToHost(commandPacket);
             }
+
         }
 
         private void ProcessIncomingPacket(object sender, PacketReceivedEventArgs e)

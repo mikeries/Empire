@@ -1,3 +1,3 @@
-MainPackage=F:\Programming\GitHub\Repos\Empire\EmpireUWP\bin\WindowsUniversal\x64\Debug\EmpireUWP_1.0.5.0_x64_Debug.appx
-SymbolPackage=F:\Programming\GitHub\Repos\Empire\EmpireUWP\AppPackages\EmpireUWP_1.0.5.0_Debug_Test\EmpireUWP_1.0.5.0_x64_Debug.appxsym
-ResourcePack=F:\Programming\GitHub\Repos\Empire\EmpireUWP\bin\WindowsUniversal\x64\Debug\EmpireUWP_1.0.5.0_scale-100.appx
+MainPackage=F:\Programming\GitHub\Repos\Empire\EmpireUWP\bin\WindowsUniversal\x64\Debug\EmpireUWP_1.0.9.0_x64_Debug.appx
+SymbolPackage=F:\Programming\GitHub\Repos\Empire\EmpireUWP\AppPackages\EmpireUWP_1.0.9.0_Debug_Test\EmpireUWP_1.0.9.0_x64_Debug.appxsym
+ResourcePack=F:\Programming\GitHub\Repos\Empire\EmpireUWP\bin\WindowsUniversal\x64\Debug\EmpireUWP_1.0.9.0_scale-100.appx

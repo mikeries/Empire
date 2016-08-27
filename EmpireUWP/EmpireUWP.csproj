@@ -72,7 +72,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\WindowsUniversal\$(Platform)\$(Configuration)\</OutputPath>
+    <OutputPath>C:\temp\</OutputPath>
     <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
@@ -97,6 +97,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Network\GameClient.cs" />
     <Compile Include="Network\GameChangedEventArgs.cs" />
     <Compile Include="Network\GameStartingEventArgs.cs" />
     <Compile Include="Network\ISerializer.cs" />
@@ -104,6 +105,7 @@
     <Compile Include="Network\EmpireSerializer.cs" />
     <Compile Include="Network\LobbyCommandEventArgs.cs" />
     <Compile Include="Network\NetworkPorts.cs" />
+    <Compile Include="Network\PacketTypes\GameServerDataUpdate.cs" />
     <Compile Include="Screens\CreateUserPage.xaml.cs">
       <DependentUpon>CreateUserPage.xaml</DependentUpon>
     </Compile>
@@ -137,7 +139,7 @@
     <Compile Include="Model\NullShip.cs" />
     <Compile Include="Model\Ship.cs" />
     <Compile Include="Model\Status.cs" />
-    <Compile Include="Network\ConnectionManager.cs" />
+    <Compile Include="Network\GameServer.cs" />
     <Compile Include="Network\PacketTypes\LobbyCommandPacket.cs" />
     <Compile Include="Network\LobbyCommands.cs" />
     <Compile Include="Network\PacketTypes\LobbyData.cs" />
@@ -153,7 +155,6 @@
     <Compile Include="Network\PacketTypes\PlayerData.cs" />
     <Compile Include="Network\PacketTypes\SalutationPacket.cs" />
     <Compile Include="Network\PacketTypes\ShipCommand.cs" />
-    <Compile Include="Network\SyncManager.cs" />
     <Compile Include="Network\UpdateQueue.cs" />
     <Compile Include="Network\ObjectState.cs" />
     <Compile Include="Model\Pool.cs" />
@@ -161,22 +162,18 @@
     <Compile Include="Screens\MainViewScreen.xaml.cs">
       <DependentUpon>MainViewScreen.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Screens\View\Animation.cs" />
-    <Compile Include="Screens\View\CanvasLayer.cs" />
-    <Compile Include="Screens\View\CommandReceivedEventArgs.cs" />
-    <Compile Include="Screens\View\GameView.cs" />
-    <Compile Include="Screens\View\GraphicalUserInterface.cs" />
-    <Compile Include="Screens\View\IGUIElement.cs" />
-    <Compile Include="Screens\View\InputManager.cs" />
-    <Compile Include="Screens\View\MenuManager.cs" />
-    <Compile Include="Screens\View\SpaceBackground.cs" />
-    <Compile Include="Screens\View\Sprite.cs" />
-    <Compile Include="Screens\View\StatusBar.cs" />
-    <Compile Include="Screens\View\TextBlock.cs" />
-    <Compile Include="Screens\View\TextProperties.cs" />
-    <Compile Include="Screens\View\TiledTexture.cs" />
-    <Compile Include="Screens\View\ViewHelper.cs" />
-    <Compile Include="Screens\View\VisualStates.cs" />
+    <Compile Include="View\Animation.cs" />
+    <Compile Include="View\CanvasLayer.cs" />
+    <Compile Include="View\CommandReceivedEventArgs.cs" />
+    <Compile Include="View\GameView.cs" />
+    <Compile Include="View\InputManager.cs" />
+    <Compile Include="View\MenuManager.cs" />
+    <Compile Include="View\SpaceBackground.cs" />
+    <Compile Include="View\Sprite.cs" />
+    <Compile Include="View\TextProperties.cs" />
+    <Compile Include="View\TiledTexture.cs" />
+    <Compile Include="View\ViewHelper.cs" />
+    <Compile Include="View\VisualStates.cs" />
     <Compile Include="Screens\WaitingRoom.xaml.cs">
       <DependentUpon>WaitingRoom.xaml</DependentUpon>
     </Compile>
@@ -248,6 +245,45 @@
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug 2|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug 2\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP;CODE_ANALYSIS</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug 2|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug 2\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP;CODE_ANALYSIS</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug 2|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>c:\temp\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP;CODE_ANALYSIS</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />

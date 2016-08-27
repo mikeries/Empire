@@ -25,11 +25,7 @@ namespace EmpireUWP.Network
             int entityID = packet.EntityID;
             if (_updateQueue.ContainsKey(entityID))
             {
-                if (packet.IsNewerThan(_updateQueue[entityID]))
-                {
-                    _updateQueue[entityID] = packet;
-                }
-                // else ignore the packet as being older than the latest update for this entity
+                _updateQueue[entityID] = packet;
             }
             else
             {

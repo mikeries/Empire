@@ -21,6 +21,7 @@ namespace EmpireUWP.Network
             typeof(LobbyCommandPacket),
             typeof(SalutationPacket),
             typeof(ShipCommand),
+            typeof(GameServerDataUpdate),
         };
 
         public byte[] CreateMessageFromPacket(NetworkPacket packet)

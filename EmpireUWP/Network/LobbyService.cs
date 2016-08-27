@@ -11,7 +11,7 @@ namespace EmpireUWP.Network
 {
     public class LobbyService
     {
-        private const string _serverAddress = "192.168.1.245";
+        private const string _serverAddress = "192.168.1.12";
 
         private NetworkConnection _connection;
 
@@ -100,7 +100,7 @@ namespace EmpireUWP.Network
                     ProcessLeaveGameCommand(playerID);
                 }
 
-                GameData newGame = new GameData(NewGameID, playerID);
+                GameData newGame = new GameData(NewGameID, playerID, hostIPAddress, NetworkPorts.GameServerRequestPort, NetworkPorts.GameServerUpdatePort);
                 _playerList[playerID].GameID = newGame.GameID;
                 _gameList.Add(newGame.GameID, newGame);
 
@@ -122,18 +122,20 @@ namespace EmpireUWP.Network
 
         private async Task ProcessEnterLobbyCommand(string playerID, string ipAddress)
         {
-            if (!_playerList.ContainsKey(playerID))
-            {
-                PlayerData player = new PlayerData(new Player(playerID), ipAddress);
-                _playerList.Add(playerID, player);
-            }
-            else
+            if (_playerList.ContainsKey(playerID))
             {
                 // TODO: need to handle case where we are logging in a second time, possibly after disconnecting.
+                // For now, simply tell the old client to close.
                 LobbyCommandPacket ejectUser = new LobbyCommandPacket(playerID, LobbyCommands.EjectThisUser);
-                StreamSocket socket = await _connection.Connect(ipAddress, NetworkPorts.LobbyClientRequestPort);
-                NetworkPacket reply = await _connection.WaitResponsePacket(socket, ejectUser);
-                socket.Dispose();
+                string address = _playerList[playerID].IPAddress;
+                using (StreamSocket socket = await _connection.Connect(address, NetworkPorts.LobbyClientRequestPort))
+                {
+                    NetworkPacket reply = await _connection.WaitResponsePacket(socket, ejectUser);
+                }
+            } else 
+            {
+                PlayerData player = new PlayerData(new Player(playerID), ipAddress, NetworkPorts.GameClientUpdatePort);
+                _playerList.Add(playerID, player);
             }
         }
 
@@ -152,7 +154,7 @@ namespace EmpireUWP.Network
             // request host to start listening
             if (data.HostID == playerID)
             {
-                await GamePage.gameInstance.StartGameServer(playerID, playerList, data);
+                await GamePage.gameInstance.StartServer(playerID, playerList, data);
             }
 
             // request each player to connect to host server

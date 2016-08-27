@@ -23,6 +23,12 @@ namespace EmpireUWP.Network
         [DataMember]
         public int GameID { get; private set; }
         [DataMember]
+        public string HostIPAddress { get; set; }
+        [DataMember]
+        public string HostRequestPort { get; set; }
+        [DataMember]
+        public string HostUpdatePort { get; set; }
+        [DataMember]
         public string HostID { get; private set; }
         [DataMember]
         public List<string> playerList = new List<string>();
@@ -30,10 +36,13 @@ namespace EmpireUWP.Network
         [DataMember]
         public GameStatus Status;
 
-        public GameData(int gameID, string playerID) : base()
+        public GameData(int gameID, string playerID, string ipAddress, string requestPort, string updatePort) : base()
         {
             Type = PacketType.GameData;
             HostID = playerID;
+            HostIPAddress = ipAddress;
+            HostRequestPort = requestPort;
+            HostUpdatePort = updatePort;
             GameID = gameID;
             Status = GameStatus.WaitingForPlayers;
             playerList.Add(playerID);

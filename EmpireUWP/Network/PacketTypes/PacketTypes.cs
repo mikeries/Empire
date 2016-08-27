@@ -12,5 +12,6 @@ namespace EmpireUWP.Network
         LobbyData,
         GameData,
         LobbyCommand,
+        GameServerDataUpdate,
     }
 }

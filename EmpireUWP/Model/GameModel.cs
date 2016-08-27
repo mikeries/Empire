@@ -19,33 +19,32 @@ namespace EmpireUWP.Model
         // all the game entities that exist
         private ConcurrentDictionary<int,Entity> _gameEntities = new ConcurrentDictionary<int, Entity>();
         public List<Entity> GameEntities { get {return _gameEntities.Values.ToList(); } }
-        public List<int> GameEntityIDs { get { return _gameEntities.Keys.ToList(); } }
-        private static Ship _nullShip;
-        public static Ship NullShip { get { return _nullShip; } }
 
-        private GameView _game;
-        public WorldData worldData;
-        private ConnectionManager _connectionManager;
-        private InputManager _inputManager;
-        private SyncManager _syncManager;
+        private Ship _nullShip;
+        public Ship NullShip { get { return _nullShip; } }
 
-        public GameModel(GameView game, ConnectionManager connection = null)
+        private GameView _gameInstance;
+        internal WorldData worldData;
+        internal InputManager InputManager;
+
+        public GameModel(GameView gameInstance)
         {
-            _game = game;
-            _connectionManager = connection;
-            if (_connectionManager != null) _inputManager = new InputManager(_connectionManager);
-            _syncManager = new SyncManager(this);
+            _gameInstance = gameInstance;
             _nullShip = new NullShip(this);
             worldData = new WorldData();
         }
 
         public void Initialize()
         {
-            if (_connectionManager != null)
+            if (_gameInstance.GameClientConnection != null)
             {
-                _connectionManager.Initialize(this);
+                InputManager = new InputManager(_gameInstance.GameClientConnection);
             }
-            worldData.Initialize(this,_inputManager);
+            worldData.Initialize(this,InputManager);
+            if(_gameInstance.GameState == GameData.GameStatus.WaitingForPlayers)
+            {
+                LoadWorld();
+            }
         }
 
         // a basic world initialization.  This needs to be replaced with
@@ -69,16 +68,21 @@ namespace EmpireUWP.Model
 
         }
 
-        public async Task Update(GameTime gameTime)
+        public void Update(GameTime gameTime)
         {
             int elapsedTime = (int)gameTime.ElapsedGameTime.TotalMilliseconds;
 
-            if (_inputManager != null)
-                await _inputManager.Update();
-
-            if (!_game.Hosting)
+            if (InputManager != null)
             {
-                ApplyUpdates();
+                InputManager.Update();
+            }
+
+            if (!_gameInstance.Hosting)
+            {
+                if (_gameInstance.GameClientConnection != null)
+                {
+                    ApplyUpdates();
+                }
             }
 
             List<Entity> deadEntities = new List<Entity>();
@@ -96,7 +100,7 @@ namespace EmpireUWP.Model
 
             RemoveDeadEntities(deadEntities);
 
-            if (_game.Hosting)
+            if (_gameInstance.Hosting)
             {
                 var asteroids =
                     from entity in _gameEntities.Values
@@ -108,7 +112,7 @@ namespace EmpireUWP.Model
 
         private void RemoveDeadEntities(List<Entity> deadEntities)
         {
-            if (_game.Hosting)
+            if (_gameInstance.Hosting)
             {
                 OnEntitiesRemoved(deadEntities);
             }
@@ -118,7 +122,7 @@ namespace EmpireUWP.Model
                 Entity entityToRemove = entity;
                 if (!_gameEntities.TryRemove(entity.EntityID, out entityToRemove))
                 {
-                    //log.Warn("Failed to remove a game entity from the collection");
+                    throw new Exception("Failed to remove a game entity from the collection");
                 }
                 worldData.ReturnToPool(entityToRemove);
             }
@@ -158,30 +162,11 @@ namespace EmpireUWP.Model
             return null;
         }
 
-        public void Start()
-        {
-            _syncManager.Start(_connectionManager);
-        }
-
         public void Dispose()
         {
-            _game = null;
-            _connectionManager = null;
+            _gameInstance = null;
             worldData = null;
-            _inputManager = null;
-            _syncManager = null;
-        }
-
-        public Ship GetShip(string owner)
-        {
-            if (_connectionManager == null)
-            {
-                return NullShip;
-            }
-            else
-            {
-                return _connectionManager.GetShip(owner);
-            }
+            InputManager = null;
         }
 
         public int NewShip(string playerID)
@@ -194,7 +179,7 @@ namespace EmpireUWP.Model
 
         public void AddGameEntity(Entity entity)
         {
-            if(_game.Hosting)
+            if(_gameInstance.Hosting)
             {
                 addGameEntityFromHost(entity);
             }
@@ -217,13 +202,13 @@ namespace EmpireUWP.Model
                 _gameEntities.TryAdd(entity.EntityID, entity);                
             } else
             {
-                //log.Warn("Null entity attempted to be added to the game.");
+                throw new Exception("Null entity attempted to be added to the game.");
             }
         }
 
         private void ApplyUpdates()
         {
-            UpdateQueue queue = _syncManager.RetrieveUpdatesAndClear();
+            UpdateQueue queue = _gameInstance.GameClientConnection.RetrieveUpdatesAndClear();
 
             foreach (EntityPacket packet in queue.Packets)
             {

@@ -14,7 +14,7 @@ namespace EmpireUWP.Network
     public class Lobby
     {
 
-        private const string _serverAddress = "192.168.1.245";
+        private const string _serverAddress = "192.168.1.12";
         private string _myAddress = null;
         internal bool Server { get; private set; }
         private LobbyService _lobbyService;
@@ -95,7 +95,8 @@ namespace EmpireUWP.Network
             var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
             _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
 
-            if (_myAddress == _serverAddress)
+            // if this instance is running on my development machine, start the lobby service.
+            if (hostNames.Count(x => { return x.DisplayName == _serverAddress; }) > 0)
             {
                 _lobbyService = new LobbyService();
                 await _lobbyService.Initialize();
@@ -107,50 +108,29 @@ namespace EmpireUWP.Network
             return;
         }
 
-        private void ProcessUpdate(NetworkPacket packet)
-        {
-            if (packet.Type == PacketType.LobbyData)
-            {
-                LobbyData lobbyData = packet as LobbyData;
-                _playerList = lobbyData._playerList;
-                _gameList = lobbyData._gameList;
-                MenuManager.PlayerListChanged();
-            }
-        }
-
         public async Task EnterLobby(string playerID)
         {
             NetworkPacket replyPacket = await SendLobbyCommand(playerID, LobbyCommands.EnterLobby, _myAddress);
-
-            //TODO: parse the packet and decide what to do.
         }
 
         public async Task LeaveLobby(string playerID)
         {
             NetworkPacket replyPacket = await SendLobbyCommand(playerID, LobbyCommands.LeaveLobby);
-
-            //TODO: parse the packet and decide what to do.
         }
 
         public async Task HostGame(string playerID)
         {
-            NetworkPacket replyPacket = await SendLobbyCommand(playerID, LobbyCommands.HostGame);
-
-            //TODO: parse the packet and decide what to do.
+            NetworkPacket replyPacket = await SendLobbyCommand(playerID, LobbyCommands.HostGame, _myAddress);
         }
 
         public async Task JoinGame(string playerID, string hostID)
         {
-            NetworkPacket replyPacket = await SendLobbyCommand(playerID, LobbyCommands.JoinGame);
-
-            //TODO: parse the packet and decide what to do.
+            NetworkPacket replyPacket = await SendLobbyCommand(playerID, LobbyCommands.JoinGame, hostID);
         }
 
         public async Task LeaveGame(string playerID)
         {
             NetworkPacket replyPacket = await SendLobbyCommand(playerID, LobbyCommands.LeaveGame);
-
-            //TODO: parse the packet and decide what to do.
         }
 
         public async Task InitializeGame(string playerID)
@@ -160,9 +140,8 @@ namespace EmpireUWP.Network
 
         public async Task StartGame(string playerID)
         {
-            GameData game = _gameList[_playerList[playerID].GameID];
-            string ipAddress = _playerList[game.HostID].IPAddress;
-            await GamePage.gameInstance.StartGame(playerID, ipAddress);
+            GameData gameData = _gameList[_playerList[playerID].GameID];
+            await GamePage.gameInstance.StartGame(playerID, gameData);
         }
 
         private async Task<NetworkPacket> SendLobbyCommand(string playerID, LobbyCommands command, string args = null)
@@ -186,6 +165,17 @@ namespace EmpireUWP.Network
                         () => { OnLobbyCommand(command); });
             }
             return acknowledgement;
+        }
+
+        private void ProcessUpdate(NetworkPacket packet)
+        {
+            if (packet.Type == PacketType.LobbyData)
+            {
+                LobbyData lobbyData = packet as LobbyData;
+                _playerList = lobbyData._playerList;
+                _gameList = lobbyData._gameList;
+                MenuManager.PlayerListChanged();
+            }
         }
 
         internal event EventHandler<LobbyCommandEventArgs> LobbyCommand = delegate { };

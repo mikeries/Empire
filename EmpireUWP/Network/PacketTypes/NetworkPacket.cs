@@ -24,10 +24,5 @@ namespace EmpireUWP.Network
             Timestamp = DateTime.Now;
         }
 
-        public bool IsNewerThan(NetworkPacket networkPacket)
-        {
-            return (this.Timestamp > networkPacket.Timestamp);
-        }
-
     }
 }

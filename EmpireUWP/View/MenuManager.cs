@@ -108,6 +108,10 @@ namespace EmpireUWP.View
             {
                 CurrentPage.Frame.Navigate(typeof(MainViewScreen));
             }
+            else if (packet.Command == LobbyCommands.EjectThisUser)
+            {
+                Windows.UI.Xaml.Application.Current.Exit();
+            }
         }
 
         internal static async void PlayerListChanged()
@@ -116,6 +120,8 @@ namespace EmpireUWP.View
                 () => { Manager.OnPropertyChanged("availablePlayers"); });
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () => { Manager.OnPropertyChanged("hostedGames"); });
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => { Manager.OnPropertyChanged("gameMembers"); });
         }
     }
 }

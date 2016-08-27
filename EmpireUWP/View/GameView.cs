@@ -15,10 +15,15 @@ namespace EmpireUWP.View
         internal static Rectangle PlayArea = new Rectangle(0, 0, 20000, 20000);
         internal static Vector2 WindowSize = new Vector2(1280f, 720f);
         internal static Vector2 ViewCenter = new Vector2(WindowSize.X / 2, WindowSize.Y / 2);
-        internal static int GameDuration = 1000 * 60 * 2;  // 2 minute timer in milliseconds
         internal GameData.GameStatus GameState = GameData.GameStatus.WaitingForPlayers;
+        internal bool Hosting
+        { get
+            {
+            if (GameClientConnection == null) return false;
+            else return GameClientConnection.Hosting;
+            }
+        }
 
-        //TODO: fix scoring system
         internal int ShieldEnergy
         {
             get
@@ -34,29 +39,24 @@ namespace EmpireUWP.View
             }
         }
 
-        internal int TimeRemaining { get; set; }
-
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private GraphicalUserInterface _gui;
-        private AIComponent _ai = new AIComponent();
-        private GameModel _gameModel;
-        private ConnectionManager _connectionManager;
 
-        private Ship _localShip = GameModel.NullShip;
+        internal GameModel GameModel;
+        internal GameClient GameClientConnection;
+        internal GameServer GameServerConnection = null;
+
+        private Ship _localShip = null;
         internal Ship LocalShip { get { return _localShip; } }
 
         private string PlayerID { get; set; }
-        public string HostID { get; private set; }
-        public bool Hosting { get { return HostID == PlayerID; } }
         
         private Dictionary<int, Sprite> _sprites = new Dictionary<int, Sprite>();
 
         public GameView()
         {
             _graphics = new GraphicsDeviceManager(this);
-            _gui = new GraphicalUserInterface(this);
-            _gameModel = new GameModel(this);
+            GameModel = new GameModel(this);
 
             this.IsMouseVisible = true;
             Content.RootDirectory = "Content";
@@ -64,7 +64,6 @@ namespace EmpireUWP.View
 
         protected override void Initialize()
         {
-            // set up display size
             _graphics.PreferredBackBufferHeight = (int)WindowSize.Y;
             _graphics.PreferredBackBufferWidth = (int)WindowSize.X;
             _graphics.ApplyChanges();
@@ -92,11 +91,10 @@ namespace EmpireUWP.View
 
         protected override async void Update(GameTime gameTime)
         {
-
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            await _gameModel.Update(gameTime);
+            GameModel.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -105,10 +103,14 @@ namespace EmpireUWP.View
         {
             GraphicsDevice.Clear(Color.Black);
 
-            _localShip = _gameModel.GetShip(PlayerID);
-            if (_localShip == null)
+            if (GameClientConnection != null)
             {
-                return;
+                _localShip = GameClientConnection.GetShip(PlayerID);
+            } 
+
+            if(_localShip == null)
+            {
+                _localShip = GameModel.NullShip;
             }
 
             DrawBackground();
@@ -120,7 +122,7 @@ namespace EmpireUWP.View
         private void DrawGameEntities()
         {
             _spriteBatch.Begin();
-            foreach (Entity entityToDraw in _gameModel.GameEntities)
+            foreach (Entity entityToDraw in GameModel.GameEntities)
             {
                 if(entityToDraw.Renderer == null)
                 {
@@ -146,7 +148,6 @@ namespace EmpireUWP.View
 
         internal void GameChangedEventHandler(object sender, GameChangedEventArgs e)
         {
-            //TODO:  Might be helpful to look into using the State pattern to handle game states and transitions between them.
             GameState = e.GameData.Status;
             if(GameState == GameData.GameStatus.ReadyToStart)
             {
@@ -156,41 +157,39 @@ namespace EmpireUWP.View
 
         private void NewGame()
         {
-            if(_gameModel != null)
+            if (GameModel != null)
             {
-                //_gameModel.Dispose();
+                GameModel.Dispose();
             }
-            _gameModel = new GameModel(this, _connectionManager);
-
-            _gameModel.Initialize();
-            if (Hosting || _connectionManager == null)
-            {
-                _gameModel.LoadWorld();
-            }
-
-            _gameModel.Start();
-
+            GameModel = new GameModel(this);
+            GameModel.Initialize();
         }
 
-        internal async Task StartGameServer(string playerID, Dictionary<string, PlayerData> playerList, GameData data)
+        internal Task StartServer(string playerID, Dictionary<string, PlayerData> playerList, GameData gameData)
         {
-            HostID = data.HostID;
             PlayerID = playerID;
-            _connectionManager = new ConnectionManager(PlayerID);
-            await _connectionManager.StartHosting(playerList, data);
-            _connectionManager.GameChanged += GameChangedEventHandler;
+            gameData.HostIPAddress = playerList[gameData.HostID].IPAddress;
+            gameData.HostRequestPort = NetworkPorts.GameServerRequestPort;
+            gameData.HostUpdatePort = NetworkPorts.GameServerUpdatePort;
+            GameServerConnection = new GameServer(this, playerList, gameData);
+            return GameServerConnection.StartServer();
         }
 
-        internal async Task StartGame(string playerID, string hostAddress)
+        internal async Task StartGame(string playerID, GameData gameData)
         {
             PlayerID = playerID;
 
-            if (_connectionManager == null) {
-                _connectionManager = new ConnectionManager(PlayerID);
-                _connectionManager.GameChanged += GameChangedEventHandler;
+            //gameData.HostIPAddress = "192.168.1.12";
+            if (GameClientConnection == null) {
+                GameClientConnection = new GameClient(this, gameData, PlayerID, NetworkPorts.GameClientRequestPort, NetworkPorts.GameClientUpdatePort);
+                await GameClientConnection.CreateNetworkConnection();
+                GameClientConnection.GameChanged += GameChangedEventHandler;
             }
 
-            await _connectionManager.NotifyHost(hostAddress);
+            NewGame();
+            await GameClientConnection.ConnectToServer();
+
         }
     }
 }
+

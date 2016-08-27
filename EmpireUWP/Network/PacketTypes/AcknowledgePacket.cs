@@ -10,6 +10,7 @@ namespace EmpireUWP.Network
     [DataContract]
     public class AcknowledgePacket : NetworkPacket
     {
+        [DataMember]
         public string Name;
 
         public AcknowledgePacket() : base()

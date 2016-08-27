@@ -11,13 +11,11 @@ namespace EmpireUWP.Network
 {
     internal class PacketReceivedEventArgs : EventArgs
     {
-        internal StreamSocket Source { get; private set; }
         internal NetworkPacket Packet { get; private set; }
 
-        internal PacketReceivedEventArgs(StreamSocket source, NetworkPacket packet)
+        internal PacketReceivedEventArgs(NetworkPacket packet)
         {
             Packet = packet;
-            Source = source;
         }
     }
 }

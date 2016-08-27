@@ -64,7 +64,7 @@ namespace EmpireUWP.Network
             await _networkConnection.StartRequestListener(_gameData.HostRequestPort, HandleRequest);
             await _networkConnection.StartUpdateListener(_gameData.HostUpdatePort, HandleUpdate);
 
-            _timer = new Timer(SyncTimer, _autoEvent, 100, 100);
+            _timer = new Timer(SyncTimer, _autoEvent, 50, 50);
         }
 
         internal Task SyncPlayer(string player)
@@ -124,7 +124,7 @@ namespace EmpireUWP.Network
                 }
             } else if (packet.Type == PacketType.ShipCommand)
             {
-                _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
+                SendUpdatePacketToAllPlayers(packet);
             }
         }
 

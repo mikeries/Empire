@@ -155,6 +155,9 @@ namespace EmpireUWP.Network
                     _playerList = update.PlayerList;
                     _gameData = update.GameData;
                     break;
+                case PacketType.ShipCommand:
+                    _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
+                    break;
             }
         }
 

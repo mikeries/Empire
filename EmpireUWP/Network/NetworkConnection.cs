@@ -127,7 +127,7 @@ namespace EmpireUWP.Network
                     if (_requestCallback != null)
                     {
                         byte[] response = await _requestCallback(data);
-                        await sendResponse(socket, response);
+                        await sendData(socket, response);
                     }
                     else if (_packetRequestCallback != null)
                     {
@@ -135,7 +135,7 @@ namespace EmpireUWP.Network
                         NetworkPacket responsePacket = await _packetRequestCallback(packet);
 
                         byte[] responseData = _serializer.CreateMessageFromPacket(responsePacket);
-                        await sendResponse(socket, responseData);
+                        await sendData(socket, responseData);
                     }
                 }
             }
@@ -145,7 +145,7 @@ namespace EmpireUWP.Network
             }
         }
 
-        private async Task sendResponse(StreamSocket socket, byte[] data)
+        private async Task sendData(StreamSocket socket, byte[] data)
         {
             byte[] dataToSend = data;
 
@@ -162,20 +162,15 @@ namespace EmpireUWP.Network
             }
             catch (Exception e)
             {
-                throw new Exception("Send failed with Message: ", e);
+                throw new Exception("Send failed with Message: "+ e.Message,e);
             }
 
-        }
-
-        internal Task SendUpdate(StreamSocket socket, byte[] data)
-        {
-            return sendResponse(socket, data);
         }
 
         internal Task SendUpdatePacket(StreamSocket socket, NetworkPacket packet)
         {
             byte[] data = _serializer.CreateMessageFromPacket(packet);
-            return sendResponse(socket, data);
+            return sendData(socket, data);
         }
 
         private async void updateReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)

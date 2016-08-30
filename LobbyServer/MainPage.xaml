@@ -25,7 +25,6 @@
         </Grid.RowDefinitions>
 
         <StackPanel x:Name="buttonPanel" Grid.Column="0" Grid.Row="0" Grid.RowSpan="6">
-            <Button x:Name="startButton" Content="Start Service" HorizontalAlignment="Center" Margin="10,20,0,0" VerticalAlignment="Top" Click="startButton_Click"/>
             <Button x:Name="initialize" Content="Initialize Client" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="initializeButton_Click"/>
             <Button x:Name="connectMike" Content="Connect Mike" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="connectMike_Click"/>
             <Button x:Name="connectJoe" Content="Connect Joe" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="connectJoe_Click"/>

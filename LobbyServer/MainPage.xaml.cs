@@ -53,12 +53,6 @@ namespace LobbyTest
             textBox.Content += Environment.NewLine + output;
         }
 
-        private async void startButton_Click(object sender, RoutedEventArgs e)
-        {
-            //await service.Initialize();
-            //ReportOutput("Server is listening.");
-        }
-
         private async void initializeButton_Click(object sender, RoutedEventArgs e)
         {
             await client.Initialize();

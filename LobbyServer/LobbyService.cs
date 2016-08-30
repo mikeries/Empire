@@ -1,4 +1,4 @@
-﻿using EmpireUWP.View;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,11 +7,11 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 
-namespace EmpireUWP.Network
+namespace LobbyService
 {
     public class LobbyService
     {
-        private const string _serverAddress = "192.168.1.12";
+        private const string _serverAddress = "127.0.0.1";
 
         private NetworkConnection _connection;
 
@@ -29,7 +29,7 @@ namespace EmpireUWP.Network
 
         public async Task Initialize()
         {
-            await _connection.StartRequestListener(NetworkPorts.EmpireUWPRequestPort,ProcessRequest);
+            await _connection.StartRequestListener(NetworkPorts.LobbyServerRequestPort,ProcessRequest);
          }
 
         private async Task<NetworkPacket> ProcessRequest(NetworkPacket packet)
@@ -154,7 +154,7 @@ namespace EmpireUWP.Network
             // request host to start listening
             if (data.HostID == playerID)
             {
-                await GamePage.gameInstance.StartServer(playerID, playerList, data);
+                //await GamePage.gameInstance.StartServer(playerID, playerList, data);
             }
 
             // request each player to connect to host server

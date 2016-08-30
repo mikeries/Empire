@@ -1,6 +1,8 @@
-﻿using EmpireUWP.View;
+﻿
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -9,20 +11,20 @@ using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
 
-namespace EmpireUWP.Network
+namespace LobbyService
 {
-    public class Lobby
+    public class Lobby : INotifyPropertyChanged
     {
 
-        private const string _serverAddress = "192.168.1.12";
+        private const string _serverAddress = "127.0.0.1";
         private string _myAddress = null;
-        internal bool Server { get; private set; }
-        private LobbyService _lobbyService;
         private NetworkConnection _connection;
 
         private Dictionary<string, PlayerData> _playerList = new Dictionary<string, PlayerData>();
         private Dictionary<int, GameData> _gameList = new Dictionary<int, GameData>();
         
+        public List<PlayerData> playerList {  get { return _playerList.Values.ToList(); } }
+
         public List<String> availablePlayers
         {
             get
@@ -79,7 +81,7 @@ namespace EmpireUWP.Network
             return null;
         }
 
-        public Lobby(MenuManager menuManager)
+        public Lobby()
         {
             EmpireSerializer serializer = new EmpireSerializer();
             _connection = new NetworkConnection(serializer);
@@ -92,14 +94,9 @@ namespace EmpireUWP.Network
                 return;     // already been initialized.
             }
 
-            var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
-            _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
-
-            // if this instance is running on my development machine, start the lobby service.
-            if (hostNames.Count(x => { return x.DisplayName == _serverAddress; }) > 0)
+            using (StreamSocket socket = await _connection.Connect(_serverAddress, NetworkPorts.LobbyServerRequestPort))
             {
-                _lobbyService = new LobbyService();
-                await _lobbyService.Initialize();
+                _myAddress = socket.Information.LocalAddress.DisplayName;
             }
 
             await _connection.StartUpdateListener(NetworkPorts.LobbyClientUpdatePort, ProcessUpdate);
@@ -141,14 +138,14 @@ namespace EmpireUWP.Network
         public async Task StartGame(string playerID)
         {
             GameData gameData = _gameList[_playerList[playerID].GameID];
-            await GamePage.gameInstance.StartGame(playerID, gameData);
+            //await GamePage.gameInstance.StartGame(playerID, gameData);
         }
 
         private async Task<NetworkPacket> SendLobbyCommand(string playerID, LobbyCommands command, string args = null)
         {
             LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
 
-            using (StreamSocket socket = await _connection.Connect(_serverAddress, NetworkPorts.EmpireUWPRequestPort))
+            using (StreamSocket socket = await _connection.Connect(_serverAddress, NetworkPorts.LobbyServerRequestPort))
             {
                 return await _connection.WaitResponsePacket(socket, commandPacket);
             }
@@ -174,7 +171,7 @@ namespace EmpireUWP.Network
                 LobbyData lobbyData = packet as LobbyData;
                 _playerList = lobbyData._playerList;
                 _gameList = lobbyData._gameList;
-                MenuManager.PlayerListChanged();
+                OnPropertyChanged("playerList");
             }
         }
 
@@ -184,5 +181,11 @@ namespace EmpireUWP.Network
             LobbyCommand?.Invoke(this, new LobbyCommandEventArgs(command));
         }
 
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+        public async void OnPropertyChanged(string propertyName)
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                       () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+        }
     }
 }

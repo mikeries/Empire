@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EmpireUWP.Network
+namespace NetworkTests
 {
     public struct NetworkPorts
     {
-        public static string EmpireUWPRequestPort = "1945";
-        public static string EmpireUWPUpdatePort = "1946";
+        public static string LobbyServerRequestPort = "1945";
+        public static string LobbyServerUpdatePort = "1946";
         public static string LobbyClientRequestPort = "1943";
         public static string LobbyClientUpdatePort = "1944";
         public static string GameServerRequestPort = "5555";

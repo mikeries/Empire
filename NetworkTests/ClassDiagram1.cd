@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="NetworkTests.App" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAQAAIAAA=</HashCode>
+      <FileName>App.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="NetworkTests.MainPage" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MainPage.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="NetworkTests.EmpireSerializer" BaseTypeListCollapsed="true">
+    <Position X="7" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAIAAAAAA=</HashCode>
+      <FileName>Network\EmpireSerializer.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="NetworkTests.LobbyCommandEventArgs">
+    <Position X="1.5" Y="9" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA=</HashCode>
+      <FileName>Network\LobbyCommandEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.NetworkConnection">
+    <Position X="9" Y="5.5" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="NetworkTests.NetworkConnection.RequestCallback" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Network\NetworkConnection.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="NetworkTests.NetworkConnection.UpdateCallback" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Network\NetworkConnection.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="NetworkTests.NetworkConnection.PacketRequestCallback" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Network\NetworkConnection.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="NetworkTests.NetworkConnection.PacketUpdateCallback" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Network\NetworkConnection.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAoAAAAAAAACEAgAAAQJACQgAiiEAAEAAgAAAAAAA=</HashCode>
+      <FileName>Network\NetworkConnection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.AcknowledgePacket">
+    <Position X="6.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\AcknowledgePacket.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.GameData">
+    <Position X="11.5" Y="3.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Enum Name="NetworkTests.GameData.GameStatus" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Network\PacketTypes\GameData.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAUAAAAAAgAABEAAAAoAAEIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\GameData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.GameServerDataUpdate">
+    <Position X="13.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\GameServerDataUpdate.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.LobbyCommandPacket">
+    <Position X="1" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAABAAgAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\LobbyCommandPacket.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.LobbyData">
+    <Position X="8" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>Network\PacketTypes\LobbyData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.NetworkPacket">
+    <Position X="6.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\NetworkPacket.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.PingPacket">
+    <Position X="2.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\PingPacket.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.PlayerData">
+    <Position X="4.5" Y="3.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Enum Name="NetworkTests.PlayerData.PlayerStatus" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Network\PacketTypes\PlayerData.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>QAAAAAAEAAAAQAgAAAEAAAAgCAAAAAAAAAAAAAACAAA=</HashCode>
+      <FileName>Network\PacketTypes\PlayerData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.SalutationPacket">
+    <Position X="9.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\SalutationPacket.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.Player">
+    <Position X="1.5" Y="6.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAAAAAAEgAAAEAAAAgAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\Player.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkTests.Network.PacketReceivedEventArgs">
+    <Position X="3.75" Y="9" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA=</HashCode>
+      <FileName>Network\PacketReceivedEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="NetworkTests.NetworkPorts">
+    <Position X="7" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAggAAABAAAAAAAAAEAAAAAAAAEAAAACBAAAAA=</HashCode>
+      <FileName>Network\NetworkPorts.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Interface Name="NetworkTests.ISerializer">
+    <Position X="7" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\ISerializer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="NetworkTests.LobbyCommands">
+    <Position X="2.5" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAACBAAAAAAAAAAAAAAAgAAQAEAgAAAAAABAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\LobbyCommands.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="NetworkTests.PacketType">
+    <Position X="4.25" Y="11.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAABAAAAAAAABAAAAEEIAABEIAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\PacketTypes\PacketTypes.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

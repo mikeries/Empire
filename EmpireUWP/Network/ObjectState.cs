@@ -17,7 +17,7 @@ namespace EmpireUWP
     // as it would require the calling objects to be careful about keeping the SetData and GetData functions
     // parallel.  There could also be issues if the sender and receiver are using different revisions.
 
-    [DataContract]
+    [DataContract (Namespace="http://schemas.datacontract.org/2004/07/EmpireSerializer")]
     public class ObjectState
     {
         [DataMember]

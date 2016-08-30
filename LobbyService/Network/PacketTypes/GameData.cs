@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 // TODO:  GameIDs and PlayerIDs should be custom types for better type checking and to hide implementation details.
 namespace LobbyService
 {
-    [DataContract]
+    [DataContract (Namespace="http://schemas.datacontract.org/2004/07/EmpireSerializer")]
     public class GameData : NetworkPacket
     {
         public enum GameStatus

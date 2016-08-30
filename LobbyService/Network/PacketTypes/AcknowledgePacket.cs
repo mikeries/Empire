@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LobbyService
 {
-    [DataContract]
+    [DataContract (Namespace="http://schemas.datacontract.org/2004/07/EmpireSerializer")]
     public class AcknowledgePacket : NetworkPacket
     {
         [DataMember]

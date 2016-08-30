@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EmpireUWP.Network
 {
-    [DataContract]
+    [DataContract (Namespace="http://schemas.datacontract.org/2004/07/EmpireSerializer")]
     public class PingPacket : NetworkPacket
     {
         public PingPacket() : base()

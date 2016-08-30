@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NetworkTests
 {
-    [DataContract]
+    [DataContract (Namespace="http://schemas.datacontract.org/2004/07/EmpireSerializer")]
     public class GameServerDataUpdate : NetworkPacket
     {
         [DataMember]

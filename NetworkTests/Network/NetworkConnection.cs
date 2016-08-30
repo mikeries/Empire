@@ -5,10 +5,6 @@ using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.Storage.Streams;
 
-
-//TODO:  instead of specifying an update listener and a request listener, provide AddListener() and RemoveListener() methods whose
-// callback signature will determine how to handle the connection.
-
 namespace NetworkTests
 {
     internal class NetworkConnection
@@ -32,7 +28,10 @@ namespace NetworkTests
             }
             catch (Exception e)
             {
-                throw new Exception("Error connecting to server: ", e);
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
             }
             return TCPsocket;
         }
@@ -89,6 +88,9 @@ namespace NetworkTests
                     }
                     reader.ReadBytes(data);
 
+                    // TODO: Most packets sent won't require a response and won't need to be awaited, which blocks the port
+                    // consider using a different port with a different handler for those that do.
+                    // For those that don't require a response, simply invoke the callback function and move on.
                     if (_tcpCallback != null)
                     {
                         byte[] response = await _tcpCallback(socket, data);
@@ -135,14 +137,15 @@ namespace NetworkTests
 
         }
 
-        internal async Task<byte[]> WaitResponse(StreamSocket socket, byte[] data)
+        internal async Task<byte[]> ConnectAndWaitResponse(string address, string port, byte[] data)
         {
-            if (socket == null)
+            // create new socket for this request
+            using (StreamSocket socket = await ConnectToTCP(address, port))
             {
-                throw new Exception("Attempted to request from a null socket.");
+                await sendTCPData(socket, data);
+                byte[] response = await responseFromServer(socket);
+                return response;
             }
-            await sendTCPData(socket, data);
-            return await responseFromServer(socket);
         }
 
         private async Task<byte[]> responseFromServer(StreamSocket socket)

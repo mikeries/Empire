@@ -10,7 +10,7 @@ namespace NetworkTests
     class Client
     {
         private NetworkConnection _connection;
-        private StreamSocket _serverSocket;
+        private StreamSocket _serverSocket;  // connection to the server
         private MainPage _rootPage;
 
         public Client(MainPage root)
@@ -21,7 +21,7 @@ namespace NetworkTests
 
         public Task StartListening(string port)
         {
-            return _connection.StartTCPListener(port, handler);
+            return _connection.StartTCPListener(port, dataHandler);
         }
 
         public async Task Connect(string address, string port)
@@ -36,19 +36,19 @@ namespace NetworkTests
             return _connection.sendTCPData(_serverSocket, data);
         }
 
-        public async Task WaitResponse(byte[] data)
+        public async Task ConnectAndWaitResponse(string address, string port, byte[] data)
         {
             _rootPage.NotifyUserFromAsyncThread("Client is sending: " + MainPage.toString(data));
-            byte[] reply = await _connection.WaitResponse(_serverSocket, data);
+            byte[] reply = await _connection.ConnectAndWaitResponse(address, port, data);
             _rootPage.NotifyUserFromAsyncThread("Server replied with: " + MainPage.toString(reply));
         }
 
-        public async Task<byte[]> handler(StreamSocket socket, byte[] data)
+        public async Task<byte[]> dataHandler(StreamSocket socket, byte[] data)
         {
             if (_serverSocket == null)
             {
                 string address = socket.Information.RemoteAddress.DisplayName;
-                await Connect(address, "5555");
+                await Connect(address, MainPage.serverPort);
             }
             return MainPage.toBytes("Hi");
         }

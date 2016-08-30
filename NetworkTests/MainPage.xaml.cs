@@ -27,9 +27,13 @@ namespace NetworkTests
     public sealed partial class MainPage : Page
     {
         private Server server;
-        private const string serverPort = "5555";
+        public const string serverPort = "5555";
         private Client client;
-        private const string clientPort = "5554";
+        public const string clientPort = "5554";
+        private PacketServer packetServer;
+        public const string packetServerPort = "5556";
+        private PacketClient packetClient;
+        public const string packetClientPort = "5557";
 
         public MainPage()
         {
@@ -44,7 +48,13 @@ namespace NetworkTests
             client = new Client(this);
             await client.StartListening(clientPort);
 
-            DisplayUpdate("Server and client are listening.");
+            packetServer = new PacketServer(this);
+            await packetServer.StartListening(packetServerPort);
+
+            packetClient = new PacketClient(this);
+            await packetClient.StartListening(packetClientPort);
+
+            DisplayUpdate("All servers and clients are listening.");
         }
 
         private async void sendButton_Click(object sender, RoutedEventArgs e)
@@ -59,7 +69,22 @@ namespace NetworkTests
 
         private async void waitResponseButton_Click(object sender, RoutedEventArgs e)
         {
-            await client.WaitResponse(toBytes("Waiting for reply"));
+            await client.ConnectAndWaitResponse("127.0.0.1", serverPort, toBytes("Waiting for reply"));
+        }
+
+        private async void packetConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            await packetClient.Connect("127.0.0.1", packetServerPort);
+        }
+
+        private async void packetSendButton_Click(object sender, RoutedEventArgs e)
+        {
+            await packetClient.Send(new SalutationPacket("Mike"));
+        }
+
+        private async void packetWaitResponseButton_Click(object sender, RoutedEventArgs e)
+        {
+            await packetClient.ConnectAndWaitResponse("127.0.0.1", packetServerPort, new SalutationPacket("Mike"));
         }
 
         public void NotifyUserFromAsyncThread(string strMessage)
@@ -75,13 +100,14 @@ namespace NetworkTests
 
         public static byte[] toBytes(string message)
         {
-            return Encoding.ASCII.GetBytes(message);
+            return Encoding.UTF8.GetBytes(message);
         }
 
         public static string toString(byte[] data)
         {
             return Encoding.UTF8.GetString(data);
         }
+
 
     }
 }

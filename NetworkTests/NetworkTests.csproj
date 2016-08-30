@@ -96,7 +96,8 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Client.cs" />
+    <Compile Include="Network\PacketClient.cs" />
+    <Compile Include="Network\Client.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -118,8 +119,10 @@
     <Compile Include="Network\PacketTypes\PlayerData.cs" />
     <Compile Include="Network\PacketTypes\SalutationPacket.cs" />
     <Compile Include="Network\Player.cs" />
+    <Compile Include="Network\PacketConnection.cs" />
+    <Compile Include="Network\PacketServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Server.cs" />
+    <Compile Include="Network\Server.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

@@ -43,8 +43,15 @@ namespace LobbyService
 
         public async Task Initialize()
         {
-            await _connection.StartTCPListener(NetworkPorts.LobbyServicePort, ProcessRequest);
-            log("Service initialized.");
+            try
+            {
+                await _connection.StartTCPListener(NetworkPorts.LobbyServicePort, ProcessRequest);
+                log("Service initialized.");
+            } catch (Exception e)
+            {
+                log("Failed to start listener on port " + NetworkPorts.LobbyServicePort);
+                log("HRESULT = " + e.HResult);
+            }
          }
 
         private async Task<NetworkPacket> ProcessRequest(StreamSocket socket, NetworkPacket packet)
@@ -100,7 +107,7 @@ namespace LobbyService
                 _gameList.Remove(gameID);
             } else if (game.HostID == playerID)
             {
-                foreach(string id in game.playerList)
+                foreach(string id in game.playerList.ToList())
                 {
                     await SendLobbyCommandToClient(_playerList[id], LobbyCommands.LeaveGame);
                 }
@@ -154,18 +161,29 @@ namespace LobbyService
         {
             if (_playerList.ContainsKey(playerID))
             {
-                // TODO: need to handle case where we are logging in a second time, possibly after disconnecting.
-                // For now, simply tell the old client to close.
-                LobbyCommandPacket ejectUser = new LobbyCommandPacket(playerID, LobbyCommands.EjectThisUser);
-                string address = _playerList[playerID].IPAddress;
-                NetworkPacket reply = await _connection.ConnectAndWaitResponse(address, NetworkPorts.LobbyClientPort , ejectUser);
-
+                await EjectUser(playerID);
+                _playerList[playerID].IPAddress = ipAddress;
             } else 
             {
                 PlayerData player = new PlayerData(new Player(playerID), ipAddress, NetworkPorts.GameClientUpdatePort);
                 _playerList.Add(playerID, player);
             }
             log(playerID + " entered the lobby.");
+        }
+
+        private async Task EjectUser(string playerID)
+        {
+            // Send an command to the client to disconnect
+            try
+            {
+                string address = _playerList[playerID].IPAddress;
+                LobbyCommandPacket ejectUser = new LobbyCommandPacket(playerID, LobbyCommands.EjectThisUser);
+                NetworkPacket reply = await _connection.ConnectAndWaitResponse(address, NetworkPorts.LobbyClientPort, ejectUser);
+            } catch (Exception e)
+            {
+                // but if it doesn't work (possibly the client is disconnected) then we can safely ignore it and move on
+                // the new client will use the old data.
+            }
         }
 
         private async Task ProcessSetupGameCommand(string playerID)
@@ -196,8 +214,16 @@ namespace LobbyService
 
         private async Task SendLobbyCommandToClient(PlayerData player, LobbyCommands command)
         {
+
             LobbyCommandPacket commandPacket = new LobbyCommandPacket(player.PlayerID, command);
-            await _connection.ConnectAndWaitResponse(player.IPAddress, NetworkPorts.LobbyClientPort, commandPacket);
+            try
+            {                
+                await _connection.ConnectAndWaitResponse(player.IPAddress, NetworkPorts.LobbyClientPort, commandPacket);
+            } catch (Exception e)
+            {
+                log("Failed to send command to remote client: HResult=" + e.HResult);
+                log("Command: " + commandPacket.Command + " Player: " + player.PlayerID);
+            }
         }
 
         private async Task UpdateAllClients()
@@ -210,9 +236,18 @@ namespace LobbyService
 
             foreach(string address in destinations)
             {
-                using (StreamSocket socket = await _connection.ConnectToTCP(address, NetworkPorts.LobbyClientPort))
+                try
                 {
-                    await _connection.SendTCPData(socket, data);
+                    using (StreamSocket socket = await _connection.ConnectToTCP(address, NetworkPorts.LobbyClientPort))
+                    {
+                        await _connection.SendTCPData(socket, data);
+                    }
+                } catch (Exception e)
+                {
+                    log("An error occurred attempting to send data to " + address + ":" + NetworkPorts.LobbyClientPort);
+                    log("HResult= "+e.HResult + "  This client will be removed.");
+                    PlayerData disconnected = (PlayerData)_playerList.Values.Select((x) => { return (x.IPAddress == address); });
+                    await ProcessLeaveLobbyCommand(disconnected.PlayerID);
                 }
             }
         }

@@ -1,9 +1,9 @@
-﻿using Windows.Networking;
-using Windows.Networking.Sockets;
+﻿using Windows.Networking.Sockets;
 using System;
 using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.Storage.Streams;
+using Windows.Networking;
 
 namespace LobbyService
 {

@@ -151,7 +151,7 @@ namespace LobbyTest
         private async Task<byte[]> responseFromServer(StreamSocket socket)
         {
             DataReader reader = new DataReader(socket.InputStream);
-            byte[] response;
+            byte[] response= new byte[0];
 
             try
             {
@@ -167,9 +167,12 @@ namespace LobbyTest
 
                 reader.ReadBytes(response);
             }
-            catch
+            catch (Exception e)
             {
-                throw;
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
             }
 
             return response;

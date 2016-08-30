@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Networking.Sockets;
 
-namespace LobbyService
+namespace LobbyTest
 {
     [DataContract]
     public class PlayerData : NetworkPacket

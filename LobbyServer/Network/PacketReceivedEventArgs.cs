@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Networking.Sockets;
 
-namespace LobbyService.Network
+namespace LobbyTest.Network
 {
     internal class PacketReceivedEventArgs : EventArgs
     {

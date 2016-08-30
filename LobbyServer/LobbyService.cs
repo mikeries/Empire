@@ -7,7 +7,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 
-namespace LobbyService
+namespace LobbyTest
 {
     public class LobbyService
     {

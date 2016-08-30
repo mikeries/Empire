@@ -15,7 +15,7 @@ using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
-namespace LobbyService
+namespace LobbyTest
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -23,7 +23,7 @@ namespace LobbyService
     public sealed partial class MainPage : Page
     {
 
-        LobbyService service = new LobbyService();
+        //LobbyService service = new LobbyService();
 
         public MainPage()
         {
@@ -55,8 +55,8 @@ namespace LobbyService
 
         private async void startButton_Click(object sender, RoutedEventArgs e)
         {
-            await service.Initialize();
-            ReportOutput("Server is listening.");
+            //await service.Initialize();
+            //ReportOutput("Server is listening.");
         }
 
         private async void initializeButton_Click(object sender, RoutedEventArgs e)

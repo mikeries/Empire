@@ -1,5 +1,5 @@
 ﻿
-namespace LobbyService
+namespace LobbyTest
 {
     public enum PacketType : int
     {

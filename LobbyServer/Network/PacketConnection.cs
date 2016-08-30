@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.Storage.Streams;
 
-namespace LobbyService
+namespace LobbyTest
 {
     internal class PacketConnection
     {

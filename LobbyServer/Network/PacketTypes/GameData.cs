@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 // TODO:  GameIDs and PlayerIDs should be custom types for better type checking and to hide implementation details.
-namespace LobbyService
+namespace LobbyTest
 {
     [DataContract]
     public class GameData : NetworkPacket

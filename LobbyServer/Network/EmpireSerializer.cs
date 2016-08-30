@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Runtime.Serialization;
 using System.IO;
 
-namespace LobbyService
+namespace LobbyTest
 {
     public class EmpireSerializer : ISerializer
     {

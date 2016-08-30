@@ -103,9 +103,10 @@
     </Compile>
     <Compile Include="Network\ISerializer.cs" />
     <Compile Include="Network\LobbyCommandEventArgs.cs" />
-    <Compile Include="Network\NetworkPorts.cs" />
-    <Compile Include="Network\PacketTypes\LobbyCommands.cs" />
     <Compile Include="Network\NetworkConnection.cs" />
+    <Compile Include="Network\NetworkPorts.cs" />
+    <Compile Include="Network\PacketConnection.cs" />
+    <Compile Include="Network\PacketTypes\LobbyCommands.cs" />
     <Compile Include="Network\PacketReceivedEventArgs.cs" />
     <Compile Include="Network\PacketTypes\AcknowledgePacket.cs" />
     <Compile Include="Network\PacketTypes\GameData.cs" />

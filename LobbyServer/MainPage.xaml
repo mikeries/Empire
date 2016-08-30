@@ -14,35 +14,53 @@
     <Grid DataContext="{StaticResource ResourceKey=client}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="140"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel x:Name="buttonPanel" Grid.Column="0">
+        <StackPanel x:Name="buttonPanel" Grid.Column="0" Grid.Row="0" Grid.RowSpan="6">
             <Button x:Name="startButton" Content="Start Service" HorizontalAlignment="Center" Margin="10,20,0,0" VerticalAlignment="Top" Click="startButton_Click"/>
             <Button x:Name="initialize" Content="Initialize Client" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="initializeButton_Click"/>
             <Button x:Name="connectMike" Content="Connect Mike" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="connectMike_Click"/>
             <Button x:Name="connectJoe" Content="Connect Joe" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="connectJoe_Click"/>
-            <Button x:Name="mikeHost" Content="Mike Host" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="mikeHost_Click" />
-            <Button x:Name="joeJoin" Content="Joe Joins" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="joeJoin_Click" />
+            <Button x:Name="host" Content="Host" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="Host_Click" />
+            <Button x:Name="join" Content="Join" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="Join_Click" />
+            <Button x:Name="leaveLobby" Content="Leave Lobby" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="LeaveLobby_Click" />
+            <Button x:Name="leaveGame" Content="Leave Game" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Click="LeaveGame_Click" />
         </StackPanel>
-        <ScrollViewer x:Name="textBox" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,20,20,20" VerticalAlignment="Top" 
-                      Height="200" Width="Auto" Grid.ColumnSpan="2" BorderBrush="#FF080808" BorderThickness="1" VerticalScrollBarVisibility="Disabled"/>
-        <ListView x:Name="playerList" Grid.Row="2" Grid.Column="1" Margin="10,0,20,0"
-                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="400" Width="Auto" BorderThickness="2"
+        <ScrollViewer x:Name="textBox" Grid.Column="1" HorizontalAlignment="Left" Margin="10,20,0,0" VerticalAlignment="Top" VerticalContentAlignment="Bottom"
+                      Height="250" Width="800" BorderBrush="#FF080808" BorderThickness="1"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Player List" Margin="0,20,0,0"  Height="20" VerticalAlignment="Top"/>
+        <ListView x:Name="playerList" Grid.Row="2" Grid.Column="1" Margin="20,0,0,0"
+                  HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="150" Width="Auto" BorderThickness="2"
                   ItemsSource="{Binding playerList}" SelectionMode="Single" SelectionChanged="playerList_SelectionChanged">
             <ListView.ItemTemplate>
                 <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Height="20">
+                        <TextBlock Text="{Binding PlayerID}" Margin="10,0,0,0"/>
+                        <TextBlock Text="{Binding GameID}" Margin="10,0,0,0"/>
+                        <TextBlock Text="{Binding IPAddress}" Margin="10,0,0,0"/>
+                        <TextBlock Text="{Binding Port}" Margin="10,0,0,0"/>
+                        <TextBlock Text="{Binding Status}" Margin="10,0,0,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Game List"/>
+        <ListView x:Name="gameList" Grid.Row="4" Grid.Column="1" Margin="10,0,0,0"
+                  HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="200" Width="Auto" BorderThickness="2"
+                  ItemsSource="{Binding gamesList}" SelectionMode="Single">
+            <ListView.ItemTemplate>
+                <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding PlayerID}" Margin="10,0,10,0"/>
-                        <TextBlock Text="{Binding GameID}" Margin="10,0,10,0"/>
-                        <TextBlock Text="{Binding IPAddress}" Margin="10,0,10,0"/>
-                        <TextBlock Text="{Binding Port}" Margin="10,0,10,0"/>
-                        <TextBlock Text="{Binding Status}" Margin="10,0,10,0"/>
+                        <TextBlock Text="{Binding GameID}" Margin="10,0,0,0"/>
+                        <TextBlock Text="{Binding HostID}" Margin="10,0,0,0" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>

@@ -18,12 +18,13 @@ namespace LobbyService
 
         private const string _serverAddress = "127.0.0.1";
         private string _myAddress = null;
-        private NetworkConnection _connection;
+        private PacketConnection _connection;
 
         private Dictionary<string, PlayerData> _playerList = new Dictionary<string, PlayerData>();
         private Dictionary<int, GameData> _gameList = new Dictionary<int, GameData>();
         
         public List<PlayerData> playerList {  get { return _playerList.Values.ToList(); } }
+        public List<GameData> gamesList { get { return _gameList.Values.ToList(); } }
 
         public List<String> availablePlayers
         {
@@ -84,7 +85,7 @@ namespace LobbyService
         public Lobby()
         {
             EmpireSerializer serializer = new EmpireSerializer();
-            _connection = new NetworkConnection(serializer);
+            _connection = new PacketConnection(serializer);
         }
 
         public async Task Initialize()
@@ -94,13 +95,12 @@ namespace LobbyService
                 return;     // already been initialized.
             }
 
-            using (StreamSocket socket = await _connection.Connect(_serverAddress, NetworkPorts.LobbyServerRequestPort))
+            using (StreamSocket socket = await _connection.ConnectToTCP(_serverAddress, NetworkPorts.LobbyServerPort))
             {
                 _myAddress = socket.Information.LocalAddress.DisplayName;
             }
 
-            await _connection.StartUpdateListener(NetworkPorts.LobbyClientUpdatePort, ProcessUpdate);
-            await _connection.StartRequestListener(NetworkPorts.LobbyClientRequestPort, ProcessRequest);
+            await _connection.StartTCPListener(NetworkPorts.LobbyClientPort, ProcessRequest);
 
             return;
         }
@@ -145,13 +145,10 @@ namespace LobbyService
         {
             LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
 
-            using (StreamSocket socket = await _connection.Connect(_serverAddress, NetworkPorts.LobbyServerRequestPort))
-            {
-                return await _connection.WaitResponsePacket(socket, commandPacket);
-            }
+            return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServerPort, commandPacket);
         }
 
-        private async Task<NetworkPacket> ProcessRequest(NetworkPacket packet)
+        private async Task<NetworkPacket> ProcessRequest(StreamSocket socket, NetworkPacket packet)
         {
             AcknowledgePacket acknowledgement = new AcknowledgePacket();
 
@@ -160,19 +157,15 @@ namespace LobbyService
                 LobbyCommandPacket command = packet as LobbyCommandPacket;
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                         () => { OnLobbyCommand(command); });
-            }
-            return acknowledgement;
-        }
-
-        private void ProcessUpdate(NetworkPacket packet)
-        {
-            if (packet.Type == PacketType.LobbyData)
+            } else if (packet.Type == PacketType.LobbyData)
             {
                 LobbyData lobbyData = packet as LobbyData;
                 _playerList = lobbyData._playerList;
                 _gameList = lobbyData._gameList;
                 OnPropertyChanged("playerList");
+                OnPropertyChanged("gamesList");
             }
+            return acknowledgement;
         }
 
         internal event EventHandler<LobbyCommandEventArgs> LobbyCommand = delegate { };

@@ -31,7 +31,7 @@ namespace LobbyService
             client.LobbyCommand += ProcessLobbyCommands;
         }
 
-        private void ProcessLobbyCommands(object sender, LobbyCommandEventArgs e)
+        private async void ProcessLobbyCommands(object sender, LobbyCommandEventArgs e)
         {
             LobbyCommandPacket packet = e.Packet;
 
@@ -40,12 +40,17 @@ namespace LobbyService
                 case LobbyCommands.EjectThisUser:
                     ReportOutput("Ejecting " + packet.PlayerID + ".");
                     break;
+                case LobbyCommands.LeaveGame:
+                    ReportOutput(packet.PlayerID + " leaves his game.");
+                    await client.LeaveGame(packet.PlayerID);
+                    break;
+
             }
         }
 
         private void ReportOutput(string output)
         {
-            textBox.Content = output + Environment.NewLine + textBox.Content;
+            textBox.Content += Environment.NewLine + output;
         }
 
         private async void startButton_Click(object sender, RoutedEventArgs e)
@@ -77,16 +82,60 @@ namespace LobbyService
             ReportOutput("Mike connected.");
         }
 
-        private async void mikeHost_Click(object sender, RoutedEventArgs e)
+        private async void Host_Click(object sender, RoutedEventArgs e)
         {
-            await client.HostGame("Mike");
-            ReportOutput("Mike hosting a game.");
+            if (playerList.SelectedIndex >= 0)
+            {
+                string player = client.playerList[playerList.SelectedIndex].PlayerID;
+                await client.HostGame(player);
+                ReportOutput(player + " is hosting a game.");
+            } else
+            {
+                ReportOutput("Select which player should host.");
+            }
         }
 
-        private async void joeJoin_Click(object sender, RoutedEventArgs e)
+        private async void Join_Click(object sender, RoutedEventArgs e)
         {
-            await client.JoinGame("Joe", "Mike");
-            ReportOutput("Joe joins Mike's game.");
+            if (playerList.SelectedIndex >= 0 && gameList.SelectedIndex >= 0)
+            {
+                string player = client.playerList[playerList.SelectedIndex].PlayerID;
+                string game = client.gamesList[gameList.SelectedIndex].HostID;
+                await client.JoinGame(player,game);
+                ReportOutput(player + " joins "+game+"'s game.");
+            }
+            else
+            {
+                ReportOutput("Select a player and a game to join.");
+            }
+        }
+
+        private async void LeaveLobby_Click(object sender, RoutedEventArgs e)
+        {
+            if (playerList.SelectedIndex >= 0)
+            {
+                string player = client.playerList[playerList.SelectedIndex].PlayerID;
+                await client.LeaveLobby(player);
+                ReportOutput(player + " leaves the lobby.");
+            }
+            else
+            {
+                ReportOutput("Select a player to leave the lobby.");
+            }
+        }
+
+        private async void LeaveGame_Click(object sender, RoutedEventArgs e)
+        {
+            if (playerList.SelectedIndex >= 0)
+            {
+                string player = client.playerList[playerList.SelectedIndex].PlayerID;
+                await client.LeaveGame(player);
+                ReportOutput(player + " leaves his game.");
+            }
+            else
+            {
+                ReportOutput("Select a player to leave his game.");
+            }
         }
     }
 }

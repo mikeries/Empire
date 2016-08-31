@@ -25,7 +25,7 @@ namespace EmpireUWP.Network
         [DataMember]
         public string HostIPAddress { get; set; }
         [DataMember]
-        public string HostRequestPort { get; set; }
+        public string HostPort { get; set; }
         [DataMember]
         public string HostUpdatePort { get; set; }
         [DataMember]
@@ -41,7 +41,7 @@ namespace EmpireUWP.Network
             Type = PacketType.GameData;
             HostID = playerID;
             HostIPAddress = ipAddress;
-            HostRequestPort = requestPort;
+            HostPort = requestPort;
             HostUpdatePort = updatePort;
             GameID = gameID;
             Status = GameStatus.WaitingForPlayers;

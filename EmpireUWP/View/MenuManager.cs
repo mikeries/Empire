@@ -45,7 +45,7 @@ namespace EmpireUWP.View
         public MenuManager()
         {
             if (_lobby == null) {
-                _lobby = new Lobby(this);
+                _lobby = new Lobby();
                 _lobby.LobbyCommand += ProcessLobbyCommand;
             }
         }

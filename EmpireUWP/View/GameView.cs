@@ -169,7 +169,7 @@ namespace EmpireUWP.View
         {
             PlayerID = playerID;
             gameData.HostIPAddress = playerList[gameData.HostID].IPAddress;
-            gameData.HostRequestPort = NetworkPorts.GameServerRequestPort;
+            gameData.HostPort = NetworkPorts.GameServerRequestPort;
             gameData.HostUpdatePort = NetworkPorts.GameServerUpdatePort;
             GameServerConnection = new GameServer(this, playerList, gameData);
             return GameServerConnection.StartServer();

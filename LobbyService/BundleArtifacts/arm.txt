@@ -1,2 +1,2 @@
-MainPackage=F:\Programming\GitHub\Repos\Empire\LobbyService\bin\ARM\Debug\LobbyService_1.0.2.0_ARM_Debug.appx
-SymbolPackage=F:\Programming\GitHub\Repos\Empire\LobbyService\AppPackages\LobbyService_1.0.2.0_Debug_Test\LobbyService_1.0.2.0_ARM_Debug.appxsym
+MainPackage=F:\Programming\GitHub\Repos\Empire\LobbyService\bin\ARM\Debug\LobbyService_1.0.3.0_ARM_Debug.appx
+SymbolPackage=F:\Programming\GitHub\Repos\Empire\LobbyService\AppPackages\LobbyService_1.0.3.0_Debug_Test\LobbyService_1.0.3.0_ARM_Debug.appxsym

@@ -26,7 +26,7 @@ namespace EmpireUWP.Network
         private Timer _timer;
         private AutoResetEvent _autoEvent = new AutoResetEvent(false);
 
-        private NetworkConnection _networkConnection;
+        private PacketConnection _networkConnection;
 
         internal GameServer(GameView gameInstance, Dictionary<string, PlayerData> players, GameData gameData)
         {
@@ -59,10 +59,9 @@ namespace EmpireUWP.Network
         internal async Task StartServer()
         {
             EmpireSerializer serializer = new Network.EmpireSerializer();
-            _networkConnection = new Network.NetworkConnection(serializer);
+            _networkConnection = new PacketConnection(serializer);
 
-            await _networkConnection.StartRequestListener(_gameData.HostRequestPort, HandleRequest);
-            await _networkConnection.StartUpdateListener(_gameData.HostUpdatePort, HandleUpdate);
+            await _networkConnection.StartTCPListener(_gameData.HostPort, HandleRequest);
 
             _timer = new Timer(SyncTimer, _autoEvent, 50, 50);
         }
@@ -91,11 +90,11 @@ namespace EmpireUWP.Network
 
             if (player.Connected)
             {
-                using (StreamSocket socket = await _networkConnection.Connect(player.IPAddress, player.Port))
+                using (StreamSocket socket = await _networkConnection.ConnectToTCP(player.IPAddress, player.Port))
                 {
                     foreach (NetworkPacket update in updates)
                     {
-                        await _networkConnection.SendUpdatePacket(socket, update);
+                        await _networkConnection.SendTCPData(socket, update);
                     }
                 }
             }
@@ -128,7 +127,7 @@ namespace EmpireUWP.Network
             }
         }
 
-        private async Task<NetworkPacket> HandleRequest(NetworkPacket packet)
+        private async Task<NetworkPacket> HandleRequest(StreamSocket socket, NetworkPacket packet)
         {
 
             AcknowledgePacket acknowledgement = new AcknowledgePacket();

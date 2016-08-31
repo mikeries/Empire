@@ -45,11 +45,11 @@ namespace LobbyService
         {
             try
             {
-                await _connection.StartTCPListener(NetworkPorts.LobbyServicePort, ProcessRequest);
+                await _connection.StartTCPListener(NetworkPorts.LobbyServerPort, ProcessRequest);
                 log("Service initialized.");
             } catch (Exception e)
             {
-                log("Failed to start listener on port " + NetworkPorts.LobbyServicePort);
+                log("Failed to start listener on port " + NetworkPorts.LobbyServerPort);
                 log("HRESULT = " + e.HResult);
             }
          }
@@ -143,7 +143,7 @@ namespace LobbyService
                     await ProcessLeaveGameCommand(playerID);
                 }
 
-                GameData newGame = new GameData(NewGameID, playerID, hostIPAddress, NetworkPorts.GameServerRequestPort, NetworkPorts.GameServerUpdatePort);
+                GameData newGame = new GameData(NewGameID, playerID, hostIPAddress, NetworkPorts.GameServerPort, NetworkPorts.GameServerPort);
                 _playerList[playerID].GameID = newGame.GameID;
                 _gameList.Add(newGame.GameID, newGame);
                 log(playerID + " began hosting game #" + newGame.GameID + ".");
@@ -172,7 +172,7 @@ namespace LobbyService
                 _playerList[playerID].IPAddress = ipAddress;
             } else 
             {
-                PlayerData player = new PlayerData(new Player(playerID), ipAddress, NetworkPorts.GameClientUpdatePort);
+                PlayerData player = new PlayerData(new Player(playerID), ipAddress, NetworkPorts.GameClientPort);
                 _playerList.Add(playerID, player);
             }
             log(playerID + " entered the lobby.");

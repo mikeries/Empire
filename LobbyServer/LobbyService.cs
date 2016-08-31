@@ -110,7 +110,7 @@ namespace LobbyTest
                     await ProcessLeaveGameCommand(playerID);
                 }
 
-                GameData newGame = new GameData(NewGameID, playerID, hostIPAddress, NetworkPorts.GameServerRequestPort, NetworkPorts.GameServerUpdatePort);
+                GameData newGame = new GameData(NewGameID, playerID, hostIPAddress, NetworkPorts.GameServerPort, NetworkPorts.GameServerPort);
                 _playerList[playerID].GameID = newGame.GameID;
                 _gameList.Add(newGame.GameID, newGame);
             }
@@ -141,7 +141,7 @@ namespace LobbyTest
 
             } else 
             {
-                PlayerData player = new PlayerData(new Player(playerID), ipAddress, NetworkPorts.GameClientUpdatePort);
+                PlayerData player = new PlayerData(new Player(playerID), ipAddress, NetworkPorts.GameClientPort);
                 _playerList.Add(playerID, player);
             }
         }

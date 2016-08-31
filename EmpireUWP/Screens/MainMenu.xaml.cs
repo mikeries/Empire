@@ -34,10 +34,9 @@ namespace EmpireUWP
         
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            base.OnNavigatedTo(e);
-
             MenuManager.CurrentPage = this;
             MenuManager.Manager = menuManager;
+            base.OnNavigatedTo(e);
         }
 
         private async void joinGame_Click(object sender, RoutedEventArgs e)

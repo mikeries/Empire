@@ -18,5 +18,6 @@ namespace EmpireUWP.Network
         EnterGame,
         EjectThisUser,
         Disconnected,
+        Update,
     }
 }

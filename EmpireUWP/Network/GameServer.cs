@@ -138,7 +138,7 @@ namespace EmpireUWP.Network
                 HandlePlayerConnection(salutation);
             }
 
-            return acknowledgement as NetworkPacket;
+            return acknowledgement;
 
         }
 

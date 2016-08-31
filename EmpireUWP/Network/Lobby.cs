@@ -1,4 +1,5 @@
 ﻿
+using EmpireUWP.View;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,7 +14,7 @@ using Windows.UI.Core;
 
 namespace EmpireUWP.Network
 {
-    public class Lobby : INotifyPropertyChanged
+    public class Lobby
     {
 
         private const string _serverAddress = "192.168.1.11";
@@ -147,7 +148,7 @@ namespace EmpireUWP.Network
         public async Task StartGame(string playerID)
         {
             GameData gameData = _gameList[_playerList[playerID].GameID];
-            //await GamePage.gameInstance.StartGame(playerID, gameData);
+            await GamePage.gameInstance.StartGame(playerID, gameData);
         }
 
         private async Task<NetworkPacket> SendLobbyCommand(string playerID, LobbyCommands command, string args = null)
@@ -164,7 +165,7 @@ namespace EmpireUWP.Network
                 OnLobbyCommand(packet);
             }
 
-            return null as NetworkPacket;
+            return new AcknowledgePacket();
         }
 
         private async Task<NetworkPacket> ProcessRequest(StreamSocket socket, NetworkPacket packet)
@@ -181,8 +182,8 @@ namespace EmpireUWP.Network
                 LobbyData lobbyData = packet as LobbyData;
                 _playerList = lobbyData._playerList;
                 _gameList = lobbyData._gameList;
-                OnPropertyChanged("playerList");
-                OnPropertyChanged("gamesList");
+                OnLobbyUpdated("playerList");
+                OnLobbyUpdated("gamesList");
             }
             return acknowledgement;
         }
@@ -193,11 +194,11 @@ namespace EmpireUWP.Network
             LobbyCommand?.Invoke(this, new LobbyCommandEventArgs(command));
         }
 
-        public event PropertyChangedEventHandler PropertyChanged = delegate { };
-        public async void OnPropertyChanged(string propertyName)
+        public event PropertyChangedEventHandler LobbyUpdated = delegate { };
+        public async void OnLobbyUpdated(string propertyName)
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                       () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+                       () => { LobbyUpdated?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
         }
     }
 }

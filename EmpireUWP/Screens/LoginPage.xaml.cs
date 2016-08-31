@@ -96,7 +96,6 @@ namespace EmpireUWP
         {
             await MenuManager.InitializeLobby(playerID);
             await MenuManager.EnterLobby();
-
             Frame.Navigate(typeof(MainMenu));
         }
 

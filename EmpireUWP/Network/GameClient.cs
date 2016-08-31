@@ -36,21 +36,19 @@ namespace EmpireUWP.Network
         private GameData _gameData;
         private GameView _gameInstance;
         private string _myAddress;
-        private string _myRequestPort;
-        private string _myUpdatePort;
+        private string _myPort;
         private UpdateQueue _updateQueue = new UpdateQueue();
 
         private PacketConnection _networkConnection;
 
-        internal GameClient(GameView gameInstance, GameData gameData, string playerID, string requestPort, string updatePort)
+        internal GameClient(GameView gameInstance, GameData gameData, string playerID, string port)
         {
             _gameInstance = gameInstance;
             _gameData = gameData;
             LocalPlayerID = playerID;
             var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
-            _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
-            _myRequestPort = requestPort;
-            _myUpdatePort = updatePort;
+            _myAddress = null;
+            _myPort = port;
         }
 
         internal async Task CreateNetworkConnection()
@@ -59,7 +57,9 @@ namespace EmpireUWP.Network
             {
                 EmpireSerializer serializer = new EmpireSerializer();
                 _networkConnection = new PacketConnection(serializer);
-                await _networkConnection.StartTCPListener(_myUpdatePort, HandleRequest);
+                await _networkConnection.StartTCPListener(_myPort, HandleRequest);
+                StreamSocket socket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort);
+                _myAddress = socket.Information.LocalAddress.DisplayName;
             }
         }
 
@@ -71,7 +71,7 @@ namespace EmpireUWP.Network
 
         internal async Task SendUpdatePacketToHost(NetworkPacket packet)
         {
-            using (StreamSocket socket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostUpdatePort))
+            using (StreamSocket socket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort))
             {
                 await _networkConnection.SendTCPData(socket, packet);
             }
@@ -93,7 +93,7 @@ namespace EmpireUWP.Network
             }
             else
             {
-                playerData = new PlayerData(new Player(LocalPlayerID), _myAddress, _myUpdatePort);
+                playerData = new PlayerData(new Player(LocalPlayerID), _myAddress, _myPort);
             }
             playerData.Status = playerStatus;
             return SendUpdatePacketToHost(playerData);

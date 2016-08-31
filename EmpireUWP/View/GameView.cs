@@ -169,8 +169,7 @@ namespace EmpireUWP.View
         {
             PlayerID = playerID;
             gameData.HostIPAddress = playerList[gameData.HostID].IPAddress;
-            gameData.HostRequestPort = NetworkPorts.GameServerRequestPort;
-            gameData.HostUpdatePort = NetworkPorts.GameServerUpdatePort;
+            gameData.HostPort = NetworkPorts.GameServerPort;
             GameServerConnection = new GameServer(this, playerList, gameData);
             return GameServerConnection.StartServer();
         }
@@ -181,7 +180,7 @@ namespace EmpireUWP.View
 
             //gameData.HostIPAddress = "192.168.1.12";
             if (GameClientConnection == null) {
-                GameClientConnection = new GameClient(this, gameData, PlayerID, NetworkPorts.GameClientRequestPort, NetworkPorts.GameClientUpdatePort);
+                GameClientConnection = new GameClient(this, gameData, PlayerID, NetworkPorts.GameClientPort);
                 await GameClientConnection.CreateNetworkConnection();
                 GameClientConnection.GameChanged += GameChangedEventHandler;
             }

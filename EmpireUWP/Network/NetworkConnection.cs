@@ -5,104 +5,64 @@ using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.Storage.Streams;
 
-
-//TODO:  instead of specifying an update listener and a request listener, provide AddListener() and RemoveListener() methods whose
-// callback signature will determine how to handle the connection.  Four possibilities come to mind:
-// delegate Task<byte[]> DataRequestCallback(byte[] data) for requests wanting to be called with raw data
-// delegate Task<NetworkPacket> PacketRequestCallback(NetworkPacket packet) for requests wanting to deal only with packets
-// delegate void DataUpdateCallback for updates providing raw data
-// delegate void PacketUpdateCallback for updates to packets.
-
 namespace EmpireUWP.Network
 {
     internal class NetworkConnection
     {
-        private StreamSocketListener _updateListener;
-        private StreamSocketListener _requestListener;
-        internal delegate Task<byte[]> RequestCallback(byte[] data);
-        RequestCallback _requestCallback;
-        internal delegate void UpdateCallback(byte[] data);
-        UpdateCallback _updateCallback;
-        internal delegate Task<NetworkPacket> PacketRequestCallback(NetworkPacket packet);
-        PacketRequestCallback _packetRequestCallback;
-        internal delegate void PacketUpdateCallback(NetworkPacket packet);
-        PacketUpdateCallback _packetUpdateCallback;
-        private ISerializer _serializer;
+        private StreamSocketListener _TCPListener = null;
+        private DatagramSocket _UDPListener = null;
+        public delegate Task<byte[]> Callback(StreamSocket socket, byte[] data);
+        private Callback _tcpCallback;
 
-        internal NetworkConnection(ISerializer serializer) {
-            if (serializer == null)
-            {
-                throw new ArgumentNullException("Invalid Serializer (Null).");
-            }
-                
-            _serializer = serializer;
+        internal NetworkConnection() {
+
         }
 
-        internal async Task StartRequestListener(string port, RequestCallback callBack)
+        internal async Task<StreamSocket> ConnectToTCP(string serverAddress, string serverPort)
         {
-            if (_requestListener != null)
-            {
-                _requestListener.Dispose();
-            }
-            _requestListener = await createListener(port);
-            _requestListener.ConnectionReceived += requestReceived;
-
-            _requestCallback = callBack;
-        }
-
-        internal async Task StartRequestListener(string port, PacketRequestCallback callBack)
-        {
-            if (_requestListener != null)
-            {
-                _requestListener.Dispose();
-            }
-            _requestListener = await createListener(port);
-            _requestListener.ConnectionReceived += requestReceived;
-
-            _packetRequestCallback = callBack;
-        }
-
-        internal async Task StartUpdateListener(string port, UpdateCallback updateCallback)
-        {
-            if (_updateListener != null)
-            {
-                _updateListener.Dispose();
-            }
-
-            _updateListener = await createListener(port);
-            _updateListener.ConnectionReceived += updateReceived;
-
-            _updateCallback = updateCallback;
-        }
-
-        internal async Task StartUpdateListener(string port, PacketUpdateCallback updateCallback)
-        {
-            if (_updateListener != null)
-            {
-                _updateListener.Dispose();
-            }
-
-            _updateListener = await createListener(port);
-            _updateListener.ConnectionReceived += updateReceived;
-
-            _packetUpdateCallback = updateCallback;
-        }
-
-        private async Task<StreamSocketListener> createListener(string port)
-        {
-            StreamSocketListener listener = new StreamSocketListener();
+            HostName _host = new HostName(serverAddress);
+            StreamSocket TCPsocket = new StreamSocket();
             try
             {
-                await listener.BindServiceNameAsync(port);
+                await TCPsocket.ConnectAsync(_host, serverPort);
             }
             catch (Exception e)
             {
-                throw new Exception("Failed to start listening for requests:", e);
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
             }
-            return listener;
+            return TCPsocket;
         }
 
-        private async void requestReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        internal async Task StartTCPListener(string port, Callback handler)
+        {
+            if (_TCPListener != null)
+            {
+                _TCPListener.Dispose();
+            }
+
+            _TCPListener = new StreamSocketListener();
+            _TCPListener.ConnectionReceived += TCPConnectionReceived;
+
+            try
+            {
+                await _TCPListener.BindServiceNameAsync(port);
+            }
+            catch (Exception e)
+            {
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+            }
+
+            _tcpCallback = handler;
+
+        }
+
+        private async void TCPConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
         {
             StreamSocket socket = args.Socket;
             DataReader reader = new DataReader(socket.InputStream);
@@ -121,32 +81,39 @@ namespace EmpireUWP.Network
                     uint dataLength = reader.ReadUInt32();
                     byte[] data = new byte[dataLength];
 
-                    await reader.LoadAsync(dataLength);
+                    uint actualLength = await reader.LoadAsync(dataLength);
+                    if(dataLength != actualLength)
+                    {
+                        return;
+                    }
                     reader.ReadBytes(data);
 
-                    if (_requestCallback != null)
+                    // TODO: Most packets sent won't require a response and won't need to be awaited, which blocks the port
+                    // consider using a different port with a different handler for those that do.
+                    // For those that don't require a response, simply invoke the callback function and move on.
+                    if (_tcpCallback != null)
                     {
-                        byte[] response = await _requestCallback(data);
-                        await sendData(socket, response);
-                    }
-                    else if (_packetRequestCallback != null)
-                    {
-                        NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
-                        NetworkPacket responsePacket = await _packetRequestCallback(packet);
-
-                        byte[] responseData = _serializer.CreateMessageFromPacket(responsePacket);
-                        await sendData(socket, responseData);
+                        byte[] response = await _tcpCallback(socket, data);
+                        await sendTCPData(socket, response);
                     }
                 }
             }
             catch (Exception e)
             {
-                throw new Exception("Exception while reading: " + e.Message, e);
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
             }
         }
 
-        private async Task sendData(StreamSocket socket, byte[] data)
+        internal async Task sendTCPData(StreamSocket socket, byte[] data)
         {
+            if(socket == null)
+            {
+                return;
+            }
+
             byte[] dataToSend = data;
 
             DataWriter writer = new DataWriter(socket.OutputStream);
@@ -162,15 +129,91 @@ namespace EmpireUWP.Network
             }
             catch (Exception e)
             {
-                throw new Exception("Send failed with Message: "+ e.Message,e);
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
             }
 
         }
 
-        internal Task SendUpdatePacket(StreamSocket socket, NetworkPacket packet)
+        internal async Task<byte[]> ConnectAndWaitResponse(string address, string port, byte[] data)
         {
-            byte[] data = _serializer.CreateMessageFromPacket(packet);
-            return sendData(socket, data);
+            // create new socket for this request
+            using (StreamSocket socket = await ConnectToTCP(address, port))
+            {
+                await sendTCPData(socket, data);
+                byte[] response = await responseFromServer(socket);
+                return response;
+            }
+        }
+
+        private async Task<byte[]> responseFromServer(StreamSocket socket)
+        {
+            DataReader reader = new DataReader(socket.InputStream);
+            byte[] response= new byte[0];
+
+            try
+            {
+                uint size = await reader.LoadAsync(sizeof(uint));
+                if (size != sizeof(int))
+                {
+                    throw new Exception("Socket closed unexpectedly.");
+                }
+
+                uint dataLength = reader.ReadUInt32();
+                response = new byte[dataLength];
+                await reader.LoadAsync(dataLength);
+
+                reader.ReadBytes(response);
+            }
+            catch (Exception e)
+            {
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+            }
+
+            return response;
+        }
+
+        internal async Task StartUDPListener(string port)
+        {
+            if (_UDPListener != null)
+            {
+                _UDPListener.Dispose();
+            }
+
+            _UDPListener = new DatagramSocket();
+
+            try
+            {
+                _UDPListener.MessageReceived += UDPReceived;
+                await _UDPListener.BindServiceNameAsync(port);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Failed to start listening for updates:", e);
+            }
+        }
+
+        private void UDPReceived(DatagramSocket socket, DatagramSocketMessageReceivedEventArgs args)
+        {
+            DataReader reader = args.GetDataReader();
+            try
+            {
+
+                uint len = reader.UnconsumedBufferLength;
+                byte[] data = new byte[len];
+                reader.ReadBytes(data);
+            } catch (Exception e)
+            {
+                SocketErrorStatus socketError = SocketError.GetStatus(e.HResult);
+                throw;
+            }
+
+            reader.Dispose();
         }
 
         private async void updateReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
@@ -198,102 +241,12 @@ namespace EmpireUWP.Network
                         return;
                     }
                     reader.ReadBytes(data);
-
-                    if (_updateCallback != null)
-                    {
-                        _updateCallback(data);
-                    }
-                    else if (_packetUpdateCallback != null)
-                    {
-                        NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
-                        _packetUpdateCallback(packet);
-                        MessageSize = 5;
-                    }
                 }
             }
             catch (Exception e)
             {
                 throw new Exception("Exception while reading: ", e);
             }
-        }
-
-        internal async Task<byte[]> WaitResponse(StreamSocket socket, byte[] data)
-        {
-            if (socket == null)
-            {
-                throw new Exception("Attempted to request from a null socket.");
-            }
-            await sendRequest(socket, data);
-            return await responseFromServer(socket);
-        }
-
-        internal async Task<NetworkPacket> WaitResponsePacket(StreamSocket socket, NetworkPacket packet)
-        {
-            byte[] message = _serializer.CreateMessageFromPacket(packet);
-            byte[] response = await WaitResponse(socket, message);
-
-            NetworkPacket responsePacket = _serializer.ConstructPacketFromMessage(response);
-            return responsePacket;
-        }
-
-        internal async Task<StreamSocket> Connect(string serverAddress, string serverPort)
-        {
-            HostName _host = new HostName(serverAddress);
-            StreamSocket socket = new StreamSocket();
-            try
-            {
-                await socket.ConnectAsync(_host, serverPort);
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Error connecting to server: ", e);
-            }
-            return socket;
-        }
-
-        private async Task sendRequest(StreamSocket socket, byte[] data)
-        {
-            DataWriter writer = new DataWriter(socket.OutputStream);
-
-            writer.WriteUInt32((uint)data.Length);
-            writer.WriteBytes(data);
-
-            try
-            {
-                await writer.StoreAsync();
-                writer.DetachStream();
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Failed to send request message.", e);
-            }
-        }
-
-        private async Task<byte[]> responseFromServer(StreamSocket socket)
-        {
-            DataReader reader = new DataReader(socket.InputStream);
-            byte[] response;
-
-            try
-            {
-                uint size = await reader.LoadAsync(sizeof(uint));
-                if (size != sizeof(int))
-                {
-                    throw new Exception("Socket closed unexpectedly.");
-                }
-
-                uint dataLength = reader.ReadUInt32();
-                response = new byte[dataLength];
-                await reader.LoadAsync(dataLength);
-
-                reader.ReadBytes(response);
-            }
-            catch
-            {
-                throw;
-            }
-
-            return response;
         }
 
     }

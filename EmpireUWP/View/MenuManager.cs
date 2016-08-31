@@ -45,16 +45,17 @@ namespace EmpireUWP.View
         public MenuManager()
         {
             if (_lobby == null) {
-                _lobby = new Lobby(this);
+                _lobby = new Lobby();
                 _lobby.LobbyCommand += ProcessLobbyCommand;
+                _lobby.LobbyUpdated += LobbyUpdate;
             }
         }
 
-        public static async Task InitializeLobby(string playerID)
+        public static Task InitializeLobby(string playerID)
         {
             PlayerID = playerID;
 
-            await _lobby.Initialize();
+            return _lobby.Initialize();
         }
 
         public static Task HostGame()
@@ -111,7 +112,12 @@ namespace EmpireUWP.View
             else if (packet.Command == LobbyCommands.EjectThisUser)
             {
                 Windows.UI.Xaml.Application.Current.Exit();
-            }
+            } 
+        }
+
+        private void LobbyUpdate(object sender, PropertyChangedEventArgs args)
+        {
+            PlayerListChanged();
         }
 
         internal static async void PlayerListChanged()

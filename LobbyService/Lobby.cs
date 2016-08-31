@@ -95,7 +95,7 @@ namespace LobbyService
                 return;     // already been initialized.
             }
 
-            using (StreamSocket socket = await _connection.ConnectToTCP(_serverAddress, NetworkPorts.LobbyServicePort))
+            using (StreamSocket socket = await _connection.ConnectToTCP(_serverAddress, NetworkPorts.LobbyServerPort))
             {
                 _myAddress = socket.Information.LocalAddress.DisplayName;
             }
@@ -145,7 +145,7 @@ namespace LobbyService
         {
             LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
 
-            return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServicePort, commandPacket);
+            return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServerPort, commandPacket);
         }
 
         private async Task<NetworkPacket> ProcessRequest(StreamSocket socket, NetworkPacket packet)

@@ -39,6 +39,7 @@ namespace LobbyTest
             {
                 case LobbyCommands.EjectThisUser:
                     ReportOutput("Ejecting " + packet.PlayerID + ".");
+                    Application.Current.Exit();
                     break;
                 case LobbyCommands.LeaveGame:
                     ReportOutput(packet.PlayerID + " leaves his game.");

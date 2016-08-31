@@ -36,21 +36,19 @@ namespace EmpireUWP.Network
         private GameData _gameData;
         private GameView _gameInstance;
         private string _myAddress;
-        private string _myRequestPort;
-        private string _myUpdatePort;
+        private string _myPort;
         private UpdateQueue _updateQueue = new UpdateQueue();
 
-        private NetworkConnection _networkConnection;
+        private PacketConnection _networkConnection;
 
-        internal GameClient(GameView gameInstance, GameData gameData, string playerID, string requestPort, string updatePort)
+        internal GameClient(GameView gameInstance, GameData gameData, string playerID, string port)
         {
             _gameInstance = gameInstance;
             _gameData = gameData;
             LocalPlayerID = playerID;
             var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
-            _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
-            _myRequestPort = requestPort;
-            _myUpdatePort = updatePort;
+            _myAddress = null;
+            _myPort = port;
         }
 
         internal async Task CreateNetworkConnection()
@@ -58,9 +56,10 @@ namespace EmpireUWP.Network
             if (_networkConnection == null)
             {
                 EmpireSerializer serializer = new EmpireSerializer();
-                _networkConnection = new NetworkConnection(serializer);
-                await _networkConnection.StartUpdateListener(_myUpdatePort, HandleUpdate);
-                await _networkConnection.StartRequestListener(_myRequestPort, HandleRequest);
+                _networkConnection = new PacketConnection(serializer);
+                await _networkConnection.StartTCPListener(_myPort, HandleRequest);
+                StreamSocket socket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort);
+                _myAddress = socket.Information.LocalAddress.DisplayName;
             }
         }
 
@@ -72,19 +71,16 @@ namespace EmpireUWP.Network
 
         internal async Task SendUpdatePacketToHost(NetworkPacket packet)
         {
-            using (StreamSocket socket = await _networkConnection.Connect(_gameData.HostIPAddress, _gameData.HostUpdatePort))
+            using (StreamSocket socket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort))
             {
-                await _networkConnection.SendUpdatePacket(socket, packet);
+                await _networkConnection.SendTCPData(socket, packet);
             }
         }
 
         internal async Task<NetworkPacket> SendRequestToHost(NetworkPacket packet)
         {
-            using (StreamSocket socket = await _networkConnection.Connect(_gameData.HostIPAddress, _gameData.HostRequestPort))
-            {
-                NetworkPacket response = await _networkConnection.WaitResponsePacket(socket, packet);
-                return response;
-            }
+            NetworkPacket response = await _networkConnection.ConnectAndWaitResponse(_gameData.HostIPAddress, _gameData.HostPort, packet);
+            return response;
         }
 
         internal Task UpdatePlayerStatus(PlayerData.PlayerStatus playerStatus)
@@ -97,7 +93,7 @@ namespace EmpireUWP.Network
             }
             else
             {
-                playerData = new PlayerData(new Player(LocalPlayerID), _myAddress, _myUpdatePort);
+                playerData = new PlayerData(new Player(LocalPlayerID), _myAddress, _myPort);
             }
             playerData.Status = playerStatus;
             return SendUpdatePacketToHost(playerData);
@@ -143,7 +139,7 @@ namespace EmpireUWP.Network
             return queue;
         }
 
-        private void HandleUpdate(NetworkPacket packet)
+        private async Task<NetworkPacket> HandleRequest(StreamSocket socket, NetworkPacket packet)
         {
             switch (packet.Type)
             {
@@ -159,11 +155,7 @@ namespace EmpireUWP.Network
                     _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
                     break;
             }
-        }
-
-        private Task<NetworkPacket> HandleRequest(NetworkPacket packet)
-        {
-            throw new NotImplementedException();
+            return null as NetworkPacket;
         }
 
         internal event EventHandler<PacketReceivedEventArgs> PacketReceived = delegate { };

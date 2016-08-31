@@ -1,6 +1,9 @@
-﻿using EmpireUWP.View;
+﻿
+using EmpireUWP.View;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -14,15 +17,16 @@ namespace EmpireUWP.Network
     public class Lobby
     {
 
-        private const string _serverAddress = "192.168.1.12";
+        private const string _serverAddress = "192.168.1.11";
         private string _myAddress = null;
-        internal bool Server { get; private set; }
-        private LobbyService _lobbyService;
-        private NetworkConnection _connection;
+        private PacketConnection _connection;
 
         private Dictionary<string, PlayerData> _playerList = new Dictionary<string, PlayerData>();
         private Dictionary<int, GameData> _gameList = new Dictionary<int, GameData>();
         
+        public List<PlayerData> playerList {  get { return _playerList.Values.ToList(); } }
+        public List<GameData> gamesList { get { return _gameList.Values.ToList(); } }
+
         public List<String> availablePlayers
         {
             get
@@ -79,10 +83,10 @@ namespace EmpireUWP.Network
             return null;
         }
 
-        public Lobby(MenuManager menuManager)
+        public Lobby()
         {
             EmpireSerializer serializer = new EmpireSerializer();
-            _connection = new NetworkConnection(serializer);
+            _connection = new PacketConnection(serializer);
         }
 
         public async Task Initialize()
@@ -92,18 +96,21 @@ namespace EmpireUWP.Network
                 return;     // already been initialized.
             }
 
-            var hostNames = Windows.Networking.Connectivity.NetworkInformation.GetHostNames();
-            _myAddress = hostNames.FirstOrDefault(name => name.Type == HostNameType.Ipv4).DisplayName;
-
-            // if this instance is running on my development machine, start the lobby service.
-            if (hostNames.Count(x => { return x.DisplayName == _serverAddress; }) > 0)
+            try
             {
-                _lobbyService = new LobbyService();
-                await _lobbyService.Initialize();
-            }
+                using (StreamSocket socket = await _connection.ConnectToTCP(_serverAddress, NetworkPorts.LobbyServerPort))
+                {
+                    _myAddress = socket.Information.LocalAddress.DisplayName;
+                }
 
-            await _connection.StartUpdateListener(NetworkPorts.LobbyClientUpdatePort, ProcessUpdate);
-            await _connection.StartRequestListener(NetworkPorts.LobbyClientRequestPort, ProcessRequest);
+                await _connection.StartTCPListener(NetworkPorts.LobbyClientPort, ProcessRequest);
+            } catch (Exception e)
+            {
+                // Could not reach lobby.
+                //TODO:  Create custom exceptions to be thrown by lobby and caught and handled by the gameView.
+                LobbyCommandPacket packet = new LobbyCommandPacket("Client", LobbyCommands.Disconnected);
+                OnLobbyCommand(packet);
+            }
 
             return;
         }
@@ -146,15 +153,22 @@ namespace EmpireUWP.Network
 
         private async Task<NetworkPacket> SendLobbyCommand(string playerID, LobbyCommands command, string args = null)
         {
-            LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
-
-            using (StreamSocket socket = await _connection.Connect(_serverAddress, NetworkPorts.EmpireUWPRequestPort))
+            try
             {
-                return await _connection.WaitResponsePacket(socket, commandPacket);
+                LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
+                return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServerPort, commandPacket);
+            } catch (Exception e)
+            {
+                // TODO throw custom exception for gameview to deal with
+                // for now, fire LobbyCommand.Disconnected.
+                LobbyCommandPacket packet = new LobbyCommandPacket("Client", LobbyCommands.Disconnected);
+                OnLobbyCommand(packet);
             }
+
+            return new AcknowledgePacket();
         }
 
-        private async Task<NetworkPacket> ProcessRequest(NetworkPacket packet)
+        private async Task<NetworkPacket> ProcessRequest(StreamSocket socket, NetworkPacket packet)
         {
             AcknowledgePacket acknowledgement = new AcknowledgePacket();
 
@@ -163,19 +177,15 @@ namespace EmpireUWP.Network
                 LobbyCommandPacket command = packet as LobbyCommandPacket;
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                         () => { OnLobbyCommand(command); });
-            }
-            return acknowledgement;
-        }
-
-        private void ProcessUpdate(NetworkPacket packet)
-        {
-            if (packet.Type == PacketType.LobbyData)
+            } else if (packet.Type == PacketType.LobbyData)
             {
                 LobbyData lobbyData = packet as LobbyData;
                 _playerList = lobbyData._playerList;
                 _gameList = lobbyData._gameList;
-                MenuManager.PlayerListChanged();
+                OnLobbyUpdated("playerList");
+                OnLobbyUpdated("gamesList");
             }
+            return acknowledgement;
         }
 
         internal event EventHandler<LobbyCommandEventArgs> LobbyCommand = delegate { };
@@ -184,5 +194,11 @@ namespace EmpireUWP.Network
             LobbyCommand?.Invoke(this, new LobbyCommandEventArgs(command));
         }
 
+        public event PropertyChangedEventHandler LobbyUpdated = delegate { };
+        public async void OnLobbyUpdated(string propertyName)
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                       () => { LobbyUpdated?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+        }
     }
 }

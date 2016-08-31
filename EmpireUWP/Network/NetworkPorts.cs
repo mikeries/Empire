@@ -8,13 +8,9 @@ namespace EmpireUWP.Network
 {
     public struct NetworkPorts
     {
-        public static string EmpireUWPRequestPort = "1945";
-        public static string EmpireUWPUpdatePort = "1946";
-        public static string LobbyClientRequestPort = "1943";
-        public static string LobbyClientUpdatePort = "1944";
-        public static string GameServerRequestPort = "5555";
-        public static string GameServerUpdatePort = "5556";
-        public static string GameClientRequestPort = "5557";
-        public static string GameClientUpdatePort = "5558";
+        public static string LobbyServerPort = "1945";
+        public static string LobbyClientPort = "1946";
+        public static string GameServerPort = "5555";
+        public static string GameClientPort = "5556";
     }
 }

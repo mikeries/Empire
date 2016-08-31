@@ -44,6 +44,9 @@ namespace LobbyTest
                     ReportOutput(packet.PlayerID + " leaves his game.");
                     await client.LeaveGame(packet.PlayerID);
                     break;
+                case LobbyCommands.Disconnected:
+                    ReportOutput("Unable to reach Lobby service.");
+                    break;
 
             }
         }

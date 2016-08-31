@@ -7,8 +7,8 @@
     <ProjectGuid>{70ED790C-A5D9-425E-A355-CA95FF9B4E3F}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LobbyServer</RootNamespace>
-    <AssemblyName>LobbyServer</AssemblyName>
+    <RootNamespace>LobbyTest</RootNamespace>
+    <AssemblyName>LobbyTest</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.10586.0</TargetPlatformVersion>

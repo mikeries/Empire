@@ -27,8 +27,10 @@
         <StackPanel x:Name="buttonPanel" Grid.Column="0" Grid.Row="0" Grid.RowSpan="6">
             <Button x:Name="startButton" Content="Start Service" HorizontalAlignment="Center" Margin="10,20,0,0" VerticalAlignment="Top" Click="startButton_Click"/>
         </StackPanel>
-        <ScrollViewer x:Name="textBox" Grid.Column="1" HorizontalAlignment="Left" Margin="10,20,0,0" VerticalAlignment="Top" VerticalContentAlignment="Bottom"
-                      Height="250" Width="800" BorderBrush="#FF080808" BorderThickness="1" Content="{Binding LogText}"/>
+        <ScrollViewer Grid.Column="1" HorizontalAlignment="Left" Margin="10,20,0,0" VerticalAlignment="Top" VerticalContentAlignment="Bottom"
+                      Height="250" Width="800" BorderBrush="#FF080808" BorderThickness="1" >
+            <TextBlock x:Name="textBox" Text="{Binding LogText}" VerticalAlignment="Bottom"/>
+        </ScrollViewer>
         <TextBlock Grid.Row="1" Grid.Column="1" Text="Player List" Margin="0,20,0,0"  Height="20" VerticalAlignment="Top"/>
         <ListView x:Name="playerList" Grid.Row="2" Grid.Column="1" Margin="20,0,0,0"
                   HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="150" Width="Auto" BorderThickness="2"

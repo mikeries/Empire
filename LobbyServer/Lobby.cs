@@ -16,7 +16,7 @@ namespace LobbyTest
     public class Lobby : INotifyPropertyChanged
     {
 
-        private const string _serverAddress = "192.168.1.12";
+        private const string _serverAddress = "192.168.1.11";
         private string _myAddress = null;
         private PacketConnection _connection;
 
@@ -95,12 +95,21 @@ namespace LobbyTest
                 return;     // already been initialized.
             }
 
-            using (StreamSocket socket = await _connection.ConnectToTCP(_serverAddress, NetworkPorts.LobbyServerPort))
+            try
             {
-                _myAddress = socket.Information.LocalAddress.DisplayName;
-            }
+                using (StreamSocket socket = await _connection.ConnectToTCP(_serverAddress, NetworkPorts.LobbyServerPort))
+                {
+                    _myAddress = socket.Information.LocalAddress.DisplayName;
+                }
 
-            await _connection.StartTCPListener(NetworkPorts.LobbyClientPort, ProcessRequest);
+                await _connection.StartTCPListener(NetworkPorts.LobbyClientPort, ProcessRequest);
+            } catch (Exception e)
+            {
+                // Could not reach lobby.
+                //TODO:  Create custom exceptions to be thrown by lobby and caught and handled by the gameView.
+                LobbyCommandPacket packet = new LobbyCommandPacket("Client", LobbyCommands.Disconnected);
+                OnLobbyCommand(packet);
+            }
 
             return;
         }
@@ -143,9 +152,19 @@ namespace LobbyTest
 
         private async Task<NetworkPacket> SendLobbyCommand(string playerID, LobbyCommands command, string args = null)
         {
-            LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
+            try
+            {
+                LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
+                return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServerPort, commandPacket);
+            } catch (Exception e)
+            {
+                // TODO throw custom exception for gameview to deal with
+                // for now, fire LobbyCommand.Disconnected.
+                LobbyCommandPacket packet = new LobbyCommandPacket("Client", LobbyCommands.Disconnected);
+                OnLobbyCommand(packet);
+            }
 
-            return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServerPort, commandPacket);
+            return null as NetworkPacket;
         }
 
         private async Task<NetworkPacket> ProcessRequest(StreamSocket socket, NetworkPacket packet)

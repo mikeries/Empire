@@ -97,34 +97,41 @@ namespace LobbyService
         private async Task ProcessLeaveGameCommand(string playerID)
         {
             int gameID = _playerList[playerID].GameID;
-            _playerList[playerID].GameID = 0;
 
-            GameData game = _gameList[gameID];
+            if (gameID > 0)
+            {
+                _playerList[playerID].GameID = 0;
+                GameData game = _gameList[gameID];
 
-            game.Leave(playerID);
-            if (game.PlayerCount == 0)
-            {
-                _gameList.Remove(gameID);
-            } else if (game.HostID == playerID)
-            {
-                foreach(string id in game.playerList.ToList())
+                game.Leave(playerID);
+                if (game.PlayerCount == 0)
                 {
-                    await SendLobbyCommandToClient(_playerList[id], LobbyCommands.LeaveGame);
+                    _gameList.Remove(gameID);
                 }
+                else if (game.HostID == playerID)
+                {
+                    foreach (string id in game.playerList.ToList())
+                    {
+                        await SendLobbyCommandToClient(_playerList[id], LobbyCommands.LeaveGame);
+                    }
+                }
+                log(playerID + " left his game.");
             }
-            log(playerID + " left his game.");
         }
 
         private async Task ProcessJoinGameCommand(string playerID, string hostID)
         {
-            if(_playerList[playerID].GameID > 0)
+            if (playerID != hostID)
             {
-                await ProcessLeaveGameCommand(playerID);
+                if (_playerList[playerID].GameID > 0)
+                {
+                    await ProcessLeaveGameCommand(playerID);
+                }
+                int gameID = _playerList[hostID].GameID;
+                _gameList[gameID].Join(playerID);
+                _playerList[playerID].GameID = gameID;
+                log(playerID + " joined a game hosted by " + hostID + ".");
             }
-            int gameID = _playerList[hostID].GameID;
-            _gameList[gameID].Join(playerID);
-            _playerList[playerID].GameID = gameID;
-            log(playerID + " joined a game hosted by " + hostID + ".");
         }
 
         private async Task ProcessHostGameCommand(string playerID, string hostIPAddress)

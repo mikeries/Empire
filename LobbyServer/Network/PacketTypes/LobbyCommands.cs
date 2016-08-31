@@ -17,5 +17,6 @@ namespace LobbyTest
         SetupGame,
         EnterGame,
         EjectThisUser,
+        Disconnected,
     }
 }

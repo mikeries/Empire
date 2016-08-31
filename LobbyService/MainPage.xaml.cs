@@ -36,16 +36,5 @@ namespace LobbyService
             await server.Initialize();
         }
 
-        public void NotifyUserFromAsyncThread(string strMessage)
-        {
-            var ignore = Dispatcher.RunAsync(
-                CoreDispatcherPriority.Normal, () => DisplayUpdate(strMessage));
-        }
-
-        private void DisplayUpdate(string update)
-        {
-            textBox.Content += Environment.NewLine + update;
-        }
-
     }
 }

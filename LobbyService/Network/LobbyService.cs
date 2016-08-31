@@ -168,8 +168,12 @@ namespace LobbyService
         {
             if (_playerList.ContainsKey(playerID))
             {
-                await EjectUser(playerID);
-                _playerList[playerID].IPAddress = ipAddress;
+                PlayerData player = _playerList[playerID];
+                if (ipAddress != player.IPAddress)
+                {
+                    await EjectUser(playerID);
+                    _playerList[playerID].IPAddress = ipAddress;
+                }
             } else 
             {
                 PlayerData player = new PlayerData(new Player(playerID), ipAddress, NetworkPorts.GameClientUpdatePort);

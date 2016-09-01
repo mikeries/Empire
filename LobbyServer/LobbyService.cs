@@ -110,7 +110,7 @@ namespace LobbyTest
                     await ProcessLeaveGameCommand(playerID);
                 }
 
-                GameData newGame = new GameData(NewGameID, playerID, hostIPAddress, NetworkPorts.GameServerPort, NetworkPorts.GameServerPort);
+                GameData newGame = new GameData(NewGameID, playerID, hostIPAddress, NetworkPorts.GameServerPort);
                 _playerList[playerID].GameID = newGame.GameID;
                 _gameList.Add(newGame.GameID, newGame);
             }

@@ -105,6 +105,7 @@ namespace LobbyTest
                     throw;
                 }
             }
+
         }
 
         internal async Task sendTCPData(StreamSocket socket, byte[] data)
@@ -131,7 +132,7 @@ namespace LobbyTest
             {
                 if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
                 {
-                    throw;
+                    socket.Dispose();
                 }
             }
 

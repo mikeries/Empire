@@ -75,7 +75,6 @@ namespace EmpireUWP.Network
                     if (MessageSize != sizeof(uint))
                     {
                         // socket was closed
-                        socket.Dispose();
                         return;
                     }
 
@@ -133,7 +132,7 @@ namespace EmpireUWP.Network
             {
                 if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
                 {
-                    throw;
+                    socket.Dispose();
                 }
             }
 

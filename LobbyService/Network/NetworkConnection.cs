@@ -1,9 +1,9 @@
-﻿using Windows.Networking.Sockets;
+﻿using Windows.Networking;
+using Windows.Networking.Sockets;
 using System;
 using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.Storage.Streams;
-using Windows.Networking;
 
 namespace LobbyService
 {
@@ -105,6 +105,7 @@ namespace LobbyService
                     throw;
                 }
             }
+
         }
 
         internal async Task sendTCPData(StreamSocket socket, byte[] data)
@@ -131,7 +132,7 @@ namespace LobbyService
             {
                 if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
                 {
-                    throw;
+                    socket.Dispose();
                 }
             }
 
@@ -151,7 +152,7 @@ namespace LobbyService
         private async Task<byte[]> responseFromServer(StreamSocket socket)
         {
             DataReader reader = new DataReader(socket.InputStream);
-            byte[] response;
+            byte[] response= new byte[0];
 
             try
             {
@@ -167,9 +168,12 @@ namespace LobbyService
 
                 reader.ReadBytes(response);
             }
-            catch
+            catch (Exception e)
             {
-                throw;
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
             }
 
             return response;

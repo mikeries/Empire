@@ -86,11 +86,8 @@ namespace EmpireUWP.Network
 
             foreach (Entity entity in _gameInstance.GameModel.GameEntities)
             {
-                if (DistanceBetween(ship, entity) < 100000000)
-                {
-                    EntityPacket packet = new EntityPacket(entity);
-                    updates.Add(packet);
-                }
+                EntityPacket packet = new EntityPacket(entity);
+                updates.Add(packet);
             }
             return SendUpdatesToPlayer(playerToSync, updates);
         }

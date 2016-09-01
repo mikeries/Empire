@@ -33,7 +33,7 @@ namespace NetworkTests
         public Task Send(NetworkPacket packet)
         {
             _rootPage.NotifyUserFromAsyncThread("Packet client is sending: " + packet.Type);
-            return _connection.sendTCPData(_serverSocket, packet);
+            return _connection.SendTCPData(_serverSocket, packet);
         }
 
         public async Task ConnectAndWaitResponse(string address, string port, NetworkPacket packet)

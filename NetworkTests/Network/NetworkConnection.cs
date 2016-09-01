@@ -105,6 +105,7 @@ namespace NetworkTests
                     throw;
                 }
             }
+
         }
 
         internal async Task sendTCPData(StreamSocket socket, byte[] data)
@@ -131,7 +132,7 @@ namespace NetworkTests
             {
                 if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
                 {
-                    throw;
+                    socket.Dispose();
                 }
             }
 
@@ -151,7 +152,7 @@ namespace NetworkTests
         private async Task<byte[]> responseFromServer(StreamSocket socket)
         {
             DataReader reader = new DataReader(socket.InputStream);
-            byte[] response;
+            byte[] response= new byte[0];
 
             try
             {
@@ -167,9 +168,12 @@ namespace NetworkTests
 
                 reader.ReadBytes(response);
             }
-            catch
+            catch (Exception e)
             {
-                throw;
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
             }
 
             return response;

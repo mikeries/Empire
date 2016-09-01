@@ -35,6 +35,16 @@ namespace EmpireUWP.Network
             _gameData = gameData;
         }
 
+        internal async Task StartServer()
+        {
+            EmpireSerializer serializer = new Network.EmpireSerializer();
+            _networkConnection = new PacketConnection(serializer);
+
+            await _networkConnection.StartTCPListener(_gameData.HostPort, HandleRequest);
+
+            _timer = new Timer(SyncTimer, _autoEvent, 100, 100);
+        }
+
         internal async void SyncTimer(object stateInfo)
         {
             if (_gameInstance.Hosting)
@@ -45,25 +55,16 @@ namespace EmpireUWP.Network
                     {
                         await SyncPlayer(player.PlayerID);
                     }
+
+                    GameServerDataUpdate update = new GameServerDataUpdate(_playerList, _gameData);
+                    await SendPacketToPlayer(player, update);
                 }
-                await SyncServerData();
             }
         }
 
-        private Task SyncServerData()
+        private Task SendPacketToPlayer(PlayerData player, NetworkPacket packet)
         {
-            GameServerDataUpdate update = new GameServerDataUpdate(_playerList, _gameData);
-            return SendUpdatePacketToAllPlayers(update);
-        }
-
-        internal async Task StartServer()
-        {
-            EmpireSerializer serializer = new Network.EmpireSerializer();
-            _networkConnection = new PacketConnection(serializer);
-
-            await _networkConnection.StartTCPListener(_gameData.HostPort, HandleRequest);
-
-            _timer = new Timer(SyncTimer, _autoEvent, 50, 50);
+            return _networkConnection.ConnectAndWaitResponse(player.IPAddress, player.Port, packet);
         }
 
         internal Task SyncPlayer(string player)
@@ -83,49 +84,45 @@ namespace EmpireUWP.Network
             return SendUpdatesToPlayer(playerToSync, updates);
         }
 
-        //TODO: Consider combining all updates into a single packet to reduce network overhead
         internal async Task SendUpdatesToPlayer(PlayerData player, List<NetworkPacket> updates)
         {
             PlayerData playerToUpdate = player;
 
             if (player.Connected)
             {
-                using (StreamSocket socket = await _networkConnection.ConnectToTCP(player.IPAddress, player.Port))
+                foreach (NetworkPacket update in updates)
                 {
-                    foreach (NetworkPacket update in updates)
-                    {
-                        await _networkConnection.SendTCPData(socket, update);
-                    }
+                    await SendPacketToPlayer(player, update);
                 }
             }
         }
 
-        internal async Task SendUpdatePacketToAllPlayers(NetworkPacket packet)
-        {
-            List<NetworkPacket> packetList = new List<NetworkPacket>();
-            packetList.Add(packet);
-            
-             foreach (PlayerData player in _playerList.Values.ToList())
-            {
-                string address = player.IPAddress;
-                await SendUpdatesToPlayer(player, packetList);
-            }
-        }
-        
-        private void HandleUpdate(NetworkPacket packet)
-        {
-            if (packet.Type == PacketType.PlayerData)
-            {
-                PlayerData playerData = packet as PlayerData;
-                if (_playerList.ContainsKey(playerData.PlayerID))
-                {
-                    _playerList[playerData.PlayerID] = playerData;
-                }
-            } else if (packet.Type == PacketType.ShipCommand)
-            {
-                SendUpdatePacketToAllPlayers(packet);
-            }
-        }
+        //private async Task SendPacketToAllPlayers(NetworkPacket packet)
+        //{
+        //    List<NetworkPacket> packetList = new List<NetworkPacket>();
+        //    packetList.Add(packet);
+
+        //     foreach (PlayerData player in _playerList.Values.ToList())
+        //    {
+        //        string address = player.IPAddress;
+        //        await SendUpdatesToPlayer(player, packetList);
+        //    }
+        //}
+
+        //private void HandleUpdate(NetworkPacket packet)
+        //{
+        //    if (packet.Type == PacketType.PlayerData)
+        //    {
+        //        PlayerData playerData = packet as PlayerData;
+        //        if (_playerList.ContainsKey(playerData.PlayerID))
+        //        {
+        //            _playerList[playerData.PlayerID] = playerData;
+        //        }
+        //    } else if (packet.Type == PacketType.ShipCommand)
+        //    {
+        //        SendUpdatePacketToAllPlayers(packet);
+        //    }
+        //}
 
         private async Task<NetworkPacket> HandleRequest(StreamSocket socket, NetworkPacket packet)
         {

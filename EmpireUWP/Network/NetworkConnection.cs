@@ -75,6 +75,7 @@ namespace EmpireUWP.Network
                     if (MessageSize != sizeof(uint))
                     {
                         // socket was closed
+                        socket.Dispose();
                         return;
                     }
 
@@ -105,6 +106,7 @@ namespace EmpireUWP.Network
                     throw;
                 }
             }
+
         }
 
         internal async Task sendTCPData(StreamSocket socket, byte[] data)

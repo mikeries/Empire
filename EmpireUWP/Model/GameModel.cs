@@ -51,7 +51,7 @@ namespace EmpireUWP.Model
         // a class that can generate a new 'world' as well as saving and restoring one.
         public void LoadWorld()
         {
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Planet planet = worldData.PlanetFactory(new Vector2(Random.Next(-10000, 10000), Random.Next(-10000, 10000)), (Planets)i);
                 addGameEntityFromHost(planet);

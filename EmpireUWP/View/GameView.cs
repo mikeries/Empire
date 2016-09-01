@@ -178,7 +178,6 @@ namespace EmpireUWP.View
         {
             PlayerID = playerID;
 
-            //gameData.HostIPAddress = "192.168.1.12";
             if (GameClientConnection == null) {
                 GameClientConnection = new GameClient(this, gameData, PlayerID, NetworkPorts.GameClientPort);
                 await GameClientConnection.CreateNetworkConnection();
@@ -188,6 +187,7 @@ namespace EmpireUWP.View
             NewGame();
             await GameClientConnection.ConnectToServer();
 
+            await MenuManager.LeaveLobby();
         }
     }
 }

@@ -69,18 +69,9 @@ namespace EmpireUWP.Network
             return SendRequestToHost(salutation);
         }
 
-        internal async Task SendUpdatePacketToHost(NetworkPacket packet)
+        private Task<NetworkPacket> SendRequestToHost(NetworkPacket packet)
         {
-            using (StreamSocket socket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort))
-            {
-                await _networkConnection.SendTCPData(socket, packet);
-            }
-        }
-
-        internal async Task<NetworkPacket> SendRequestToHost(NetworkPacket packet)
-        {
-            NetworkPacket response = await _networkConnection.ConnectAndWaitResponse(_gameData.HostIPAddress, _gameData.HostPort, packet);
-            return response;
+            return _networkConnection.ConnectAndWaitResponse(_gameData.HostIPAddress, _gameData.HostPort, packet);
         }
 
         internal Task UpdatePlayerStatus(PlayerData.PlayerStatus playerStatus)
@@ -96,12 +87,12 @@ namespace EmpireUWP.Network
                 playerData = new PlayerData(new Player(LocalPlayerID), _myAddress, _myPort);
             }
             playerData.Status = playerStatus;
-            return SendUpdatePacketToHost(playerData);
+            return SendRequestToHost(playerData);
         }
 
         internal void SendShipCommandToHost(ShipCommand shipCommand)
         {
-            SendUpdatePacketToHost(shipCommand);
+            SendRequestToHost(shipCommand);
         }
 
         internal Ship GetShip(string owner = null)
@@ -141,6 +132,7 @@ namespace EmpireUWP.Network
 
         private async Task<NetworkPacket> HandleRequest(StreamSocket socket, NetworkPacket packet)
         {
+            AcknowledgePacket acknowledge = new Network.AcknowledgePacket();
             switch (packet.Type)
             {
                 case PacketType.Entity:
@@ -155,7 +147,7 @@ namespace EmpireUWP.Network
                     _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
                     break;
             }
-            return null as NetworkPacket;
+            return acknowledge;
         }
 
         internal event EventHandler<PacketReceivedEventArgs> PacketReceived = delegate { };

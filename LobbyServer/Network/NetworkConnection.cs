@@ -11,8 +11,10 @@ namespace LobbyTest
     {
         private StreamSocketListener _TCPListener = null;
         private DatagramSocket _UDPListener = null;
-        public delegate Task<byte[]> Callback(StreamSocket socket, byte[] data);
-        private Callback _tcpCallback;
+        public delegate Task<byte[]> TCPCallback(StreamSocket socket, byte[] data);
+        private TCPCallback _tcpCallback;
+        public delegate void UDPCallback(DatagramSocket socket, byte[] data);
+        private UDPCallback _udpCallback;
 
         internal NetworkConnection() {
 
@@ -36,7 +38,7 @@ namespace LobbyTest
             return TCPsocket;
         }
 
-        internal async Task StartTCPListener(string port, Callback handler)
+        internal async Task StartTCPListener(string port, TCPCallback handler)
         {
             if (_TCPListener != null)
             {
@@ -75,6 +77,7 @@ namespace LobbyTest
                     if (MessageSize != sizeof(uint))
                     {
                         // socket was closed
+                        socket.Dispose();
                         return;
                     }
 
@@ -84,6 +87,8 @@ namespace LobbyTest
                     uint actualLength = await reader.LoadAsync(dataLength);
                     if(dataLength != actualLength)
                     {
+                        // socket was closed
+                        socket.Dispose();
                         return;
                     }
                     reader.ReadBytes(data);
@@ -179,7 +184,7 @@ namespace LobbyTest
             return response;
         }
 
-        internal async Task StartUDPListener(string port)
+        internal async Task StartUDPListener(string port, UDPCallback handler)
         {
             if (_UDPListener != null)
             {
@@ -192,6 +197,7 @@ namespace LobbyTest
             {
                 _UDPListener.MessageReceived += UDPReceived;
                 await _UDPListener.BindServiceNameAsync(port);
+                _udpCallback = handler;
             }
             catch (Exception e)
             {
@@ -208,6 +214,7 @@ namespace LobbyTest
                 uint len = reader.UnconsumedBufferLength;
                 byte[] data = new byte[len];
                 reader.ReadBytes(data);
+                _udpCallback(socket, data);
             } catch (Exception e)
             {
                 SocketErrorStatus socketError = SocketError.GetStatus(e.HResult);
@@ -217,38 +224,74 @@ namespace LobbyTest
             reader.Dispose();
         }
 
-        private async void updateReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        internal async Task sendUDPData(string address, string port, byte[] data)
         {
-            StreamSocket socket = args.Socket;
-            DataReader reader = new DataReader(socket.InputStream);
+            DatagramSocket socket = new DatagramSocket();
+            HostName host = new HostName(address);
+            try
+            {
+                await socket.ConnectAsync(host, port);
+            }
+            catch {
+                throw;
+            }
+
+            byte[] dataToSend = data;
+
+            DataWriter writer = new DataWriter(socket.OutputStream);
+
+            writer.WriteUInt32((uint)dataToSend.Length);
+            writer.WriteBytes(dataToSend);
 
             try
             {
-                while (true)
-                {
-                    uint MessageSize = await reader.LoadAsync(sizeof(uint));
-                    if (MessageSize != sizeof(uint))
-                    {
-                        // socket was closed
-                        return;
-                    }
-
-                    uint dataLength = reader.ReadUInt32();
-                    byte[] data = new byte[dataLength];
-
-                    MessageSize = await reader.LoadAsync(dataLength);
-                    if (MessageSize != dataLength)
-                    {
-                        return;
-                    }
-                    reader.ReadBytes(data);
-                }
+                await writer.StoreAsync();
+                await writer.FlushAsync();
+                writer.DetachStream();
             }
             catch (Exception e)
             {
-                throw new Exception("Exception while reading: ", e);
+                if (SocketError.GetStatus(e.HResult) == SocketErrorStatus.Unknown)
+                {
+                    socket.Dispose();
+                }
             }
+            socket.Dispose();
+
         }
+
+        //private async void updateReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        //{
+        //    StreamSocket socket = args.Socket;
+        //    DataReader reader = new DataReader(socket.InputStream);
+
+        //    try
+        //    {
+        //        while (true)
+        //        {
+        //            uint MessageSize = await reader.LoadAsync(sizeof(uint));
+        //            if (MessageSize != sizeof(uint))
+        //            {
+        //                // socket was closed
+        //                return;
+        //            }
+
+        //            uint dataLength = reader.ReadUInt32();
+        //            byte[] data = new byte[dataLength];
+
+        //            MessageSize = await reader.LoadAsync(dataLength);
+        //            if (MessageSize != dataLength)
+        //            {
+        //                return;
+        //            }
+        //            reader.ReadBytes(data);
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new Exception("Exception while reading: ", e);
+        //    }
+        //}
 
     }
 }

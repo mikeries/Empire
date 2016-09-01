@@ -24,7 +24,8 @@ namespace NetworkTests
 
         public async Task StartListening(string port)
         {
-            await _connection.StartTCPListener(port, handler);
+            await _connection.StartTCPListener(port, tcpHandler);
+            await _connection.StartUDPListener(port, udpHandler);
         }
 
         public async Task Connect(string address, string port)
@@ -33,7 +34,7 @@ namespace NetworkTests
             _rootPage.NotifyUserFromAsyncThread("Packet server is connected.");
         }
 
-        public async Task<NetworkPacket> handler(StreamSocket socket, NetworkPacket packet)
+        public async Task<NetworkPacket> tcpHandler(StreamSocket socket, NetworkPacket packet)
         {
             string address = socket.Information.RemoteAddress.DisplayName;
 
@@ -48,6 +49,11 @@ namespace NetworkTests
             await Task.Delay(5000);
 
             return new AcknowledgePacket();
+        }
+
+        public void udpHandler(DatagramSocket socket, NetworkPacket packet)
+        {
+            _rootPage.NotifyUserFromAsyncThread("Packet server received via UDP: " + packet.Type);
         }
 
     }

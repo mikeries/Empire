@@ -11,8 +11,10 @@ namespace LobbyTest
     {
         private ISerializer _serializer;
         private NetworkConnection _networkConnection;
-        public delegate Task<NetworkPacket> PacketCallback(StreamSocket socket, NetworkPacket packet);
-        private PacketCallback _handler;
+        public delegate Task<NetworkPacket> TCPPacketCallback(StreamSocket socket, NetworkPacket packet);
+        private TCPPacketCallback _TCPhandler;
+        public delegate void UDPPacketCallback(DatagramSocket socket, NetworkPacket packet);
+        private UDPPacketCallback _UDPhandler;
 
         internal PacketConnection(ISerializer serializer)
         {
@@ -25,18 +27,18 @@ namespace LobbyTest
             return _networkConnection.ConnectToTCP(serverAddress,serverPort);
         }
 
-        internal Task StartTCPListener(string port, PacketCallback handler)
+        internal Task StartTCPListener(string port, TCPPacketCallback handler)
         {
-            _handler = handler;
-            return _networkConnection.StartTCPListener(port, packetHandler);
+            _TCPhandler = handler;
+            return _networkConnection.StartTCPListener(port, TCPPacketHandler);
         }
 
-        private async Task<byte[]> packetHandler(StreamSocket socket, byte[] data)
+        private async Task<byte[]> TCPPacketHandler(StreamSocket socket, byte[] data)
         {
             try
             {
                 NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
-                NetworkPacket reply = await _handler(socket, packet);
+                NetworkPacket reply = await _TCPhandler(socket, packet);
                 return _serializer.CreateMessageFromPacket(reply);
             }
             catch { }
@@ -65,5 +67,31 @@ namespace LobbyTest
             return new AcknowledgePacket();
         }
 
+        internal Task StartUDPListener(string port, UDPPacketCallback handler)
+        {
+            _UDPhandler = handler;
+            return _networkConnection.StartUDPListener(port, UDPPacketHandler);
+        }
+
+        internal Task SendUDPData(string address, string port, NetworkPacket packet)
+        {
+            try
+            {
+                byte[] data = _serializer.CreateMessageFromPacket(packet);
+                return _networkConnection.sendUDPData(address, port, data);
+            }
+            catch { }
+            return Task.Delay(0);
+        }
+
+        private void UDPPacketHandler(DatagramSocket socket, byte[] data)
+        {
+            try
+            {
+                NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
+                _UDPhandler(socket, packet);
+            }
+            catch { }
+        }
     }
 }

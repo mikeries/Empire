@@ -30,10 +30,10 @@ namespace NetworkTests
             _rootPage.NotifyUserFromAsyncThread("Packet client is connected.");
         }
 
-        public Task Send(NetworkPacket packet)
+        public Task Send(string address, string port, NetworkPacket packet)
         {
-            _rootPage.NotifyUserFromAsyncThread("Packet client is sending: " + packet.Type);
-            return _connection.SendTCPData(_serverSocket, packet);
+            _rootPage.NotifyUserFromAsyncThread("Packet client is sending via UDP: " + packet.Type);
+            return _connection.SendUDPData(address, port, packet);
         }
 
         public async Task ConnectAndWaitResponse(string address, string port, NetworkPacket packet)

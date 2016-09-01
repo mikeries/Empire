@@ -13,7 +13,7 @@ namespace NetworkTests
     class Server
     {
         private NetworkConnection _connection;
-        private Dictionary<string,StreamSocket> clientList = new Dictionary<string, StreamSocket>();  // dictionary of StreamSockets back to the various clients
+        private Dictionary<string,StreamSocket> clientList = new Dictionary<string, StreamSocket>();  
         private MainPage _rootPage;
 
         public Server(MainPage rootPage)
@@ -24,7 +24,8 @@ namespace NetworkTests
 
         public async Task StartListening(string port)
         {
-            await _connection.StartTCPListener(port, dataHandler);
+            await _connection.StartTCPListener(port, tcpHandler);
+            await _connection.StartUDPListener(port, udpHandler);
         }
 
         public async Task Connect(string address, string port)
@@ -33,13 +34,14 @@ namespace NetworkTests
             _rootPage.NotifyUserFromAsyncThread("Server is connected.");
         }
 
-        public async Task<byte[]> dataHandler(StreamSocket socket, byte[] data)
+        public async Task<byte[]> tcpHandler(StreamSocket socket, byte[] data)
         {
             string address = socket.Information.RemoteAddress.DisplayName;
 
             if(!clientList.ContainsKey(address))
             {
                 StreamSocket clientSocket = await _connection.ConnectToTCP(address, MainPage.clientPort);
+
                 _rootPage.NotifyUserFromAsyncThread("Server is connected.");
                 clientList.Add(address, clientSocket);
             }
@@ -48,6 +50,12 @@ namespace NetworkTests
 
             await Task.Delay(5000);
             return MainPage.toBytes("Hi");
+        }
+
+        public void udpHandler(DatagramSocket socket, byte[] data)
+        {
+            _rootPage.NotifyUserFromAsyncThread("Server received UDP: " + MainPage.toString(data));
+
         }
 
     }

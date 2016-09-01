@@ -40,41 +40,40 @@ namespace EmpireUWP.Network
             _networkConnection = new PacketConnection(serializer);
 
             await _networkConnection.StartTCPListener(_gameData.HostPort, HandleRequest);
+            await _networkConnection.StartUDPListener(_gameData.HostPort, HandleUpdate);
 
             _timer = new Timer(SyncTimer, _autoEvent, 100, 100);
         }
 
         internal async void SyncTimer(object stateInfo)
         {
-            if (_gameInstance.Hosting)
+            foreach (PlayerData player in _playerList.Values)
             {
-                foreach (PlayerData player in _playerList.Values)
+                if (player != null && _gameData.HostID != player.PlayerID)
                 {
-                    if (player != null && _gameData.HostID != player.PlayerID)
-                    {
-                        await SyncPlayer(player.PlayerID);
-                    }
-
-                    GameServerDataUpdate update = new GameServerDataUpdate(_playerList, _gameData);
-                    await SendPacketToPlayer(player, update);
+                    await SyncPlayer(player.PlayerID);
                 }
+
+                GameServerDataUpdate update = new GameServerDataUpdate(_playerList, _gameData);
+                await SendTCPPacketToPlayer(player, update);
             }
         }
 
-        private Task SendPacketToPlayer(PlayerData player, NetworkPacket packet)
+        private Task SendUDPPacketToPlayer(PlayerData player, NetworkPacket packet)
         {
-            if (player.ClientSocket != null)
-            {
-                return _networkConnection.SendTCPData(player.ClientSocket, packet);
-            }
-            return Task.Delay(0);
+            return _networkConnection.SendUDPData(player.IPAddress, player.Port , packet);
         }
 
-        private async Task SendPacketToAllPlayers(NetworkPacket packet)
+        private Task SendTCPPacketToPlayer(PlayerData player, NetworkPacket packet)
+        {
+            return _networkConnection.SendTCPData(player.ClientSocket, packet);
+        }
+
+        private async Task SendUDPPacketToAllPlayers(NetworkPacket packet)
         {
             foreach(PlayerData player in _playerList.Values)
             {
-                await SendPacketToPlayer(player, packet);
+                await SendUDPPacketToPlayer(player, packet);
             }
         }
 
@@ -89,10 +88,10 @@ namespace EmpireUWP.Network
                 EntityPacket packet = new EntityPacket(entity);
                 updates.Add(packet);
             }
-            return SendUpdatesToPlayer(playerToSync, updates);
+            return SendUDPToPlayer(playerToSync, updates);
         }
 
-        internal async Task SendUpdatesToPlayer(PlayerData player, List<NetworkPacket> updates)
+        internal async Task SendUDPToPlayer(PlayerData player, List<NetworkPacket> updates)
         {
             PlayerData playerToUpdate = player;
 
@@ -100,7 +99,7 @@ namespace EmpireUWP.Network
             {
                 foreach (NetworkPacket update in updates)
                 {
-                    await SendPacketToPlayer(player, update);
+                    await SendUDPPacketToPlayer(player, update);
                 }
             }
         }
@@ -113,7 +112,14 @@ namespace EmpireUWP.Network
             {
                 SalutationPacket salutation = packet as SalutationPacket;
                 await HandlePlayerConnection(socket, salutation);
-            } else if (packet.Type == PacketType.PlayerData)
+            } 
+
+            return acknowledgement;
+        }
+
+        private async Task HandleUpdate(DatagramSocket socket, NetworkPacket packet)
+        {
+            if (packet.Type == PacketType.PlayerData)
             {
                 PlayerData playerData = packet as PlayerData;
                 if (_playerList.ContainsKey(playerData.PlayerID))
@@ -123,10 +129,8 @@ namespace EmpireUWP.Network
             }
             else if (packet.Type == PacketType.ShipCommand)
             {
-                await SendPacketToAllPlayers(packet);
+                await SendUDPPacketToAllPlayers(packet);
             }
-
-            return acknowledgement;
         }
 
         private async Task HandlePlayerConnection(StreamSocket socket, SalutationPacket salutation)

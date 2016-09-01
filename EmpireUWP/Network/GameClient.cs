@@ -60,6 +60,7 @@ namespace EmpireUWP.Network
                 EmpireSerializer serializer = new EmpireSerializer();
                 _networkConnection = new PacketConnection(serializer);
                 await _networkConnection.StartTCPListener(_myPort, HandleRequest);
+                await _networkConnection.StartUDPListener(_myPort, HandleUpdate);
                 _serverSocket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort);
                 _myAddress = _serverSocket.Information.LocalAddress.DisplayName;
             }
@@ -135,22 +136,30 @@ namespace EmpireUWP.Network
         private async Task<NetworkPacket> HandleRequest(StreamSocket socket, NetworkPacket packet)
         {
             AcknowledgePacket acknowledge = new Network.AcknowledgePacket();
-            switch (packet.Type)
+            if (packet != null)
             {
-                case PacketType.Entity:
-                    _updateQueue.Add(packet as EntityPacket);
-                    break;
-                case PacketType.GameServerDataUpdate:
-                    GameServerDataUpdate update = packet as GameServerDataUpdate;
-                    _playerList = update.PlayerList;
-                    _gameData = update.GameData;
-                    break;
-                case PacketType.ShipCommand:
-                    _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
-                    break;
+                switch (packet.Type)
+                {
+                    case PacketType.Entity:
+                        _updateQueue.Add(packet as EntityPacket);
+                        break;
+                    case PacketType.GameServerDataUpdate:
+                        GameServerDataUpdate update = packet as GameServerDataUpdate;
+                        _playerList = update.PlayerList;
+                        _gameData = update.GameData;
+                        break;
+                    case PacketType.ShipCommand:
+                        _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
+                        break;
+                }
             }
             await Task.Delay(0);
             return acknowledge;
+        }
+
+        private Task HandleUpdate(DatagramSocket socket, NetworkPacket packet)
+        {
+            throw new NotImplementedException();
         }
 
         internal event EventHandler<PacketReceivedEventArgs> PacketReceived = delegate { };

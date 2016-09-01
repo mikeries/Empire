@@ -59,7 +59,7 @@ namespace NetworkTests
 
         private async void sendButton_Click(object sender, RoutedEventArgs e)
         {
-            await client.Send(toBytes("Hello!"));
+            await client.Send("127.0.0.1", serverPort, toBytes("Hello!"));
         }
 
         private async void connectButton_Click(object sender, RoutedEventArgs e)
@@ -79,7 +79,7 @@ namespace NetworkTests
 
         private async void packetSendButton_Click(object sender, RoutedEventArgs e)
         {
-            await packetClient.Send(new SalutationPacket("Mike"));
+            await packetClient.Send("127.0.0.1", packetServerPort, new SalutationPacket("Mike"));
         }
 
         private async void packetWaitResponseButton_Click(object sender, RoutedEventArgs e)
@@ -95,7 +95,7 @@ namespace NetworkTests
 
         private void DisplayUpdate(string update)
         {
-            textBox.Content += Environment.NewLine + update;
+            textBox.Text += Environment.NewLine + update;
         }
 
         public static byte[] toBytes(string message)

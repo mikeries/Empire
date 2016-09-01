@@ -28,7 +28,10 @@
             <Button x:Name="packetWaitResponseButton" Content="Packet Send/Wait" HorizontalAlignment="Center" Margin="10,20,0,0" VerticalAlignment="Top" Click="packetWaitResponseButton_Click" />
 
         </StackPanel>
-        <ScrollViewer x:Name="textBox" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,20,20,20" VerticalAlignment="Top" 
-                      Height="600" Width="Auto" Grid.ColumnSpan="2" BorderBrush="#FF080808" BorderThickness="1" VerticalScrollBarVisibility="Disabled"/>
+        <ScrollViewer Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,20,20,20" VerticalAlignment="Top" 
+                      Height="600" Width="Auto" Grid.ColumnSpan="2" BorderBrush="#FF080808" BorderThickness="1" VerticalScrollBarVisibility="Auto">
+            <TextBlock x:Name="textBox"/>
+        </ScrollViewer>
+
     </Grid>
 </Page>

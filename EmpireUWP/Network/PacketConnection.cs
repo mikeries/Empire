@@ -33,22 +33,36 @@ namespace EmpireUWP.Network
 
         private async Task<byte[]> packetHandler(StreamSocket socket, byte[] data)
         {
-            NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
-            NetworkPacket reply = await _handler(socket, packet);
-            return _serializer.CreateMessageFromPacket(reply);
+            try
+            {
+                NetworkPacket packet = _serializer.ConstructPacketFromMessage(data);
+                NetworkPacket reply = await _handler(socket, packet);
+                return _serializer.CreateMessageFromPacket(reply);
+            }
+            catch { }
+            return new byte[0];
         }
 
         internal Task SendTCPData(StreamSocket socket, NetworkPacket packet)
         {
-            byte[] data = _serializer.CreateMessageFromPacket(packet);
-            return _networkConnection.sendTCPData(socket, data);
+            try
+            {
+                byte[] data = _serializer.CreateMessageFromPacket(packet);
+                return _networkConnection.sendTCPData(socket, data);
+            } catch { }
+            return Task.Delay(0);
         }
 
         internal async Task<NetworkPacket> ConnectAndWaitResponse(string address, string port, NetworkPacket packet)
         {
-            byte[] data = _serializer.CreateMessageFromPacket(packet);
-            byte[] response = await _networkConnection.ConnectAndWaitResponse(address, port, data);
-            return _serializer.ConstructPacketFromMessage(response);
+            try
+            {
+                byte[] data = _serializer.CreateMessageFromPacket(packet);
+                byte[] response = await _networkConnection.ConnectAndWaitResponse(address, port, data);
+                return _serializer.ConstructPacketFromMessage(response);
+            }
+            catch { }
+            return new AcknowledgePacket();
         }
 
     }

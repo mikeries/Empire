@@ -24,7 +24,7 @@ namespace LobbyService
         [DataMember]
         public string PlayerID { get; private set; }                   
         [DataMember]
-        public string IPAddress { get; private set; }
+        public string IPAddress { get; set; }
         [DataMember]
         public string Port { get; private set; }
         [DataMember]

@@ -41,7 +41,7 @@ namespace EmpireUWP.Network
 
             await _networkConnection.StartTCPListener(_gameData.HostPort, HandleRequest);
 
-            _timer = new Timer(SyncTimer, _autoEvent, 1000, 1000);
+            _timer = new Timer(SyncTimer, _autoEvent, 100, 100);
         }
 
         internal async void SyncTimer(object stateInfo)
@@ -63,7 +63,11 @@ namespace EmpireUWP.Network
 
         private Task SendPacketToPlayer(PlayerData player, NetworkPacket packet)
         {
-            return _networkConnection.SendTCPData(player.ClientSocket, packet);
+            if (player.ClientSocket != null)
+            {
+                return _networkConnection.SendTCPData(player.ClientSocket, packet);
+            }
+            return Task.Delay(0);
         }
 
         private async Task SendPacketToAllPlayers(NetworkPacket packet)

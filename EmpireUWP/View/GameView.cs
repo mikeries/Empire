@@ -188,7 +188,7 @@ namespace EmpireUWP.View
             NewGame();
             await GameClientConnection.ConnectToServer();
 
-            await MenuManager.LeaveLobby();
+            //await MenuManager.LeaveLobby();
         }
     }
 }

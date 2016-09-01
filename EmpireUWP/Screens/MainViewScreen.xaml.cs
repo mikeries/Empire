@@ -30,14 +30,14 @@ namespace EmpireUWP
             this.InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
             MenuManager.CurrentPage = this;
             MenuManager.Manager = menuManager;
 
-            MenuManager.StartGame();
+            await MenuManager.StartGame();
         }
 
     }

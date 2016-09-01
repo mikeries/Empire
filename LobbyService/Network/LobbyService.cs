@@ -90,7 +90,7 @@ namespace LobbyService
                 try
                 {
                     await UpdateAllClients();
-                } catch (Exception e)
+                } catch (Exception)
                 {
                     throw;
                 }
@@ -196,7 +196,7 @@ namespace LobbyService
                 string address = _playerList[playerID].IPAddress;
                 LobbyCommandPacket ejectUser = new LobbyCommandPacket(playerID, LobbyCommands.EjectThisUser);
                 NetworkPacket reply = await _connection.ConnectAndWaitResponse(address, NetworkPorts.LobbyClientPort, ejectUser);
-            } catch (Exception e)
+            } catch (Exception)
             {
                 // but if it doesn't work (possibly the client is disconnected) then we can safely ignore it and move on
                 // the new client will use the old data.

@@ -1,14 +1,11 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Networking;
 using Windows.Networking.Sockets;
-using Windows.Storage.Streams;
 using Windows.UI.Core;
 
 namespace LobbyTest
@@ -103,7 +100,7 @@ namespace LobbyTest
                 }
 
                 await _connection.StartTCPListener(NetworkPorts.LobbyClientPort, ProcessRequest);
-            } catch (Exception e)
+            } catch (Exception)
             {
                 // Could not reach lobby.
                 //TODO:  Create custom exceptions to be thrown by lobby and caught and handled by the gameView.
@@ -147,6 +144,7 @@ namespace LobbyTest
         public async Task StartGame(string playerID)
         {
             GameData gameData = _gameList[_playerList[playerID].GameID];
+            await Task.Delay(0);
             //await GamePage.gameInstance.StartGame(playerID, gameData);
         }
 
@@ -156,7 +154,7 @@ namespace LobbyTest
             {
                 LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
                 return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServerPort, commandPacket);
-            } catch (Exception e)
+            } catch (Exception)
             {
                 // TODO throw custom exception for gameview to deal with
                 // for now, fire LobbyCommand.Disconnected.

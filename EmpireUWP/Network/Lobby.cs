@@ -104,7 +104,7 @@ namespace EmpireUWP.Network
                 }
 
                 await _connection.StartTCPListener(NetworkPorts.LobbyClientPort, ProcessRequest);
-            } catch (Exception e)
+            } catch (Exception)
             {
                 // Could not reach lobby.
                 //TODO:  Create custom exceptions to be thrown by lobby and caught and handled by the gameView.
@@ -157,7 +157,7 @@ namespace EmpireUWP.Network
             {
                 LobbyCommandPacket commandPacket = new LobbyCommandPacket(playerID, command, args);
                 return await _connection.ConnectAndWaitResponse(_serverAddress, NetworkPorts.LobbyServerPort, commandPacket);
-            } catch (Exception e)
+            } catch (Exception)
             {
                 // TODO throw custom exception for gameview to deal with
                 // for now, fire LobbyCommand.Disconnected.

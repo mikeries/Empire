@@ -96,6 +96,7 @@ namespace EmpireUWP.View
 
             GameModel.Update(gameTime);
 
+            await Task.Delay(0);
             base.Update(gameTime);
         }
 

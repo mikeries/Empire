@@ -22,7 +22,6 @@ namespace EmpireUWP.Network
         private Dictionary<string, PlayerData> _playerList;
         private GameData _gameData;
         private GameView _gameInstance;
-        private int _lastUpdated = 0;
         private Timer _timer;
         private AutoResetEvent _autoEvent = new AutoResetEvent(false);
 
@@ -135,8 +134,8 @@ namespace EmpireUWP.Network
                 HandlePlayerConnection(salutation);
             }
 
+            await Task.Delay(0);
             return acknowledgement;
-
         }
 
         private void HandlePlayerConnection(SalutationPacket salutation)

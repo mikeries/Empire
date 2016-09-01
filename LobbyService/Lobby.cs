@@ -138,6 +138,7 @@ namespace LobbyService
         public async Task StartGame(string playerID)
         {
             GameData gameData = _gameList[_playerList[playerID].GameID];
+            await Task.Delay(0);
             //await GamePage.gameInstance.StartGame(playerID, gameData);
         }
 

@@ -147,6 +147,7 @@ namespace EmpireUWP.Network
                     _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
                     break;
             }
+            await Task.Delay(0);
             return acknowledge;
         }
 

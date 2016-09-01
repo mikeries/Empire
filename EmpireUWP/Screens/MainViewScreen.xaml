@@ -27,7 +27,7 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock x:Name="textBlock" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" TextWrapping="Wrap" Text="Welcome to Empire" VerticalAlignment="Top" Margin="0,50,0,0" FontSize="38" Grid.ColumnSpan="2" Foreground="#FFCFB307"/>
-        <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" TextWrapping="Wrap" Text="Waiting for players to connect." VerticalAlignment="Top" Margin="0,50,0,0" FontSize="30" Grid.ColumnSpan="2" Foreground="#FFCFB307"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" TextWrapping="Wrap" Visibility="Collapsed" Text="Waiting for players to connect." VerticalAlignment="Top" Margin="0,50,0,0" FontSize="30" Grid.ColumnSpan="2" Foreground="#FFCFB307"/>
 
     </Grid>
 </Page>

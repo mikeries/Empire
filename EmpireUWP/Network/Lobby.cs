@@ -175,8 +175,17 @@ namespace EmpireUWP.Network
             if (packet.Type == PacketType.LobbyCommand)
             {
                 LobbyCommandPacket command = packet as LobbyCommandPacket;
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () => { OnLobbyCommand(command); });
+                if (command.Command == LobbyCommands.SetupGame)
+                {
+                    string hostID = command.PlayerID;
+                    GameData game = _gameList[_playerList[hostID].GameID];
+                    await GamePage.gameInstance.StartServer(hostID, _playerList, game);
+                }
+                else
+                {
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                            () => { OnLobbyCommand(command); });
+                }
             } else if (packet.Type == PacketType.LobbyData)
             {
                 LobbyData lobbyData = packet as LobbyData;

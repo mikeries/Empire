@@ -212,7 +212,7 @@ namespace LobbyService
             // request host to start listening
             if (data.HostID == playerID)
             {
-                //await GamePage.gameInstance.StartServer(playerID, playerList, data);
+                await SendLobbyCommandToClient(_playerList[playerID], LobbyCommands.SetupGame);
             }
 
             // request each player to connect to host server

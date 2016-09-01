@@ -112,7 +112,10 @@ namespace EmpireUWP.View
             else if (packet.Command == LobbyCommands.EjectThisUser)
             {
                 Windows.UI.Xaml.Application.Current.Exit();
-            } 
+            } else if (packet.Command == LobbyCommands.SetupGame)
+            {
+                GamePage.gameInstance.StartServer(playerID, )
+            }
         }
 
         private void LobbyUpdate(object sender, PropertyChangedEventArgs args)

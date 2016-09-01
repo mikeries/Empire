@@ -69,12 +69,12 @@ namespace EmpireUWP.Network
         internal Task ConnectToServer()
         {
             NetworkPacket salutation = new Network.SalutationPacket(LocalPlayerID) as NetworkPacket;
-            return SendPacketToHost(salutation);
+            return _networkConnection.ConnectAndWaitResponse(_gameData.HostIPAddress, _gameData.HostPort, salutation);
         }
 
         private Task SendPacketToHost(NetworkPacket packet)
         {
-            return _networkConnection.SendTCPData(_serverSocket, packet);
+            return _networkConnection.SendUDPData(_gameData.HostIPAddress,_gameData.HostPort, packet);
         }
 
         internal Task UpdatePlayerStatus(PlayerData.PlayerStatus playerStatus)
@@ -159,7 +159,24 @@ namespace EmpireUWP.Network
 
         private Task HandleUpdate(DatagramSocket socket, NetworkPacket packet)
         {
-            throw new NotImplementedException();
+            if (packet != null)
+            {
+                switch (packet.Type)
+                {
+                    case PacketType.Entity:
+                        _updateQueue.Add(packet as EntityPacket);
+                        break;
+                    case PacketType.GameServerDataUpdate:
+                        GameServerDataUpdate update = packet as GameServerDataUpdate;
+                        _playerList = update.PlayerList;
+                        _gameData = update.GameData;
+                        break;
+                    case PacketType.ShipCommand:
+                        _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
+                        break;
+                }
+            }
+            return Task.Delay(0);
         }
 
         internal event EventHandler<PacketReceivedEventArgs> PacketReceived = delegate { };

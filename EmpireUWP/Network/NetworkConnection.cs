@@ -215,9 +215,23 @@ namespace EmpireUWP.Network
             {
 
                 uint len = reader.UnconsumedBufferLength;
-                byte[] data = new byte[len];
-                reader.ReadBytes(data);
-                _udpCallback(socket, data);
+
+                uint packetLength=0;
+                if(len > sizeof(uint))
+                {
+                    packetLength = (uint)reader.ReadInt32();
+                    if (packetLength == len-sizeof(uint))
+                    {
+                        byte[] data = new byte[packetLength];
+                        reader.ReadBytes(data);
+                        _udpCallback(socket, data);
+                    } else
+                    {
+                        // packet is corrupted.
+                    }
+                }
+
+
             } catch (Exception e)
             {
                 SocketErrorStatus socketError = SocketError.GetStatus(e.HResult);
@@ -263,39 +277,5 @@ namespace EmpireUWP.Network
             socket.Dispose();
 
         }
-
-        //private async void updateReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
-        //{
-        //    StreamSocket socket = args.Socket;
-        //    DataReader reader = new DataReader(socket.InputStream);
-
-        //    try
-        //    {
-        //        while (true)
-        //        {
-        //            uint MessageSize = await reader.LoadAsync(sizeof(uint));
-        //            if (MessageSize != sizeof(uint))
-        //            {
-        //                // socket was closed
-        //                return;
-        //            }
-
-        //            uint dataLength = reader.ReadUInt32();
-        //            byte[] data = new byte[dataLength];
-
-        //            MessageSize = await reader.LoadAsync(dataLength);
-        //            if (MessageSize != dataLength)
-        //            {
-        //                return;
-        //            }
-        //            reader.ReadBytes(data);
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw new Exception("Exception while reading: ", e);
-        //    }
-        //}
-
     }
 }

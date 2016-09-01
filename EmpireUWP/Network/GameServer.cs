@@ -55,7 +55,7 @@ namespace EmpireUWP.Network
                 }
 
                 GameServerDataUpdate update = new GameServerDataUpdate(_playerList, _gameData);
-                await SendTCPPacketToPlayer(player, update);
+                await SendUDPPacketToPlayer(player, update);
             }
         }
 

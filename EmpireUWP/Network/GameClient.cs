@@ -32,9 +32,11 @@ namespace EmpireUWP.Network
             }
         }
 
+
         private Dictionary<string, PlayerData> _playerList = new Dictionary<string, PlayerData>();
         private GameData _gameData;
         private GameView _gameInstance;
+        private StreamSocket _serverSocket = null;
         private string _myAddress;
         private string _myPort;
         private UpdateQueue _updateQueue = new UpdateQueue();
@@ -58,20 +60,20 @@ namespace EmpireUWP.Network
                 EmpireSerializer serializer = new EmpireSerializer();
                 _networkConnection = new PacketConnection(serializer);
                 await _networkConnection.StartTCPListener(_myPort, HandleRequest);
-                StreamSocket socket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort);
-                _myAddress = socket.Information.LocalAddress.DisplayName;
+                _serverSocket = await _networkConnection.ConnectToTCP(_gameData.HostIPAddress, _gameData.HostPort);
+                _myAddress = _serverSocket.Information.LocalAddress.DisplayName;
             }
         }
 
         internal Task ConnectToServer()
         {
             NetworkPacket salutation = new Network.SalutationPacket(LocalPlayerID) as NetworkPacket;
-            return SendRequestToHost(salutation);
+            return SendPacketToHost(salutation);
         }
 
-        private Task<NetworkPacket> SendRequestToHost(NetworkPacket packet)
+        private Task SendPacketToHost(NetworkPacket packet)
         {
-            return _networkConnection.ConnectAndWaitResponse(_gameData.HostIPAddress, _gameData.HostPort, packet);
+            return _networkConnection.SendTCPData(_serverSocket, packet);
         }
 
         internal Task UpdatePlayerStatus(PlayerData.PlayerStatus playerStatus)
@@ -87,12 +89,12 @@ namespace EmpireUWP.Network
                 playerData = new PlayerData(new Player(LocalPlayerID), _myAddress, _myPort);
             }
             playerData.Status = playerStatus;
-            return SendRequestToHost(playerData);
+            return SendPacketToHost(playerData);
         }
 
         internal void SendShipCommandToHost(ShipCommand shipCommand)
         {
-            SendRequestToHost(shipCommand);
+            SendPacketToHost(shipCommand);
         }
 
         internal Ship GetShip(string owner = null)

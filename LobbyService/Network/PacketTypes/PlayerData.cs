@@ -24,7 +24,7 @@ namespace LobbyService
         [DataMember]
         public string PlayerID { get; private set; }                   
         [DataMember]
-        public string IPAddress { get; set; }
+        public string IPAddress { get; private set; }
         [DataMember]
         public string Port { get; private set; }
         [DataMember]
@@ -37,6 +37,8 @@ namespace LobbyService
         public int Score { get; set; }
         [DataMember]
         public int GameID { get; set; }
+
+        public StreamSocket ClientSocket = null;
 
         public PlayerData(Player player, string ipAddress, string port) : base()
         {

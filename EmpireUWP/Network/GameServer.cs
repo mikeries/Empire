@@ -41,7 +41,7 @@ namespace EmpireUWP.Network
 
             await _networkConnection.StartTCPListener(_gameData.HostPort, HandleRequest);
 
-            _timer = new Timer(SyncTimer, _autoEvent, 100, 100);
+            _timer = new Timer(SyncTimer, _autoEvent, 1000, 1000);
         }
 
         internal async void SyncTimer(object stateInfo)
@@ -63,7 +63,15 @@ namespace EmpireUWP.Network
 
         private Task SendPacketToPlayer(PlayerData player, NetworkPacket packet)
         {
-            return _networkConnection.ConnectAndWaitResponse(player.IPAddress, player.Port, packet);
+            return _networkConnection.SendTCPData(player.ClientSocket, packet);
+        }
+
+        private async Task SendPacketToAllPlayers(NetworkPacket packet)
+        {
+            foreach(PlayerData player in _playerList.Values)
+            {
+                await SendPacketToPlayer(player, packet);
+            }
         }
 
         internal Task SyncPlayer(string player)
@@ -96,56 +104,42 @@ namespace EmpireUWP.Network
             }
         }
 
-        //private async Task SendPacketToAllPlayers(NetworkPacket packet)
-        //{
-        //    List<NetworkPacket> packetList = new List<NetworkPacket>();
-        //    packetList.Add(packet);
-
-        //     foreach (PlayerData player in _playerList.Values.ToList())
-        //    {
-        //        string address = player.IPAddress;
-        //        await SendUpdatesToPlayer(player, packetList);
-        //    }
-        //}
-
-        //private void HandleUpdate(NetworkPacket packet)
-        //{
-        //    if (packet.Type == PacketType.PlayerData)
-        //    {
-        //        PlayerData playerData = packet as PlayerData;
-        //        if (_playerList.ContainsKey(playerData.PlayerID))
-        //        {
-        //            _playerList[playerData.PlayerID] = playerData;
-        //        }
-        //    } else if (packet.Type == PacketType.ShipCommand)
-        //    {
-        //        SendUpdatePacketToAllPlayers(packet);
-        //    }
-        //}
-
         private async Task<NetworkPacket> HandleRequest(StreamSocket socket, NetworkPacket packet)
         {
-
             AcknowledgePacket acknowledgement = new AcknowledgePacket();
 
             if (packet.Type == PacketType.Salutation)
             {
                 SalutationPacket salutation = packet as SalutationPacket;
-                HandlePlayerConnection(salutation);
+                await HandlePlayerConnection(socket, salutation);
+            } else if (packet.Type == PacketType.PlayerData)
+            {
+                PlayerData playerData = packet as PlayerData;
+                if (_playerList.ContainsKey(playerData.PlayerID))
+                {
+                    _playerList[playerData.PlayerID] = playerData;
+                }
+            }
+            else if (packet.Type == PacketType.ShipCommand)
+            {
+                await SendPacketToAllPlayers(packet);
             }
 
-            await Task.Delay(0);
             return acknowledgement;
         }
 
-        private void HandlePlayerConnection(SalutationPacket salutation)
+        private async Task HandlePlayerConnection(StreamSocket socket, SalutationPacket salutation)
         {
             string PlayerID = salutation.Name;
             if(_playerList.ContainsKey(PlayerID))
             {
+                PlayerData playerData = _playerList[PlayerID];
                 int shipID = _gameInstance.GameModel.NewShip(PlayerID);
-                _playerList[PlayerID].ShipID = shipID;
-                _playerList[PlayerID].Connected = true;
+                playerData.ShipID = shipID;
+
+                StreamSocket clientSocket = await _networkConnection.ConnectToTCP(socket.Information.RemoteAddress.DisplayName, NetworkPorts.GameClientPort);
+                playerData.ClientSocket = clientSocket;
+                playerData.Connected = true;
             } 
         }
 

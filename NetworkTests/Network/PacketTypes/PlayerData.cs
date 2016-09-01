@@ -38,6 +38,8 @@ namespace NetworkTests
         [DataMember]
         public int GameID { get; set; }
 
+        public StreamSocket ClientSocket = null;
+
         public PlayerData(Player player, string ipAddress, string port) : base()
         {
             Type = PacketType.PlayerData;

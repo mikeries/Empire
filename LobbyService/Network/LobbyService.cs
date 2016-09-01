@@ -87,7 +87,13 @@ namespace LobbyService
                         await ProcessSetupGameCommand(playerID);
                         break;
                 }
-                await UpdateAllClients();
+                try
+                {
+                    await UpdateAllClients();
+                } catch (Exception e)
+                {
+                    throw;
+                }
                 OnPropertyChanged("gamesList");
                 OnPropertyChanged("playerList");
             }

@@ -34,12 +34,12 @@ namespace EmpireUWP.Network
         [DataMember]
         public GameStatus Status;
 
-        public GameData(int gameID, string playerID, string ipAddress, string requestPort) : base()
+        public GameData(int gameID, string playerID, string ipAddress, string port) : base()
         {
             Type = PacketType.GameData;
             HostID = playerID;
             HostIPAddress = ipAddress;
-            HostPort = requestPort;
+            HostPort = port;
             GameID = gameID;
             Status = GameStatus.WaitingForPlayers;
             playerList.Add(playerID);

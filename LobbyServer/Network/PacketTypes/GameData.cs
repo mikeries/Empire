@@ -1,4 +1,4 @@
-﻿
+﻿using LobbyTest.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,9 +25,7 @@ namespace LobbyTest
         [DataMember]
         public string HostIPAddress { get; set; }
         [DataMember]
-        public string HostRequestPort { get; set; }
-        [DataMember]
-        public string HostUpdatePort { get; set; }
+        public string HostPort { get; set; }
         [DataMember]
         public string HostID { get; private set; }
         [DataMember]
@@ -36,13 +34,12 @@ namespace LobbyTest
         [DataMember]
         public GameStatus Status;
 
-        public GameData(int gameID, string playerID, string ipAddress, string requestPort, string updatePort) : base()
+        public GameData(int gameID, string playerID, string ipAddress, string port) : base()
         {
             Type = PacketType.GameData;
             HostID = playerID;
             HostIPAddress = ipAddress;
-            HostRequestPort = requestPort;
-            HostUpdatePort = updatePort;
+            HostPort = port;
             GameID = gameID;
             Status = GameStatus.WaitingForPlayers;
             playerList.Add(playerID);

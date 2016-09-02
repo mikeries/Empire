@@ -32,6 +32,10 @@ namespace EmpireUWP.Model
             _gameInstance = gameInstance;
             _nullShip = new NullShip(this);
             worldData = new WorldData();
+            if (_gameInstance.Hosting)
+            {
+                _gameInstance.GameServer.AddListener(this);
+            }
         }
 
         public void Initialize()
@@ -109,7 +113,7 @@ namespace EmpireUWP.Model
 
         private void RemoveDeadEntities(List<int> deadEntities)
         {
-            if (_gameInstance.Hosting)
+            if (_gameInstance.Hosting && deadEntities.Count > 0)
             {
                 OnEntitiesRemoved(deadEntities);
             }

@@ -32,7 +32,7 @@ namespace EmpireUWP.Network
             _gameInstance = gameInstance;
             _playerList = players;
             _gameData = gameData;
-            _gameInstance.GameModel.EntitiesRemoved += EntitiesRemoved;
+
         }
 
         internal async Task StartServer()
@@ -44,6 +44,11 @@ namespace EmpireUWP.Network
             await _networkConnection.StartUDPListener(_gameData.HostPort, HandleUpdate);
 
             _timer = new Timer(SyncTimer, _autoEvent, 200, 200);
+        }
+
+        internal void AddListener(GameModel model)
+        {
+            model.EntitiesRemoved += EntitiesRemoved;
         }
 
         // TODO:  I don't like doing this on a timer... it can fall behind and start stepping on itself, leading
@@ -67,11 +72,6 @@ namespace EmpireUWP.Network
             return _networkConnection.SendUDPData(player.IPAddress, player.Port , packet);
         }
 
-        private Task SendTCPPacketToPlayer(PlayerData player, NetworkPacket packet)
-        {
-            return _networkConnection.SendTCPData(player.ClientSocket, packet);
-        }
-
         private async Task SendUDPPacketToAllPlayers(NetworkPacket packet)
         {
             foreach(PlayerData player in _playerList.Values)
@@ -84,7 +84,10 @@ namespace EmpireUWP.Network
         {
             foreach (PlayerData player in _playerList.Values)
             {
-                await SendTCPPacketToPlayer(player, packet);
+                if (player.Connected)
+                {
+                    await _networkConnection.ConnectAndWaitResponse(player.IPAddress, player.Port, packet);
+                }
             }
         }
 

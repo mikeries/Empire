@@ -17,21 +17,6 @@ namespace EmpireUWP.Network
 
         internal List<PlayerData> Gamers { get { return _playerList.Values.ToList(); } }
         internal string LocalPlayerID = null;
-        internal bool Hosting
-        {
-            get
-            {
-                if (_gameData == null || LocalPlayerID == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    return _gameData.HostID == LocalPlayerID;
-                }
-            }
-        }
-
 
         private Dictionary<string, PlayerData> _playerList = new Dictionary<string, PlayerData>();
         private GameData _gameData;

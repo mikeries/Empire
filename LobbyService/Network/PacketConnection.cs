@@ -13,13 +13,25 @@ namespace LobbyService
         private NetworkConnection _networkConnection;
         public delegate Task<NetworkPacket> TCPPacketCallback(StreamSocket socket, NetworkPacket packet);
         private TCPPacketCallback _TCPhandler;
-        public delegate void UDPPacketCallback(DatagramSocket socket, NetworkPacket packet);
+        public delegate Task UDPPacketCallback(DatagramSocket socket, NetworkPacket packet);
         private UDPPacketCallback _UDPhandler;
 
         internal PacketConnection(ISerializer serializer)
         {
             _serializer = serializer;
             _networkConnection = new NetworkConnection();
+        }
+
+        internal void Close()
+        {
+            if(_serializer != null)
+            {
+                _serializer = null;
+            }
+            if(_networkConnection != null)
+            {
+                _networkConnection.Close();
+            }
         }
 
         internal Task<StreamSocket> ConnectToTCP(string serverAddress, string serverPort)
@@ -78,13 +90,13 @@ namespace LobbyService
             try
             {
                 byte[] data = _serializer.CreateMessageFromPacket(packet);
-                return _networkConnection.sendUDPData(address, port, data);
+                return _networkConnection.SendUDPData(address, port, data);
             }
             catch { }
             return Task.Delay(0);
         }
 
-        private void UDPPacketHandler(DatagramSocket socket, byte[] data)
+        private Task UDPPacketHandler(DatagramSocket socket, byte[] data)
         {
             try
             {
@@ -92,6 +104,7 @@ namespace LobbyService
                 _UDPhandler(socket, packet);
             }
             catch { }
+            return Task.Delay(0);
         }
     }
 }

@@ -22,16 +22,17 @@ namespace LobbyService
             typeof(GameServerDataUpdate),
         };
 
+        private DataContractSerializer _serializer = new DataContractSerializer(typeof(NetworkPacket), _knownTypes);
+
         public byte[] CreateMessageFromPacket(NetworkPacket packet)
         {
             byte[] message = null;
-            DataContractSerializer serializer = new DataContractSerializer(typeof(NetworkPacket), _knownTypes);
 
             try
             {
                 using (MemoryStream stream = new MemoryStream())
                 {
-                    serializer.WriteObject(stream, packet);
+                    _serializer.WriteObject(stream, packet);
                     message = stream.ToArray();
                 }
             }
@@ -47,18 +48,17 @@ namespace LobbyService
         public NetworkPacket ConstructPacketFromMessage(byte[] message)
         {
             NetworkPacket packet = null;
-            DataContractSerializer serializer = new DataContractSerializer(typeof(NetworkPacket), _knownTypes);
 
             try
             {
                 using (MemoryStream stream = new MemoryStream(message))
                 {
-                    packet = (NetworkPacket)serializer.ReadObject(stream);
+                    packet = (NetworkPacket)_serializer.ReadObject(stream);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                throw new Exception(e.Message);
+                return packet;  // Corrupted packet?  Return null.
             }
 
             return packet;

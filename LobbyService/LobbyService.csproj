@@ -110,6 +110,7 @@
     <Compile Include="Network\PacketConnection.cs" />
     <Compile Include="Network\PacketReceivedEventArgs.cs" />
     <Compile Include="Network\PacketTypes\AcknowledgePacket.cs" />
+    <Compile Include="Network\PacketTypes\DeadEntitiesPacket.cs" />
     <Compile Include="Network\PacketTypes\GameData.cs" />
     <Compile Include="Network\PacketTypes\GameServerDataUpdate.cs" />
     <Compile Include="Network\PacketTypes\LobbyCommandPacket.cs" />

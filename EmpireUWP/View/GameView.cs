@@ -22,6 +22,13 @@ namespace EmpireUWP.View
             return (GameServer != null);
             }
         }
+        internal bool DemoMode
+        {
+            get
+            {
+                return (GameClientConnection == null);
+            }
+        }
 
         internal int ShieldEnergy
         {
@@ -188,7 +195,7 @@ namespace EmpireUWP.View
             NewGame();
             await GameClientConnection.ConnectToServer();
 
-            //await MenuManager.LeaveLobby();
+            await MenuManager.LeaveLobby();
         }
 
         internal void LeaveGame()

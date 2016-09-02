@@ -207,7 +207,6 @@ namespace LobbyService
         {
             int game = _playerList[playerID].GameID;
             GameData data = _gameList[game];
-            data.Status = GameData.GameStatus.ReadyToStart;     
 
             var players =
                 from playerdata in _playerList.Values

@@ -15,7 +15,7 @@ namespace EmpireUWP.Network
 {
     public class GameServer
     {
-        private const int MaxSyncDistance = 1000;
+        private const int MaxSyncDistance = 2000;
 
         internal List<PlayerData> Gamers { get { return _playerList.Values.ToList(); } }
 
@@ -32,6 +32,7 @@ namespace EmpireUWP.Network
             _gameInstance = gameInstance;
             _playerList = players;
             _gameData = gameData;
+            _gameInstance.GameModel.EntitiesRemoved += EntitiesRemoved;
         }
 
         internal async Task StartServer()
@@ -42,9 +43,11 @@ namespace EmpireUWP.Network
             await _networkConnection.StartTCPListener(_gameData.HostPort, HandleRequest);
             await _networkConnection.StartUDPListener(_gameData.HostPort, HandleUpdate);
 
-            _timer = new Timer(SyncTimer, _autoEvent, 100, 100);
+            _timer = new Timer(SyncTimer, _autoEvent, 200, 200);
         }
 
+        // TODO:  I don't like doing this on a timer... it can fall behind and start stepping on itself, leading
+        // to crashes.
         internal async void SyncTimer(object stateInfo)
         {
             foreach (PlayerData player in _playerList.Values)
@@ -74,6 +77,14 @@ namespace EmpireUWP.Network
             foreach(PlayerData player in _playerList.Values)
             {
                 await SendUDPPacketToPlayer(player, packet);
+            }
+        }
+
+        private async Task SendTCPPacketToAllPlayers(NetworkPacket packet)
+        {
+            foreach (PlayerData player in _playerList.Values)
+            {
+                await SendTCPPacketToPlayer(player, packet);
             }
         }
 
@@ -149,6 +160,12 @@ namespace EmpireUWP.Network
                 playerData.ClientSocket = clientSocket;
                 playerData.Connected = true;
             } 
+        }
+
+        private async void EntitiesRemoved(object sender, EntitiesRemovedEventAgs e)
+        {
+            DeadEntitiesPacket packet = new Network.DeadEntitiesPacket(e.EntitiesRemoved);
+            await SendTCPPacketToAllPlayers(packet);
         }
 
         private static int DistanceBetween(Ship ship, Entity entity)

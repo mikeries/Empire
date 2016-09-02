@@ -20,7 +20,7 @@ namespace EmpireUWP.Model
         const int LaserHeight = 3;
         const int LaserWidth = 3;
         const float LaserSpeed = 1.0f;
-        public const int InitialAsteroidCount = 100;
+        public const int InitialAsteroidCount = 1000;
         public const int InitialShipCount = 1;
 
         private EntityPool<Asteroid> asteroidPool;

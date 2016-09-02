@@ -77,20 +77,17 @@ namespace EmpireUWP.Model
                 InputManager.Update();
             }
 
-            if (!_gameInstance.Hosting)
+            if (!_gameInstance.Hosting && !_gameInstance.DemoMode)
             {
-                if (_gameInstance.GameClientConnection != null)
-                {
-                    ApplyUpdates();
-                }
+                ApplyUpdates();
             }
 
-            List<Entity> deadEntities = new List<Entity>();
+            List<int> deadEntities = new List<int>();
             foreach (Entity entity in _gameEntities.Values)
             {
                 if (entity.Status == Status.Disposable)
                 {
-                    deadEntities.Add(entity);
+                    deadEntities.Add(entity.EntityID);
                 }
                 else
                 {
@@ -110,22 +107,27 @@ namespace EmpireUWP.Model
             }
         }
 
-        private void RemoveDeadEntities(List<Entity> deadEntities)
+        private void RemoveDeadEntities(List<int> deadEntities)
         {
             if (_gameInstance.Hosting)
             {
                 OnEntitiesRemoved(deadEntities);
             }
 
-            foreach (Entity entity in deadEntities)
+            foreach (int entityID in deadEntities)
             {
-                Entity entityToRemove = entity;
-                if (!_gameEntities.TryRemove(entity.EntityID, out entityToRemove))
-                {
-                    throw new Exception("Failed to remove a game entity from the collection");
-                }
-                worldData.ReturnToPool(entityToRemove);
+                RemoveDeadEntity(entityID);
             }
+        }
+
+        private void RemoveDeadEntity(int entityID)
+        {
+            Entity entityToRemove = _gameEntities[entityID];
+            if (!_gameEntities.TryRemove(entityID, out entityToRemove))
+            {
+                throw new Exception("Failed to remove a game entity from the collection");
+            }
+            worldData.ReturnToPool(entityToRemove);
         }
 
         private void DetectCollisionsWith(IEnumerable<Entity> asteroids)
@@ -226,10 +228,15 @@ namespace EmpireUWP.Model
                     addGameEntityFromHost(updatedEntity);
                 }
             }
+
+            foreach(int entityID in queue._deadEntities)
+            {
+                RemoveDeadEntity(entityID);
+            }
         }
 
         public event EventHandler<EntitiesRemovedEventAgs> EntitiesRemoved = delegate { };
-        private void OnEntitiesRemoved(List<Entity> deadEntities)
+        private void OnEntitiesRemoved(List<int> deadEntities)
         {
             EntitiesRemoved?.Invoke(null, new EntitiesRemovedEventAgs(deadEntities));
         }

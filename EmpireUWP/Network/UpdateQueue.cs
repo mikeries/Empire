@@ -11,6 +11,7 @@ namespace EmpireUWP.Network
     class UpdateQueue
     {
         private ConcurrentDictionary<int, EntityPacket> _updateQueue = new ConcurrentDictionary<int, EntityPacket>();
+        internal List<int> _deadEntities = new List<int>();
 
         internal List<EntityPacket> Packets
         {

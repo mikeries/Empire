@@ -13,5 +13,6 @@ namespace EmpireUWP.Network
         GameData,
         LobbyCommand,
         GameServerDataUpdate,
+        DeadEntities,
     }
 }

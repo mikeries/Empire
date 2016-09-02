@@ -22,6 +22,7 @@ namespace EmpireUWP.Network
             typeof(SalutationPacket),
             typeof(ShipCommand),
             typeof(GameServerDataUpdate),
+            typeof(DeadEntitiesPacket),
         };
 
         private DataContractSerializer _serializer = new DataContractSerializer(typeof(NetworkPacket), _knownTypes);
@@ -60,7 +61,7 @@ namespace EmpireUWP.Network
             }
             catch (Exception)
             {
-                return packet;  // null packet
+                return packet;  // Corrupted packet?  Return null.
             }
 
             return packet;

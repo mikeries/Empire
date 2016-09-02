@@ -152,16 +152,9 @@ namespace EmpireUWP.Network
             {
                 switch (packet.Type)
                 {
-                    case PacketType.Entity:
-                        _updateQueue.Add(packet as EntityPacket);
-                        break;
-                    case PacketType.GameServerDataUpdate:
-                        GameServerDataUpdate update = packet as GameServerDataUpdate;
-                        _playerList = update.PlayerList;
-                        _gameData = update.GameData;
-                        break;
-                    case PacketType.ShipCommand:
-                        _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
+                    case PacketType.DeadEntities:
+                        DeadEntitiesPacket newlyDead = packet as DeadEntitiesPacket;
+                        _updateQueue._deadEntities.AddRange(newlyDead.EntityList);
                         break;
                 }
             }

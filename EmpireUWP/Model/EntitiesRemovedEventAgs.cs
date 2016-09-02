@@ -4,9 +4,9 @@ namespace EmpireUWP.Model
 {
     public class EntitiesRemovedEventAgs
     {
-        public List<Entity> EntitiesRemoved;
+        public List<int> EntitiesRemoved;
 
-        public EntitiesRemovedEventAgs(List<Entity> deadEntities)
+        public EntitiesRemovedEventAgs(List<int> deadEntities)
         {
             EntitiesRemoved = deadEntities;
         }

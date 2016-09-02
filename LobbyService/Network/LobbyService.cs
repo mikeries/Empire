@@ -206,7 +206,8 @@ namespace LobbyService
         private async Task ProcessSetupGameCommand(string playerID)
         {
             int game = _playerList[playerID].GameID;
-            GameData data = _gameList[game];     
+            GameData data = _gameList[game];
+            data.Status = GameData.GameStatus.ReadyToStart;     
 
             var players =
                 from playerdata in _playerList.Values

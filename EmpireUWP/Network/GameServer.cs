@@ -32,7 +32,6 @@ namespace EmpireUWP.Network
             _gameInstance = gameInstance;
             _playerList = players;
             _gameData = gameData;
-
         }
 
         internal async Task StartServer()
@@ -125,28 +124,33 @@ namespace EmpireUWP.Network
         {
             AcknowledgePacket acknowledgement = new AcknowledgePacket();
 
-            if (packet.Type == PacketType.Salutation)
+            if (packet != null)
             {
-                SalutationPacket salutation = packet as SalutationPacket;
-                await HandlePlayerConnection(socket, salutation);
-            } 
-
+                if (packet.Type == PacketType.Salutation)
+                {
+                    SalutationPacket salutation = packet as SalutationPacket;
+                    await HandlePlayerConnection(socket, salutation);
+                }
+            }
             return acknowledgement;
         }
 
         private async Task HandleUpdate(DatagramSocket socket, NetworkPacket packet)
         {
-            if (packet.Type == PacketType.PlayerData)
+            if (packet != null)
             {
-                PlayerData playerData = packet as PlayerData;
-                if (_playerList.ContainsKey(playerData.PlayerID))
+                if (packet.Type == PacketType.PlayerData)
                 {
-                    _playerList[playerData.PlayerID] = playerData;
+                    PlayerData playerData = packet as PlayerData;
+                    if (_playerList.ContainsKey(playerData.PlayerID))
+                    {
+                        _playerList[playerData.PlayerID] = playerData;
+                    }
                 }
-            }
-            else if (packet.Type == PacketType.ShipCommand)
-            {
-                await SendUDPPacketToAllPlayers(packet);
+                else if (packet.Type == PacketType.ShipCommand)
+                {
+                    await SendUDPPacketToAllPlayers(packet);
+                }
             }
         }
 
@@ -168,7 +172,7 @@ namespace EmpireUWP.Network
         private async void EntitiesRemoved(object sender, EntitiesRemovedEventAgs e)
         {
             DeadEntitiesPacket packet = new Network.DeadEntitiesPacket(e.EntitiesRemoved);
-            await SendTCPPacketToAllPlayers(packet);
+            await SendUDPPacketToAllPlayers(packet);
         }
 
         private static int DistanceBetween(Ship ship, Entity entity)

@@ -164,6 +164,10 @@ namespace EmpireUWP.Network
                     case PacketType.ShipCommand:
                         _gameInstance.GameModel.InputManager.ProcessRemoteInput(packet as ShipCommand);
                         break;
+                    case PacketType.DeadEntities:
+                        DeadEntitiesPacket newlyDead = packet as DeadEntitiesPacket;
+                        _updateQueue._deadEntities.AddRange(newlyDead.EntityList);
+                        break;
                 }
             }
             return Task.Delay(0);

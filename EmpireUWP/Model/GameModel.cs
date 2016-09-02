@@ -126,12 +126,15 @@ namespace EmpireUWP.Model
 
         private void RemoveDeadEntity(int entityID)
         {
-            Entity entityToRemove = _gameEntities[entityID];
-            if (!_gameEntities.TryRemove(entityID, out entityToRemove))
+            if (_gameEntities.ContainsKey(entityID))
             {
-                throw new Exception("Failed to remove a game entity from the collection");
+                Entity entityToRemove = _gameEntities[entityID];
+                if (!_gameEntities.TryRemove(entityID, out entityToRemove))
+                {
+                    throw new Exception("Failed to remove a game entity from the collection");
+                }
+                worldData.ReturnToPool(entityToRemove);
             }
-            worldData.ReturnToPool(entityToRemove);
         }
 
         private void DetectCollisionsWith(IEnumerable<Entity> asteroids)

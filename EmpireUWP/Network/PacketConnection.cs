@@ -22,6 +22,18 @@ namespace EmpireUWP.Network
             _networkConnection = new NetworkConnection();
         }
 
+        internal void Close()
+        {
+            if(_serializer != null)
+            {
+                _serializer = null;
+            }
+            if(_networkConnection != null)
+            {
+                _networkConnection.Close();
+            }
+        }
+
         internal Task<StreamSocket> ConnectToTCP(string serverAddress, string serverPort)
         {
             return _networkConnection.ConnectToTCP(serverAddress,serverPort);

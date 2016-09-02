@@ -148,6 +148,7 @@ namespace EmpireUWP.Network
         public async Task StartGame(string playerID)
         {
             GameData gameData = _gameList[_playerList[playerID].GameID];
+            gameData.Status = GameData.GameStatus.ReadyToStart;
             await GamePage.gameInstance.StartGame(playerID, gameData);
         }
 

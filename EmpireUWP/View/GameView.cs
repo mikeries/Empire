@@ -19,8 +19,7 @@ namespace EmpireUWP.View
         internal bool Hosting
         { get
             {
-            if (GameClientConnection == null) return false;
-            else return GameClientConnection.Hosting;
+            return (GameServer != null);
             }
         }
 
@@ -44,7 +43,7 @@ namespace EmpireUWP.View
 
         internal GameModel GameModel;
         internal GameClient GameClientConnection;
-        internal GameServer GameServerConnection = null;
+        internal GameServer GameServer = null;
 
         private Ship _localShip = null;
         internal Ship LocalShip { get { return _localShip; } }
@@ -171,15 +170,16 @@ namespace EmpireUWP.View
             PlayerID = playerID;
             gameData.HostIPAddress = playerList[gameData.HostID].IPAddress;
             gameData.HostPort = NetworkPorts.GameServerPort;
-            GameServerConnection = new GameServer(this, playerList, gameData);
-            return GameServerConnection.StartServer();
+            GameServer = new GameServer(this, playerList, gameData);
+            return GameServer.StartServer();
         }
 
         internal async Task StartGame(string playerID, GameData gameData)
         {
             PlayerID = playerID;
 
-            if (GameClientConnection == null) {
+            if (GameClientConnection == null)
+            {
                 GameClientConnection = new GameClient(this, gameData, PlayerID, NetworkPorts.GameClientPort);
                 await GameClientConnection.CreateNetworkConnection();
                 GameClientConnection.GameChanged += GameChangedEventHandler;
@@ -189,6 +189,18 @@ namespace EmpireUWP.View
             await GameClientConnection.ConnectToServer();
 
             //await MenuManager.LeaveLobby();
+        }
+
+        internal void LeaveGame()
+        {
+            if (GameServer != null)
+            {
+                GameServer.Close();
+            }
+            if (GameClientConnection != null)
+            {
+                GameClientConnection.Close();
+            }
         }
     }
 }

@@ -85,8 +85,11 @@ namespace EmpireUWP.Network
 
             foreach (Entity entity in _gameInstance.GameModel.GameEntities)
             {
-                EntityPacket packet = new EntityPacket(entity);
-                updates.Add(packet);
+                if (DistanceBetween(ship, entity) < MaxSyncDistance)
+                {
+                    EntityPacket packet = new EntityPacket(entity);
+                    updates.Add(packet);
+                }
             }
             return SendUDPToPlayer(playerToSync, updates);
         }
@@ -150,7 +153,16 @@ namespace EmpireUWP.Network
 
         private static int DistanceBetween(Ship ship, Entity entity)
         {
+            if(ship==null)
+            {
+                return 0;
+            }
             return (int)(ship.Location - entity.Location).Length();
+        }
+
+        public void Close()
+        {
+            _networkConnection.Close();
         }
     }
 }

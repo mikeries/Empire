@@ -41,7 +41,7 @@ namespace EmpireUWP.Model
                 InputManager = new InputManager(_gameInstance.GameClientConnection);
             }
             worldData.Initialize(this,InputManager);
-            if(_gameInstance.GameState == GameData.GameStatus.WaitingForPlayers)
+            if(_gameInstance.GameState == GameData.GameStatus.WaitingForPlayers || _gameInstance.Hosting)
             {
                 LoadWorld();
             }

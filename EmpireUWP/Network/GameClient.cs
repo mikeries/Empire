@@ -53,6 +53,18 @@ namespace EmpireUWP.Network
             _myPort = port;
         }
 
+        internal void Close()
+        {
+            if(_networkConnection != null)
+            {
+                _networkConnection.Close();
+            }
+            if(_serverSocket != null)
+            {
+                _serverSocket.Dispose();
+            }
+        }
+
         internal async Task CreateNetworkConnection()
         {
             if (_networkConnection == null)

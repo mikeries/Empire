@@ -20,6 +20,19 @@ namespace EmpireUWP.Network
 
         }
 
+        internal void Close()
+        {
+            if (_TCPListener != null)
+            {
+                _TCPListener.Dispose();
+            }
+            if (_UDPListener != null)
+            {
+                _UDPListener.Dispose();
+            }
+        }
+
+
         internal async Task<StreamSocket> ConnectToTCP(string serverAddress, string serverPort)
         {
             HostName _host = new HostName(serverAddress);
@@ -77,6 +90,7 @@ namespace EmpireUWP.Network
                     if (MessageSize != sizeof(uint))
                     {
                         // socket was closed
+                        reader.Dispose();
                         socket.Dispose();
                         return;
                     }
@@ -88,6 +102,7 @@ namespace EmpireUWP.Network
                     if(dataLength != actualLength)
                     {
                         // socket was closed
+                        reader.Dispose();
                         socket.Dispose();
                         return;
                     }

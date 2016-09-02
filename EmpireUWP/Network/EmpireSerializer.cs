@@ -58,7 +58,7 @@ namespace EmpireUWP.Network
                     packet = (NetworkPacket)_serializer.ReadObject(stream);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return packet;  // null packet
             }
